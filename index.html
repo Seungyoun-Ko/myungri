@@ -7,6 +7,7 @@
 <!-- Security: Content Security Policy -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --bg: #1a1a2e;
@@ -27,7 +28,6 @@ body {
   -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
   -webkit-touch-callout: none;
 }
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
 /* Header */
 .header { background: linear-gradient(135deg, var(--surface), var(--surface2)); padding: 20px; text-align: center; border-bottom: 2px solid var(--accent); }
@@ -602,11 +602,9 @@ function getYearJeolgi(year) {
 // 사주팔자 (四柱八字) 계산
 // ============================================================
 
-// 일주 계산 (기준일: 1900-01-01 = 갑자일 → 실제로는 1900-01-01이 갑자가 아님)
-// 1900년 1월 1일의 간지 인덱스를 보정
-// 1900-01-01 = 경자일(庚子日) → 천간 6(경), 지지 0(자) → 60갑자 인덱스: 36
-// 참고: 갑자=0, 을축=1, ... 경자=36
-const BASE_DAY_GAPJA = 36; // 1900-01-01의 60갑자 인덱스
+// 일주 계산
+// 1900-01-01 = 갑술일(甲戌日) → 천간 0(갑), 지지 10(술) → 60갑자 인덱스: 10
+const BASE_DAY_GAPJA = 10;
 
 function getDayGapjaIndex(y, m, d) {
   const base = new Date(1900, 0, 1);
