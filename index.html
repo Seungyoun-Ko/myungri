@@ -148,6 +148,10 @@ body {
 .unseong-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; text-align: center; font-size: 0.85em; }
 .unseong-grid .item { padding: 4px; background: rgba(255,255,255,0.03); border-radius: 4px; }
 
+/* 지장간 */
+.jijanggan { font-size: 0.7em; color: var(--text-dim); padding: 4px 0; margin-top: 4px; border-top: 1px dashed #333; }
+.jijanggan span { margin: 0 2px; }
+
 /* Seun (세운) */
 .seun-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
 .seun-table th { color: var(--text-dim); font-weight: 400; padding: 4px; font-size: 0.8em; }
@@ -363,6 +367,23 @@ function getSipsinBranch(dayStemIdx, branchIdx) {
   const branchMainStem = [9,5,0,1,4,2,3,5,6,7,4,8]; // 자=계, 축=기, 인=갑, 묘=을...
   return getSipsin(dayStemIdx, branchMainStem[branchIdx]);
 }
+
+// ---- 지장간 (支藏干, Hidden Stems) ----
+// 각 지지 안에 숨어있는 천간 [여기, (중기), 본기]
+const JIJANGGAN = [
+  [8, 9],       // 子: 임, 계
+  [9, 7, 5],    // 丑: 계, 신, 기
+  [4, 2, 0],    // 寅: 무, 병, 갑
+  [0, 1],       // 卯: 갑, 을
+  [1, 9, 4],    // 辰: 을, 계, 무
+  [4, 6, 2],    // 巳: 무, 경, 병
+  [2, 5, 3],    // 午: 병, 기, 정
+  [3, 1, 5],    // 未: 정, 을, 기
+  [5, 8, 6],    // 申: 기, 임, 경
+  [6, 7],       // 酉: 경, 신
+  [7, 3, 4],    // 戌: 신, 정, 무
+  [4, 0, 8],    // 亥: 무, 갑, 임
+];
 
 // ============================================================
 // 음력 데이터 (1900~2050)
@@ -1084,20 +1105,18 @@ function calculateSaju() {
   pillars.forEach(pi => {
     const stemOh = STEM_OHENG[pi.p.stem];
     const branchOh = BRANCH_OHENG[pi.p.branch];
-    const stemYY = STEM_YINYANG[pi.p.stem] === 0 ? '양' : '음';
-    const branchYY = BRANCH_YINYANG[pi.p.branch] === 0 ? '양' : '음';
+    const jjg = JIJANGGAN[pi.p.branch];
     html += `<div class="pillar">
       <div class="pillar-label">${pi.label}</div>
       <div class="stem" style="color:${OHENG_COLOR[stemOh]}">
         ${CHEONGAN[pi.p.stem]}<br>
         <span class="pillar-hanja">${CHEONGAN_HANJA[pi.p.stem]}</span>
       </div>
-      <div class="element-tag ${OHENG_CLASS[stemOh]}">${stemYY}${OHENG[stemOh]}</div>
       <div class="branch" style="color:${OHENG_COLOR[branchOh]}">
         ${JIJI[pi.p.branch]}<br>
         <span class="pillar-hanja">${JIJI_HANJA[pi.p.branch]}</span>
       </div>
-      <div class="element-tag ${OHENG_CLASS[branchOh]}">${branchYY}${OHENG[branchOh]}</div>
+      <div class="jijanggan">${jjg.map(s => `<span style="color:${OHENG_COLOR[STEM_OHENG[s]]}">${CHEONGAN[s]}</span>`).join('')}</div>
     </div>`;
   });
   html += `</div>`;
@@ -1149,13 +1168,16 @@ function calculateSaju() {
   // 대운
   html += `<div class="info-box"><h3>대운 (大運) - ${daeun.isForward ? '순행 ▶' : '역행 ◀'}</h3>`;
   html += `<div style="font-size:0.85em; color:var(--text-dim); margin-bottom:8px;">대운 시작: ${daeun.startAge}세</div>`;
-  html += `<table class="daeun-table"><tr>`;
+  html += `<table class="daeun-table">`;
+  html += `<tr>`;
   daeun.list.forEach(d => {
     const stemOh = STEM_OHENG[d.stem];
-    html += `<td>
-      <div style="color:${OHENG_COLOR[stemOh]}; font-weight:700;">${CHEONGAN[d.stem]}${JIJI[d.branch]}</div>
-      <div style="font-size:0.7em; color:var(--text-dim);">${CHEONGAN_HANJA[d.stem]}${JIJI_HANJA[d.branch]}</div>
-    </td>`;
+    html += `<td style="border-bottom:none;"><div style="color:${OHENG_COLOR[stemOh]}; font-weight:700;">${CHEONGAN[d.stem]}</div><div style="font-size:0.65em; color:var(--text-dim);">${CHEONGAN_HANJA[d.stem]}</div></td>`;
+  });
+  html += `</tr><tr>`;
+  daeun.list.forEach(d => {
+    const branchOh = BRANCH_OHENG[d.branch];
+    html += `<td><div style="color:${OHENG_COLOR[branchOh]}; font-weight:700;">${JIJI[d.branch]}</div><div style="font-size:0.65em; color:var(--text-dim);">${JIJI_HANJA[d.branch]}</div></td>`;
   });
   html += `</tr><tr class="age-row">`;
   daeun.list.forEach(d => {
@@ -1167,17 +1189,22 @@ function calculateSaju() {
   const currentYear = new Date().getFullYear();
   const seunStartYear = currentYear - 2;
   html += `<div class="info-box"><h3>세운 (歲運) - 연운</h3>`;
-  html += `<table class="seun-table"><tr>`;
+  html += `<table class="seun-table">`;
+  html += `<tr>`;
   for (let sy = seunStartYear; sy < seunStartYear + 10; sy++) {
     const seunIdx = ((sy - 4) % 60 + 60) % 60;
     const seunStem = seunIdx % 10;
-    const seunBranch = seunIdx % 12;
     const stemOh = STEM_OHENG[seunStem];
     const isCurrent = sy === currentYear;
-    html += `<td${isCurrent ? ' class="current-year"' : ''}>
-      <div style="color:${OHENG_COLOR[stemOh]}; font-weight:700;">${CHEONGAN[seunStem]}${JIJI[seunBranch]}</div>
-      <div style="font-size:0.65em; color:var(--text-dim);">${CHEONGAN_HANJA[seunStem]}${JIJI_HANJA[seunBranch]}</div>
-    </td>`;
+    html += `<td${isCurrent ? ' class="current-year"' : ''} style="border-bottom:none;"><div style="color:${OHENG_COLOR[stemOh]}; font-weight:700;">${CHEONGAN[seunStem]}</div><div style="font-size:0.6em; color:var(--text-dim);">${CHEONGAN_HANJA[seunStem]}</div></td>`;
+  }
+  html += `</tr><tr>`;
+  for (let sy = seunStartYear; sy < seunStartYear + 10; sy++) {
+    const seunIdx = ((sy - 4) % 60 + 60) % 60;
+    const seunBranch = seunIdx % 12;
+    const branchOh = BRANCH_OHENG[seunBranch];
+    const isCurrent = sy === currentYear;
+    html += `<td${isCurrent ? ' class="current-year"' : ''}><div style="color:${OHENG_COLOR[branchOh]}; font-weight:700;">${JIJI[seunBranch]}</div><div style="font-size:0.6em; color:var(--text-dim);">${JIJI_HANJA[seunBranch]}</div></td>`;
   }
   html += `</tr><tr>`;
   for (let sy = seunStartYear; sy < seunStartYear + 10; sy++) {
