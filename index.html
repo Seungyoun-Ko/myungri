@@ -148,6 +148,12 @@ body {
 .unseong-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; text-align: center; font-size: 0.85em; }
 .unseong-grid .item { padding: 4px; background: rgba(255,255,255,0.03); border-radius: 4px; }
 
+/* Seun (세운) */
+.seun-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+.seun-table th { color: var(--text-dim); font-weight: 400; padding: 4px; font-size: 0.8em; }
+.seun-table td { text-align: center; padding: 5px 3px; border-bottom: 1px solid #222; }
+.seun-table .current-year { background: rgba(233,69,96,0.15); border-radius: 4px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -602,15 +608,11 @@ function getYearJeolgi(year) {
 // 사주팔자 (四柱八字) 계산
 // ============================================================
 
-// 일주 계산
-// 1900-01-01 = 갑술일(甲戌日) → 천간 0(갑), 지지 10(술) → 60갑자 인덱스: 10
-const BASE_DAY_GAPJA = 10;
-
+// 일주 계산 - Julian Day Number 기반 (브라우저 타임존 무관)
+// 검증: 1986-11-20 = 무진일(戊辰), 2024-02-10 = 갑진일(甲辰)
 function getDayGapjaIndex(y, m, d) {
-  const base = new Date(1900, 0, 1);
-  const target = new Date(y, m - 1, d);
-  const diffDays = Math.floor((target - base) / 86400000);
-  return ((BASE_DAY_GAPJA + diffDays) % 60 + 60) % 60;
+  const jd = getJD(y, m, d);
+  return ((Math.floor(jd) + 50) % 60 + 60) % 60;
 }
 
 function gapjaToStemBranch(index) {
@@ -1159,6 +1161,30 @@ function calculateSaju() {
   daeun.list.forEach(d => {
     html += `<td>${d.age}세<br><span style="font-size:0.9em;">${d.year}</span></td>`;
   });
+  html += `</tr></table></div>`;
+
+  // 세운 (歲運)
+  const currentYear = new Date().getFullYear();
+  const seunStartYear = currentYear - 2;
+  html += `<div class="info-box"><h3>세운 (歲運) - 연운</h3>`;
+  html += `<table class="seun-table"><tr>`;
+  for (let sy = seunStartYear; sy < seunStartYear + 10; sy++) {
+    const seunIdx = ((sy - 4) % 60 + 60) % 60;
+    const seunStem = seunIdx % 10;
+    const seunBranch = seunIdx % 12;
+    const stemOh = STEM_OHENG[seunStem];
+    const isCurrent = sy === currentYear;
+    html += `<td${isCurrent ? ' class="current-year"' : ''}>
+      <div style="color:${OHENG_COLOR[stemOh]}; font-weight:700;">${CHEONGAN[seunStem]}${JIJI[seunBranch]}</div>
+      <div style="font-size:0.65em; color:var(--text-dim);">${CHEONGAN_HANJA[seunStem]}${JIJI_HANJA[seunBranch]}</div>
+    </td>`;
+  }
+  html += `</tr><tr>`;
+  for (let sy = seunStartYear; sy < seunStartYear + 10; sy++) {
+    const age = sy - year + 1;
+    const isCurrent = sy === currentYear;
+    html += `<td${isCurrent ? ' class="current-year"' : ''} style="font-size:0.8em; color:var(--text-dim);">${sy}<br>${age > 0 ? age + '세' : ''}</td>`;
+  }
   html += `</tr></table></div>`;
 
   // 육십갑자 일람
