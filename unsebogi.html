@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>운세보기 - 사주 분석</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
+  --accent: #e94560; --gold: #f0c040; --text: #eee; --text-dim: #999;
+  --wood: #4caf50; --fire: #f44336; --earth: #ff9800; --metal: #e0e0e0; --water: #2196f3;
+}
+body {
+  font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text);
+  min-height: 100vh; -webkit-user-select: none; user-select: none;
+}
+.header { background: linear-gradient(135deg, var(--surface), var(--surface2)); padding: 20px; text-align: center; border-bottom: 2px solid var(--accent); }
+.header h1 { font-size: 1.8em; font-weight: 900; color: var(--gold); }
+.header h1 span { font-size: 0.5em; color: var(--text-dim); display: block; margin-top: 4px; font-weight: 300; }
+.back-btn { position: absolute; left: 20px; top: 24px; background: none; border: 1px solid #555; color: var(--text); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9em; text-decoration: none; }
+.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+/* 사주 요약 바 */
+.saju-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 24px; }
+.saju-bar .col { background: var(--surface); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid #333; }
+.saju-bar .col-label { font-size: 0.7em; color: var(--text-dim); }
+.saju-bar .col-stem { font-size: 1.4em; font-weight: 900; }
+.saju-bar .col-branch { font-size: 1.4em; font-weight: 900; }
+
+/* 운세 카드 */
+.fortune-card {
+  background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  border: 1px solid #333; position: relative; overflow: hidden;
+}
+.fortune-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+}
+.fortune-card.personality::before { background: var(--gold); }
+.fortune-card.career::before { background: var(--water); }
+.fortune-card.wealth::before { background: var(--earth); }
+.fortune-card.love::before { background: var(--fire); }
+.fortune-card.health::before { background: var(--wood); }
+.fortune-card.yearly::before { background: var(--accent); }
+.fortune-card.monthly::before { background: var(--metal); }
+.fortune-card.advice::before { background: linear-gradient(var(--gold), var(--accent)); }
+
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.card-icon { font-size: 1.5em; }
+.card-title { font-size: 1.1em; font-weight: 700; color: var(--gold); }
+.card-subtitle { font-size: 0.8em; color: var(--text-dim); }
+.card-body { font-size: 0.92em; line-height: 1.7; color: #ddd; }
+.card-body p { margin-bottom: 8px; }
+.card-body .highlight { color: var(--gold); font-weight: 700; }
+.card-body .warn { color: var(--accent); }
+
+/* 점수 바 */
+.score-bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.score-bar .label { font-size: 0.85em; min-width: 50px; }
+.score-bar .bar { flex: 1; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+.score-bar .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+.score-bar .val { font-size: 0.85em; min-width: 35px; text-align: right; }
+
+/* 오행 관계 */
+.oheng-rel { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+.oheng-chip { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 500; }
+
+.footer { text-align: center; padding: 20px; font-size: 0.75em; color: var(--text-dim); }
+
+/* 구분선 */
+.divider { border: none; border-top: 1px solid #333; margin: 24px 0; }
+
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  .fortune-card { padding: 14px; }
+}
+</style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" oncopy="return false;" oncut="return false;">
+
+<div class="header" style="position:relative;">
+  <a class="back-btn" href="index.html">◀ 만세력</a>
+  <h1>운세 분석<span>사주팔자 기반 종합 운세</span></h1>
+</div>
+
+<div class="container" id="content">
+  <div style="text-align:center; padding:60px 20px; color:var(--text-dim);">
+    <p>만세력에서 사주 보기 후 운세보기를 클릭해주세요.</p>
+  </div>
+</div>
+
+<div class="footer">운세 분석 &copy; 2026 | 사주팔자 기반 참고용 운세 (오락 목적)</div>
+
+<script>
+// ---- 기본 데이터 (만세력과 동일) ----
+const CHEONGAN = ['갑','을','병','정','무','기','경','신','임','계'];
+const CHEONGAN_HANJA = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const JIJI = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const JIJI_HANJA = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const OHENG = ['목','화','토','금','수'];
+const OHENG_HANJA = ['木','火','土','金','水'];
+const OHENG_COLOR = ['#4caf50','#f44336','#ff9800','#e0e0e0','#2196f3'];
+const STEM_OHENG = [0,0,1,1,2,2,3,3,4,4];
+const BRANCH_OHENG = [4,2,0,0,2,1,1,2,3,3,2,4];
+const STEM_YINYANG = [0,1,0,1,0,1,0,1,0,1];
+const SIPSIN_NAME = ['비견','겁재','식신','상관','편재','정재','편관','정관','편인','정인'];
+
+function getSipsin(dayStemIdx, targetStemIdx) {
+  const relation = ((STEM_OHENG[targetStemIdx] - STEM_OHENG[dayStemIdx] + 5) % 5);
+  const sameYY = (STEM_YINYANG[dayStemIdx] === STEM_YINYANG[targetStemIdx]) ? 0 : 1;
+  return SIPSIN_NAME[relation * 2 + sameYY];
+}
+
+// ---- URL 파라미터 파싱 ----
+const params = new URLSearchParams(window.location.search);
+const ys = parseInt(params.get('ys')); // year stem
+const yb = parseInt(params.get('yb')); // year branch
+const ms = parseInt(params.get('ms')); // month stem
+const mb = parseInt(params.get('mb'));
+const ds = parseInt(params.get('ds')); // day stem
+const db = parseInt(params.get('db'));
+const hs = parseInt(params.get('hs')); // hour stem
+const hb = parseInt(params.get('hb'));
+const gender = params.get('g') || 'M';
+const birthYear = parseInt(params.get('y')) || 0;
+const birthMonth = parseInt(params.get('m')) || 0;
+const birthDay = parseInt(params.get('d')) || 0;
+
+if (isNaN(ds)) {
+  // 데이터 없음
+} else {
+  renderFortune();
+}
+
+function renderFortune() {
+  const dayStem = ds;
+
+  // 오행 카운트
+  const oheng = [0,0,0,0,0];
+  [ys,ms,ds,hs].forEach(s => oheng[STEM_OHENG[s]]++);
+  [yb,mb,db,hb].forEach(b => oheng[BRANCH_OHENG[b]]++);
+  const total = oheng.reduce((a,b)=>a+b,0);
+
+  // 십신 분석
+  const sipsinYear = getSipsin(dayStem, ys);
+  const sipsinMonth = getSipsin(dayStem, ms);
+  const sipsinHour = getSipsin(dayStem, hs);
+
+  // 올해 세운 분석
+  const currentYear = new Date().getFullYear();
+  const seunIdx = ((currentYear - 4) % 60 + 60) % 60;
+  const seunStem = seunIdx % 10;
+  const seunBranch = seunIdx % 12;
+  const seunSipsin = getSipsin(dayStem, seunStem);
+
+  // 일간 오행
+  const dayOheng = STEM_OHENG[dayStem];
+  const dayYY = STEM_YINYANG[dayStem] === 0 ? '양' : '음';
+
+  // 신강/신약 판단 (간략)
+  const selfCount = oheng[dayOheng]; // 비겁 (같은 오행)
+  const inCount = oheng[(dayOheng + 4) % 5]; // 인성 (나를 생하는 오행)
+  const strength = selfCount + inCount;
+  const isStrong = strength >= 4;
+
+  // 용신 추정 (간략)
+  const yongshin = isStrong
+    ? [(dayOheng + 1) % 5, (dayOheng + 2) % 5] // 식상, 재성
+    : [(dayOheng + 4) % 5, dayOheng]; // 인성, 비겁
+
+  // ---- 성격 분석 데이터 ----
+  const personalityData = [
+    { // 갑 - 큰 나무
+      core: '리더십이 강하고 정의감이 넘칩니다. 큰 뜻을 품고 꿋꿋이 나아가는 성격으로, 한번 결심하면 좀처럼 꺾이지 않습니다.',
+      strength: '추진력, 결단력, 책임감, 정직함',
+      weakness: '고집이 세고 융통성이 부족할 수 있습니다. 타인의 의견을 경청하는 노력이 필요합니다.',
+    },
+    { // 을 - 풀/꽃
+      core: '유연하고 적응력이 뛰어납니다. 부드러운 카리스마로 사람들의 마음을 얻으며, 예술적 감성이 풍부합니다.',
+      strength: '적응력, 인내력, 섬세함, 예술성',
+      weakness: '우유부단하거나 의존적일 수 있습니다. 자신만의 확고한 기준을 세우는 것이 중요합니다.',
+    },
+    { // 병 - 태양
+      core: '밝고 열정적이며 활발합니다. 주변을 환하게 비추는 태양 같은 존재로, 사교성이 뛰어나고 긍정적입니다.',
+      strength: '열정, 사교성, 낙천성, 표현력',
+      weakness: '성급하거나 주의가 산만할 수 있습니다. 꾸준함과 인내심을 기르면 큰 성취를 이룹니다.',
+    },
+    { // 정 - 촛불
+      core: '섬세하고 따뜻한 내면을 가지고 있습니다. 깊은 통찰력으로 상황을 꿰뚫어 보며, 집중력이 대단합니다.',
+      strength: '통찰력, 집중력, 따뜻함, 섬세함',
+      weakness: '내향적이고 감정 기복이 있을 수 있습니다. 자신감을 가지고 적극적으로 표현하는 것이 좋습니다.',
+    },
+    { // 무 - 큰 산
+      core: '듬직하고 안정적이며 포용력이 넓습니다. 믿음직스럽고 한결같은 성품으로 주변의 신뢰를 받습니다.',
+      strength: '안정감, 포용력, 신뢰성, 중후함',
+      weakness: '변화를 꺼리고 보수적일 수 있습니다. 새로운 시도에 열린 마음을 가지면 더 큰 발전이 있습니다.',
+    },
+    { // 기 - 논밭
+      core: '겸손하고 실용적이며 세심합니다. 만물을 품고 기르는 대지처럼 주변을 보살피는 따뜻한 성격입니다.',
+      strength: '배려심, 실용성, 겸손, 꼼꼼함',
+      weakness: '걱정이 많고 소심해질 수 있습니다. 자신을 먼저 돌보고 과감한 결정을 내리는 연습이 필요합니다.',
+    },
+    { // 경 - 강철
+      core: '강인하고 의리가 있으며 결단력이 탁월합니다. 정의로운 성품으로 불의를 참지 못하며 실행력이 강합니다.',
+      strength: '의리, 결단력, 실행력, 정의감',
+      weakness: '날카롭고 직설적이어서 갈등을 빚을 수 있습니다. 부드러운 소통 방식을 익히면 관계가 좋아집니다.',
+    },
+    { // 신 - 보석
+      core: '섬세하고 완벽을 추구하며 예리한 감각을 가졌습니다. 심미안이 뛰어나고 분석력이 탁월합니다.',
+      strength: '심미안, 분석력, 완벽추구, 품격',
+      weakness: '예민하고 까다로울 수 있습니다. 완벽주의를 내려놓고 여유를 가지면 정신적 평화를 얻습니다.',
+    },
+    { // 임 - 큰 바다
+      core: '지혜롭고 포용력이 넓으며 자유로운 영혼입니다. 넓은 시야와 창의력으로 큰 그림을 그리는 사람입니다.',
+      strength: '지혜, 창의력, 포용력, 자유로움',
+      weakness: '방향을 잃기 쉽고 집중력이 흐려질 수 있습니다. 목표를 구체화하고 실천하는 것이 중요합니다.',
+    },
+    { // 계 - 이슬/비
+      core: '지적이고 감성적이며 직관력이 뛰어납니다. 조용하지만 깊은 내면의 힘을 가지고 있습니다.',
+      strength: '직관력, 지성, 감성, 끈기',
+      weakness: '내면에 불안을 품기 쉽고 의심이 많을 수 있습니다. 긍정적 마인드와 신뢰를 키우는 것이 좋습니다.',
+    }
+  ];
+
+  // ---- 직업운 데이터 ----
+  const careerByOheng = [
+    '교육, 문학, 출판, 패션, 디자인, 건축, 인테리어, 환경 분야', // 목
+    '방송, 연예, 요식업, IT, 전자, 에너지, 광고, 홍보 분야', // 화
+    '부동산, 건설, 농업, 유통, 중개, 금융, 공무원 분야', // 토
+    '금융, 법률, 기계, 자동차, 의료기기, 보석, IT하드웨어 분야', // 금
+    '무역, 해운, 수산, 관광, 유통, 서비스, 컨설팅, 연구 분야' // 수
+  ];
+
+  // ---- 올해 운세 데이터 (십신 기반) ----
+  const yearlyFortuneBySipsin = {
+    '비견': { summary: '경쟁과 자립의 해', detail: '올해는 자신의 역량을 시험받는 해입니다. 경쟁이 치열하지만 그만큼 성장의 기회도 큽니다. 동료나 형제와의 협력이 중요하며, 독립적인 프로젝트에서 두각을 나타낼 수 있습니다. 다만 고집을 부리면 마찰이 생기니 유연하게 대처하세요.', score: 65 },
+    '겁재': { summary: '도전과 변화의 해', detail: '예상치 못한 변화와 경쟁 상황이 올 수 있습니다. 재물의 출입이 잦으니 투자나 큰 지출에 신중해야 합니다. 하지만 위기 속에서 새로운 기회를 발견할 수 있으며, 과감한 결단이 전화위복이 될 수 있습니다.', score: 55 },
+    '식신': { summary: '안정과 풍요의 해', detail: '올해는 의식주가 풍족하고 마음이 편안한 해입니다. 창의적인 활동에서 좋은 결과를 얻으며, 건강도 양호합니다. 새로운 취미나 학습을 시작하기 좋은 시기이며, 대인관계도 원만합니다. 여유를 즐기세요.', score: 80 },
+    '상관': { summary: '표현과 변혁의 해', detail: '자기표현 욕구가 강해지는 해입니다. 창의적 분야에서 빛을 발할 수 있지만, 말실수나 돌발 행동을 조심해야 합니다. 기존 틀을 깨는 시도가 성공할 수 있으나, 기본을 지키는 것이 중요합니다. 대인관계에서 솔직함이 오해를 부를 수 있으니 표현에 신중하세요.', score: 60 },
+    '편재': { summary: '재물과 활동의 해', detail: '활동적이고 재물 운이 따르는 해입니다. 새로운 사업이나 투자에서 성과를 기대할 수 있으며, 넓은 인맥이 도움이 됩니다. 다만 과욕을 부리면 손실이 올 수 있으니 적정선을 지키세요. 이성운도 활발합니다.', score: 75 },
+    '정재': { summary: '안정적 수입의 해', detail: '꾸준하고 안정적인 재물운이 따릅니다. 성실한 노력이 정당한 보상으로 돌아오며, 저축과 재테크에 좋은 해입니다. 가정도 화목하고 안정적입니다. 무리한 투기보다 꾸준한 적립이 좋습니다.', score: 78 },
+    '편관': { summary: '도전과 극복의 해', detail: '압박과 시련이 있지만 이를 극복하면 큰 성장이 따릅니다. 직장에서 책임이 무거워지거나 예상치 못한 변수가 생길 수 있습니다. 건강 관리에 유의하고, 법적 문제나 규정 위반에 주의하세요. 위기를 기회로 만드는 지혜가 필요합니다.', score: 50 },
+    '정관': { summary: '승진과 명예의 해', detail: '사회적 인정과 명예가 높아지는 해입니다. 승진, 합격, 자격 취득 등 공적인 성과가 기대됩니다. 질서와 원칙을 지키면 좋은 결과를 얻습니다. 윗사람의 도움이 있으며, 책임감 있는 행동이 신뢰를 높입니다.', score: 82 },
+    '편인': { summary: '학문과 변화의 해', detail: '새로운 학문이나 기술을 익히기 좋은 해입니다. 직관력이 날카로워지고 영적인 성장도 기대할 수 있습니다. 다만 현실과 동떨어진 생각에 빠지기 쉬우니 실용적인 판단을 유지하세요. 어머니나 여성 어른과의 인연이 깊어집니다.', score: 65 },
+    '정인': { summary: '배움과 보호의 해', detail: '학업과 자기계발에 최적의 해입니다. 주변의 도움과 보호를 받으며 안정적으로 성장합니다. 자격증 시험, 진학, 연구 등에서 좋은 결과를 기대할 수 있습니다. 건강도 양호하며 정신적으로 풍요로운 한 해가 됩니다.', score: 85 }
+  };
+
+  // ---- 월운 (이번 달) ----
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  // 이번 달 절기 기준 월지 (간략 계산)
+  const monthBranches = [1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 0, 0, 1];
+  // 양력 월 → 대략적 월지 (절기 중간 기준)
+  const approxMonthBranch = ((currentMonth + 1) % 12 + 12) % 12;
+  // 올해 년간 기준 월간 계산
+  const yearStemForMonth = seunStem;
+  const monthStemStart = [2,4,6,8,0];
+  const curMonthStem = (monthStemStart[yearStemForMonth % 5] + ((approxMonthBranch - 2 + 12) % 12)) % 10;
+  const monthSipsin = getSipsin(dayStem, curMonthStem);
+
+  // ---- 건강운 (오행 기반) ----
+  const healthByOheng = [
+    { organ: '간, 담, 눈, 근육, 손발톱', risk: '간 기능 저하, 근육 경련, 시력 문제', tip: '녹색 채소를 충분히 섭취하고 규칙적인 스트레칭을 하세요.' },
+    { organ: '심장, 소장, 혈관, 혀', risk: '혈압 문제, 심장 질환, 불면증', tip: '과도한 스트레스를 피하고 충분한 수면을 취하세요.' },
+    { organ: '비위(소화기), 입술, 피부', risk: '소화 장애, 비만, 피부 트러블', tip: '규칙적인 식사와 과식을 삼가고 가벼운 산책을 하세요.' },
+    { organ: '폐, 대장, 코, 피부', risk: '호흡기 질환, 피부 건조, 대장 문제', tip: '충분한 수분 섭취와 깨끗한 공기 환경을 유지하세요.' },
+    { organ: '신장, 방광, 뼈, 귀', risk: '신장 기능, 허리 통증, 청력 문제', tip: '짠 음식을 줄이고 허리 건강에 유의하세요.' }
+  ];
+
+  // 가장 부족한 오행
+  const minOheng = oheng.indexOf(Math.min(...oheng));
+  // 가장 과다한 오행
+  const maxOheng = oheng.indexOf(Math.max(...oheng));
+
+  // ---- 연애/결혼운 ----
+  const loveByDayStem = [
+    '강한 리더십 때문에 연인에게 다소 권위적으로 보일 수 있습니다. 상대를 존중하며 부드럽게 다가가면 깊은 관계를 맺습니다. 의리 있고 헌신적인 파트너입니다.',
+    '다정하고 헌신적인 연인입니다. 상대에게 잘 맞추지만 자신의 감정도 표현하는 것이 중요합니다. 예술적이고 감성적인 교류를 좋아합니다.',
+    '열정적이고 적극적인 사랑을 합니다. 밝고 매력적이어서 인기가 많지만, 한 사람에게 집중하는 것이 관계의 안정을 가져옵니다.',
+    '섬세하고 깊은 감정을 가진 연인입니다. 은은한 매력으로 상대를 끌어당기며, 정신적 교감을 중시합니다. 질투심을 잘 다스리는 것이 포인트입니다.',
+    '듬직하고 안정적인 파트너입니다. 변함없는 사랑을 주지만 표현이 서툴 수 있습니다. 감정 표현을 적극적으로 하면 관계가 더 깊어집니다.',
+    '따뜻하고 세심한 배려로 상대를 감동시킵니다. 가정적이며 안정된 관계를 추구합니다. 다만 지나친 걱정이나 간섭은 줄이는 것이 좋습니다.',
+    '의리 있고 직선적인 사랑을 합니다. 솔직한 표현이 장점이지만 날카로운 말에 주의가 필요합니다. 상대의 부드러운 면을 인정하고 수용하세요.',
+    '품격 있고 세련된 연애를 합니다. 이상이 높아 상대를 고르는 눈이 까다롭지만, 인연을 만나면 깊이 헌신합니다. 완벽주의를 내려놓으세요.',
+    '자유롭고 포용력 있는 사랑을 합니다. 넓은 마음으로 상대를 감싸지만, 방향성 없이 흘러갈 수 있습니다. 진지한 약속과 일관성이 중요합니다.',
+    '지적이고 감성적인 교류를 즐깁니다. 속마음을 잘 드러내지 않아 오해를 받을 수 있으니 솔직한 소통이 필요합니다. 깊은 정을 나누는 관계가 어울립니다.'
+  ];
+
+  // ---- 렌더링 ----
+  const pers = personalityData[dayStem];
+  const yearFortune = yearlyFortuneBySipsin[seunSipsin] || yearlyFortuneBySipsin['비견'];
+  const healthWeak = healthByOheng[minOheng];
+  const healthStrong = healthByOheng[maxOheng];
+
+  let html = '';
+
+  // 사주 요약 바
+  html += `<div class="saju-bar">`;
+  [{l:'시주',s:hs,b:hb},{l:'일주',s:ds,b:db},{l:'월주',s:ms,b:mb},{l:'년주',s:ys,b:yb}].forEach(p => {
+    html += `<div class="col">
+      <div class="col-label">${p.l}</div>
+      <div class="col-stem" style="color:${OHENG_COLOR[STEM_OHENG[p.s]]}">${CHEONGAN[p.s]} <small style="color:var(--text-dim)">${CHEONGAN_HANJA[p.s]}</small></div>
+      <div class="col-branch" style="color:${OHENG_COLOR[BRANCH_OHENG[p.b]]}">${JIJI[p.b]} <small style="color:var(--text-dim)">${JIJI_HANJA[p.b]}</small></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // 기본 정보
+  html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; color:var(--text-dim);">`;
+  html += `${birthYear}년 ${birthMonth}월 ${birthDay}일생 · ${gender === 'M' ? '남성' : '여성'} · `;
+  html += `일간 <span style="color:${OHENG_COLOR[dayOheng]}; font-weight:700;">${CHEONGAN[dayStem]}(${CHEONGAN_HANJA[dayStem]})</span> · `;
+  html += `${isStrong ? '<span class="highlight">신강(身強)</span>' : '<span style="color:var(--accent);">신약(身弱)</span>'}`;
+  html += `</div>`;
+
+  // 1. 성격/기질
+  html += `<div class="fortune-card personality">
+    <div class="card-header"><span class="card-icon">🧠</span><div><div class="card-title">성격과 기질</div><div class="card-subtitle">일간 ${CHEONGAN[dayStem]}(${CHEONGAN_HANJA[dayStem]}) ${dayYY}${OHENG[dayOheng]} 기반</div></div></div>
+    <div class="card-body">
+      <p>${pers.core}</p>
+      <p><span class="highlight">장점:</span> ${pers.strength}</p>
+      <p><span class="warn">주의점:</span> ${pers.weakness}</p>
+    </div>
+  </div>`;
+
+  // 2. 직업/적성운
+  const yongshinOheng = OHENG[yongshin[0]];
+  html += `<div class="fortune-card career">
+    <div class="card-header"><span class="card-icon">💼</span><div><div class="card-title">직업과 적성</div><div class="card-subtitle">용신: ${OHENG_HANJA[yongshin[0]]} ${OHENG[yongshin[0]]}</div></div></div>
+    <div class="card-body">
+      <p>일간의 오행과 사주 구성을 고려할 때, <span class="highlight">${careerByOheng[dayOheng]}</span>에 적성이 있습니다.</p>
+      <p>용신(用神)인 <span class="highlight">${OHENG[yongshin[0]]}(${OHENG_HANJA[yongshin[0]]})</span> 기운을 활용하면 <span class="highlight">${careerByOheng[yongshin[0]]}</span>에서도 좋은 성과를 기대할 수 있습니다.</p>
+      <p>${isStrong ? '신강한 사주이므로 독립적으로 사업을 운영하거나 리더 역할이 어울립니다.' : '신약한 사주이므로 안정적인 조직에서 전문성을 쌓는 것이 유리합니다.'}</p>
+    </div>
+  </div>`;
+
+  // 3. 재물운
+  const jaeStar = oheng[(dayOheng + 2) % 5]; // 재성 오행 개수
+  html += `<div class="fortune-card wealth">
+    <div class="card-header"><span class="card-icon">💰</span><div><div class="card-title">재물운</div><div class="card-subtitle">재성(財星) 분석</div></div></div>
+    <div class="card-body">
+      ${jaeStar >= 2
+        ? '<p>사주에 <span class="highlight">재성이 충분하여</span> 재물 복이 있는 편입니다. 꾸준한 수입이 따르며, 자산 관리를 잘하면 안정적인 부를 쌓을 수 있습니다.</p>'
+        : jaeStar === 1
+          ? '<p>재성이 적당하여 <span class="highlight">노력한 만큼 보상</span>을 받는 구조입니다. 무리한 투기보다 성실한 저축과 안정적 투자가 유리합니다.</p>'
+          : '<p>재성이 부족하여 <span class="warn">재물에 대한 욕심보다 기술이나 전문성</span>으로 승부하는 것이 좋습니다. 별도의 재테크 공부가 도움이 됩니다.</p>'
+      }
+      <p>${isStrong ? '신강하여 재물을 다루는 힘이 있으므로, 적극적인 재테크 활동이 가능합니다.' : '신약하여 큰 돈을 무리하게 굴리기보다 안전한 자산 위주로 관리하는 것이 좋습니다.'}</p>
+    </div>
+  </div>`;
+
+  // 4. 연애/결혼운
+  html += `<div class="fortune-card love">
+    <div class="card-header"><span class="card-icon">❤️</span><div><div class="card-title">연애와 결혼</div><div class="card-subtitle">일간 기반 애정 분석</div></div></div>
+    <div class="card-body">
+      <p>${loveByDayStem[dayStem]}</p>
+      <p>궁합이 좋은 일간: <span class="highlight">${CHEONGAN[(dayStem + 5) % 10]}(${CHEONGAN_HANJA[(dayStem + 5) % 10]})</span> - 천간합(天干合)의 인연으로 서로를 완성시키는 관계입니다.</p>
+    </div>
+  </div>`;
+
+  // 5. 건강운
+  html += `<div class="fortune-card health">
+    <div class="card-header"><span class="card-icon">🏥</span><div><div class="card-title">건강운</div><div class="card-subtitle">오행 균형 기반</div></div></div>
+    <div class="card-body">
+      <p><span class="warn">취약 장기 (${OHENG[minOheng]} 부족):</span> ${healthWeak.organ}</p>
+      <p>주의 질환: ${healthWeak.risk}</p>
+      <p><span class="highlight">건강 조언:</span> ${healthWeak.tip}</p>`;
+  html += `<div style="margin-top:10px;">`;
+  for (let i = 0; i < 5; i++) {
+    const pct = total > 0 ? Math.round(oheng[i] / total * 100) : 0;
+    html += `<div class="score-bar">
+      <span class="label" style="color:${OHENG_COLOR[i]}">${OHENG[i]}(${OHENG_HANJA[i]})</span>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%; background:${OHENG_COLOR[i]}"></div></div>
+      <span class="val">${oheng[i]}개</span>
+    </div>`;
+  }
+  html += `</div></div></div>`;
+
+  // 6. 올해의 운세
+  html += `<div class="fortune-card yearly">
+    <div class="card-header"><span class="card-icon">📅</span><div><div class="card-title">${currentYear}년 운세</div><div class="card-subtitle">${CHEONGAN[seunStem]}${JIJI[seunBranch]}(${CHEONGAN_HANJA[seunStem]}${JIJI_HANJA[seunBranch]})년 · 십신: ${seunSipsin}</div></div></div>
+    <div class="card-body">
+      <p style="font-size:1.05em; font-weight:700; margin-bottom:8px;">${yearFortune.summary}</p>
+      <p>${yearFortune.detail}</p>
+      <div class="score-bar" style="margin-top:12px;">
+        <span class="label">총운</span>
+        <div class="bar"><div class="bar-fill" style="width:${yearFortune.score}%; background:${yearFortune.score >= 70 ? 'var(--gold)' : yearFortune.score >= 50 ? 'var(--earth)' : 'var(--accent)'}"></div></div>
+        <span class="val" style="color:var(--gold); font-weight:700;">${yearFortune.score}점</span>
+      </div>
+    </div>
+  </div>`;
+
+  // 7. 이달의 운세
+  html += `<div class="fortune-card monthly">
+    <div class="card-header"><span class="card-icon">🗓️</span><div><div class="card-title">${currentMonth}월 운세</div><div class="card-subtitle">월간 ${CHEONGAN[curMonthStem]}(${CHEONGAN_HANJA[curMonthStem]}) · 십신: ${monthSipsin}</div></div></div>
+    <div class="card-body">
+      <p>${getMonthlyFortune(monthSipsin)}</p>
+    </div>
+  </div>`;
+
+  // 8. 종합 조언
+  html += `<div class="fortune-card advice">
+    <div class="card-header"><span class="card-icon">💡</span><div><div class="card-title">종합 조언</div><div class="card-subtitle">용신과 오행 균형 기반</div></div></div>
+    <div class="card-body">
+      <p><span class="highlight">용신(用神):</span> ${OHENG[yongshin[0]]}(${OHENG_HANJA[yongshin[0]]}) - ${getYongshinAdvice(yongshin[0])}</p>
+      <p><span class="highlight">행운의 색:</span> <span style="color:${OHENG_COLOR[yongshin[0]]}">${getLuckyColor(yongshin[0])}</span></p>
+      <p><span class="highlight">행운의 숫자:</span> ${getLuckyNumber(yongshin[0])}</p>
+      <p><span class="highlight">행운의 방위:</span> ${getLuckyDirection(yongshin[0])}</p>
+      <p style="margin-top:12px; padding:10px; background:rgba(240,192,64,0.1); border-radius:6px; font-size:0.85em;">
+        ※ 이 운세는 사주팔자의 기본 구성을 바탕으로 한 참고용 분석입니다. 실제 운세는 개인의 노력과 선택에 따라 달라질 수 있습니다.
+      </p>
+    </div>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function getMonthlyFortune(sipsin) {
+  const data = {
+    '비견': '이달은 경쟁 상황에서 자신의 실력이 드러나는 시기입니다. 협업보다 독자적 판단이 빛을 발하며, 자기 관리에 집중하면 좋은 결과를 얻습니다.',
+    '겁재': '예상치 못한 지출이나 변동이 있을 수 있습니다. 충동적 결정을 피하고, 중요한 계약은 신중하게 검토하세요.',
+    '식신': '평온하고 즐거운 달입니다. 맛있는 음식, 좋은 사람들과의 만남이 기분을 좋게 합니다. 창의적 영감이 넘치는 시기입니다.',
+    '상관': '자기표현 욕구가 강해지는 달입니다. 기발한 아이디어가 떠오르지만, 말과 행동에 신중함이 필요합니다. 윗사람과의 관계에 주의하세요.',
+    '편재': '활동적이고 재물 기회가 있는 달입니다. 새로운 인연이나 사업 기회가 찾아올 수 있습니다. 적극적으로 움직이세요.',
+    '정재': '안정적인 수입과 지출이 이루어지는 달입니다. 저축에 좋으며, 가정에서 따뜻한 시간을 보냅니다.',
+    '편관': '업무 압박이 있거나 예상치 못한 책임이 주어질 수 있습니다. 건강 관리에 유의하고, 무리하지 마세요.',
+    '정관': '사회적 인정을 받는 달입니다. 규칙적인 생활과 원칙을 지키면 좋은 평가를 받습니다.',
+    '편인': '직관력이 높아지고 학습에 좋은 달입니다. 새로운 분야에 관심이 생기며, 영감이 넘칩니다.',
+    '정인': '학업이나 자격 시험에 유리한 달입니다. 어른의 도움을 받을 수 있으며, 정신적으로 안정됩니다.'
+  };
+  return data[sipsin] || data['비견'];
+}
+
+function getYongshinAdvice(ohengIdx) {
+  return [
+    '목(木) 기운을 보충하세요. 나무, 식물을 가까이하고 푸른 자연 속에서 에너지를 충전하세요.',
+    '화(火) 기운을 보충하세요. 밝은 조명, 따뜻한 환경, 열정적인 활동이 운을 돕습니다.',
+    '토(土) 기운을 보충하세요. 안정적인 환경, 규칙적인 생활, 대지와 가까운 활동이 좋습니다.',
+    '금(金) 기운을 보충하세요. 정돈된 환경, 금속 액세서리, 원칙적인 생활이 도움됩니다.',
+    '수(水) 기운을 보충하세요. 물 가까이 지내고, 지적 활동과 유연한 사고가 운을 높입니다.'
+  ][ohengIdx];
+}
+
+function getLuckyColor(ohengIdx) {
+  return ['청색, 녹색 계열', '적색, 주황색 계열', '황색, 갈색 계열', '백색, 금색 계열', '흑색, 남색 계열'][ohengIdx];
+}
+
+function getLuckyNumber(ohengIdx) {
+  return ['3, 8', '2, 7', '5, 10', '4, 9', '1, 6'][ohengIdx];
+}
+
+function getLuckyDirection(ohengIdx) {
+  return ['동쪽', '남쪽', '중앙', '서쪽', '북쪽'][ohengIdx];
+}
+</script>
+</body>
+</html>

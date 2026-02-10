@@ -1233,7 +1233,37 @@ function calculateSaju() {
   html += `<div style="margin-top:8px; font-size:0.85em; color:var(--text-dim);">${getDayGanDescription(dayPillar.stem)}</div>`;
   html += `</div></div>`;
 
+  // 운세보기 버튼
+  html += `<div style="text-align:center; margin-top:16px;">
+    <button class="btn btn-primary" style="font-size:1.1em; padding:14px 40px;" onclick="goToFortune()">운세 보기 →</button>
+  </div>`;
+
   panel.innerHTML = html;
+}
+
+function goToFortune() {
+  const year = parseInt(document.getElementById('inputYear').value);
+  const month = parseInt(document.getElementById('inputMonth').value);
+  const day = parseInt(document.getElementById('inputDay').value);
+  const hour = parseInt(document.getElementById('inputHour').value);
+  const minute = parseInt(document.getElementById('inputMin').value);
+  const gender = document.querySelector('input[name="gender"]:checked').value;
+
+  const terms = getYearJeolgi(year);
+  const yp = getYearPillar(year, month, day, terms);
+  const mp = getMonthPillar(year, month, day, yp.stem, terms);
+  const di = getDayGapjaIndex(year, month, day);
+  const dp = { gapja: di, ...gapjaToStemBranch(di) };
+  const hp = getHourPillar(hour, minute, dp.stem);
+
+  const params = new URLSearchParams({
+    ys: yp.stem, yb: yp.branch,
+    ms: mp.stem, mb: mp.branch,
+    ds: dp.stem, db: dp.branch,
+    hs: hp.stem, hb: hp.branch,
+    g: gender, y: year, m: month, d: day
+  });
+  window.location.href = 'unsebogi.html?' + params.toString();
 }
 
 // 일간 간단 해석
