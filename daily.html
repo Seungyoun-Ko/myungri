@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의 운세 - 일일 사주 운세</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a2e;--surface:#16213e;--surface2:#0f3460;--accent:#e94560;--gold:#f0c040;--text:#eee;--text-dim:#999;--wood:#4caf50;--fire:#f44336;--earth:#ff9800;--metal:#e0e0e0;--water:#2196f3}
+body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-user-select:none;user-select:none}
+.header{background:linear-gradient(135deg,var(--surface),var(--surface2));padding:20px;text-align:center;border-bottom:2px solid var(--accent)}
+.header h1{font-size:1.8em;font-weight:900;color:var(--gold)}
+.header h1 span{font-size:0.5em;color:var(--text-dim);display:block;margin-top:4px;font-weight:300}
+.nav{display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333}
+.nav a{color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333;transition:all .2s}
+.nav a:hover,.nav a.active{color:var(--gold);border-color:var(--gold)}
+.container{max-width:900px;margin:0 auto;padding:20px}
+
+/* 오늘 날짜 표시 */
+.today-banner{background:linear-gradient(135deg,var(--surface2),var(--surface));border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;border:1px solid #333;position:relative;overflow:hidden}
+.today-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--accent),var(--gold))}
+.today-date{font-size:1.4em;font-weight:700;color:var(--gold);margin-bottom:4px}
+.today-lunar{font-size:0.85em;color:var(--text-dim);margin-bottom:12px}
+.today-pillars{display:flex;justify-content:center;gap:16px}
+.today-pillar{text-align:center}
+.today-pillar .label{font-size:0.7em;color:var(--text-dim);margin-bottom:4px}
+.today-pillar .stem{font-size:1.5em;font-weight:900}
+.today-pillar .branch{font-size:1.5em;font-weight:900}
+.today-pillar .hanja{font-size:0.6em;color:var(--text-dim)}
+
+/* 입력 */
+.input-box{background:var(--surface);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid #333}
+.input-box h3{font-size:0.95em;color:var(--gold);margin-bottom:12px;text-align:center}
+.form-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.form-row select,.form-row input{padding:8px 10px;border:1px solid #444;border-radius:6px;background:var(--bg);color:var(--text);font-size:0.9em;min-width:70px}
+.form-row select:focus,.form-row input:focus{border-color:var(--gold);outline:none}
+.form-row label{font-size:0.8em;color:var(--text-dim);width:100%;text-align:center;margin-bottom:2px}
+.gender-row{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.gender-row label{font-size:0.9em;cursor:pointer;padding:6px 16px;border:1px solid #444;border-radius:6px;transition:all .2s}
+.gender-row input[type="radio"]{display:none}
+.gender-row input[type="radio"]:checked+label{background:var(--accent);border-color:var(--accent)}
+.btn{padding:10px 24px;border:none;border-radius:6px;cursor:pointer;font-size:1em;font-weight:700;transition:all .2s}
+.btn-primary{background:var(--accent);color:white;width:100%}
+.btn-primary:hover{background:#ff5a75;transform:translateY(-1px)}
+
+/* 결과 */
+.result{display:none}
+.fortune-summary{background:var(--surface);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;border:1px solid #333}
+.fortune-summary .grade{font-size:2em;font-weight:900;margin-bottom:4px}
+.fortune-summary .grade-text{font-size:1.1em;font-weight:700;margin-bottom:8px}
+.fortune-summary .desc{font-size:0.88em;color:#ccc;line-height:1.6}
+
+.fortune-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:600px){.fortune-grid{grid-template-columns:1fr}}
+.fortune-card{background:var(--surface);border-radius:10px;padding:16px;border:1px solid #333;position:relative;overflow:hidden}
+.fortune-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.fortune-card.total::before{background:var(--gold)}
+.fortune-card.wealth::before{background:var(--earth)}
+.fortune-card.love::before{background:var(--fire)}
+.fortune-card.career::before{background:var(--water)}
+.fortune-card.health::before{background:var(--wood)}
+.fortune-card.study::before{background:#ab47bc}
+.fortune-card h4{font-size:0.9em;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.fortune-card p{font-size:0.85em;line-height:1.7;color:#ccc}
+.score-bar{display:flex;align-items:center;gap:8px;margin:8px 0}
+.score-bar .label{font-size:0.8em;min-width:50px;color:var(--text-dim)}
+.score-bar .bar{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.score-bar .bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.score-bar .val{font-size:0.8em;min-width:30px;text-align:right}
+
+.lucky-box{background:var(--surface);border-radius:10px;padding:16px;border:1px solid #333;margin-bottom:16px}
+.lucky-box h4{font-size:0.9em;color:var(--gold);margin-bottom:10px}
+.lucky-items{display:flex;flex-wrap:wrap;gap:10px}
+.lucky-item{background:var(--bg);border-radius:8px;padding:8px 14px;border:1px solid #444;text-align:center;min-width:80px}
+.lucky-item .lk-label{font-size:0.7em;color:var(--text-dim);margin-bottom:2px}
+.lucky-item .lk-value{font-size:0.95em;font-weight:700;color:var(--gold)}
+
+.advice-box{background:var(--surface);border-radius:10px;padding:16px;border:1px solid #333;margin-top:16px}
+.advice-box h4{font-size:0.9em;color:var(--gold);margin-bottom:8px}
+.advice-box p{font-size:0.88em;line-height:1.7;color:#ccc}
+
+.footer{text-align:center;padding:16px;font-size:0.75em;color:var(--text-dim)}
+</style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" oncopy="return false;" oncut="return false;">
+
+<div class="header">
+  <h1>오늘의 운세<span>일일 사주 운세 분석</span></h1>
+</div>
+<div class="nav">
+  <a href="index.html">만세력</a>
+  <a href="unsebogi.html">운세보기</a>
+  <a href="gunghap.html">궁합</a>
+  <a href="daily.html" class="active">오늘의 운세</a>
+</div>
+
+<div class="container">
+  <div class="today-banner" id="todayBanner"></div>
+
+  <div class="input-box">
+    <h3>생년월일시를 입력하세요</h3>
+    <div class="form-row"><label>생년월일</label></div>
+    <div class="form-row">
+      <input type="number" id="byear" min="1900" max="2050" placeholder="년">
+      <select id="bmonth"></select>
+      <select id="bday"></select>
+    </div>
+    <div class="form-row"><label>태어난 시</label></div>
+    <div class="form-row">
+      <select id="bhour"></select>
+    </div>
+    <div class="gender-row">
+      <input type="radio" name="gender" id="g_m" value="m" checked><label for="g_m">남성</label>
+      <input type="radio" name="gender" id="g_f" value="f"><label for="g_f">여성</label>
+    </div>
+    <button class="btn btn-primary" onclick="showDailyFortune()">오늘의 운세 보기</button>
+  </div>
+
+  <div class="result" id="resultArea"></div>
+</div>
+
+<div class="footer">오늘의 운세 &copy; 2026 | 사주 기반 참고용 (오락 목적)</div>
+
+<script>
+// ---- 기본 데이터 ----
+const CHEONGAN=['갑','을','병','정','무','기','경','신','임','계'];
+const CHEONGAN_HANJA=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const JIJI=['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const JIJI_HANJA=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const OHENG=['목','화','토','금','수'];
+const OHENG_COLOR=['#4caf50','#f44336','#ff9800','#e0e0e0','#2196f3'];
+const STEM_OHENG=[0,0,1,1,2,2,3,3,4,4];
+const BRANCH_OHENG=[4,2,0,0,2,1,1,2,3,3,2,4];
+const STEM_YINYANG=[0,1,0,1,0,1,0,1,0,1]; // 0=양, 1=음
+const DDI=['쥐','소','호랑이','토끼','용','뱀','말','양','원숭이','닭','개','돼지'];
+
+// 십신 이름
+const SIPSIN=['비견','겁재','식신','상관','편재','정재','편관','정관','편인','정인'];
+
+// ---- 절기/사주 계산 ----
+function getJD(y,m,d){if(m<=2){y--;m+=12}const A=Math.floor(y/100);const B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5}
+function getSunLongitude(jd){const T=(jd-2451545)/36525;let L0=280.46646+36000.76983*T+.0003032*T*T;let M=(357.52911+35999.05029*T-.0001537*T*T)*Math.PI/180;const C=(1.914602-.004817*T-.000014*T*T)*Math.sin(M)+(.019993-.000101*T)*Math.sin(2*M)+.000289*Math.sin(3*M);let lon=L0+C;const om=125.04-1934.136*T;lon=lon-.00569-.00478*Math.sin(om*Math.PI/180);return((lon%360)+360)%360}
+function getSolarTermDate(year,ti){const tl=[285,300,315,330,345,0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270];const target=tl[ti];const ma=[1.05,1.20,2.04,2.19,3.06,3.21,4.05,4.20,5.06,5.21,6.06,6.21,7.07,7.23,8.07,8.23,9.08,9.23,10.08,10.23,11.07,11.22,12.07,12.22];let jd=getJD(year,Math.floor(ma[ti]),Math.round((ma[ti]%1)*100));for(let i=0;i<50;i++){let d=target-getSunLongitude(jd);if(d>180)d-=360;if(d<-180)d+=360;if(Math.abs(d)<.0001)break;jd+=d/360*365.25}jd+=.5;const Z=Math.floor(jd),F=jd-Z;let A;if(Z<2299161)A=Z;else{const al=Math.floor((Z-1867216.25)/36524.25);A=Z+1+al-Math.floor(al/4)}const B=A+1524,CC=Math.floor((B-122.1)/365.25),D=Math.floor(365.25*CC),E=Math.floor((B-D)/30.6001);const day=B-D-Math.floor(30.6001*E)+F;const month=(E<14)?E-1:E-13;return{month,day:Math.floor(day)}}
+const _jc={};function getYearJeolgi(y){if(_jc[y])return _jc[y];const t=[];const n=['소한','대한','입춘','우수','경칩','춘분','청명','곡우','입하','소만','망종','하지','소서','대서','입추','처서','백로','추분','한로','상강','입동','소설','대설','동지'];for(let i=0;i<24;i++){const d=getSolarTermDate(y,i);t.push({name:n[i],month:d.month,day:d.day,index:i})}_jc[y]=t;return t}
+
+function getDayGapjaIndex(y,m,d){return((Math.floor(getJD(y,m,d))+50)%60+60)%60}
+function gapjaToStemBranch(i){return{stem:i%10,branch:i%12}}
+
+function getYearPillar(year,month,day){
+  const terms=getYearJeolgi(year);const ip=terms.find(t=>t.name==='입춘');
+  let ay=year;if(month<ip.month||(month===ip.month&&day<ip.day))ay=year-1;
+  const idx=((ay-4)%60+60)%60;return{stem:idx%10,branch:idx%12,gapja:idx};
+}
+
+function getMonthPillar(year,month,day,yearStem){
+  const terms=getYearJeolgi(year);
+  const ji=[{idx:2,br:2},{idx:4,br:3},{idx:6,br:4},{idx:8,br:5},{idx:10,br:6},{idx:12,br:7},{idx:14,br:8},{idx:16,br:9},{idx:18,br:10},{idx:20,br:11},{idx:22,br:0},{idx:0,br:1}];
+  const entries=[];
+  ji.forEach(j=>{const t=terms.find(tt=>tt.index===j.idx);if(t)entries.push({month:t.month,day:t.day,branch:j.br})});
+  if(month>=11){const nt=getYearJeolgi(year+1);const ns=nt.find(t=>t.index===0);if(ns)entries.push({month:ns.month+12,day:ns.day,branch:1})}
+  entries.sort((a,b)=>a.month-b.month||a.day-b.day);
+  let mb=1;for(let i=entries.length-1;i>=0;i--){const e=entries[i];if(month>e.month||(month===e.month&&day>=e.day)){mb=e.branch;break}}
+  const mss=[2,4,6,8,0];const stemStart=mss[yearStem%5];const ms=(stemStart+((mb-2+12)%12))%10;
+  return{stem:ms,branch:mb};
+}
+
+function getHourPillar(hour,minute,dayStem){
+  let ah=hour,am=minute-30;if(am<0){am+=60;ah--}if(ah<0)ah+=24;
+  const tm=ah*60+am;let bi;
+  if(tm>=23*60||tm<1*60)bi=0;else if(tm<3*60)bi=1;else if(tm<5*60)bi=2;else if(tm<7*60)bi=3;else if(tm<9*60)bi=4;else if(tm<11*60)bi=5;else if(tm<13*60)bi=6;else if(tm<15*60)bi=7;else if(tm<17*60)bi=8;else if(tm<19*60)bi=9;else if(tm<21*60)bi=10;else bi=11;
+  const hss=[0,2,4,6,8];const hs=(hss[dayStem%5]+bi)%10;
+  return{stem:hs,branch:bi};
+}
+
+function calcSaju(y,m,d,h){
+  const yp=getYearPillar(y,m,d);
+  const mp=getMonthPillar(y,m,d,yp.stem);
+  const di=getDayGapjaIndex(y,m,d);
+  const dp=gapjaToStemBranch(di);
+  const hp=getHourPillar(h,0,dp.stem);
+  return{year:yp,month:mp,day:{stem:dp.stem,branch:dp.branch},hour:hp};
+}
+
+// ---- 십신 계산 ----
+function getSipsin(dayStem, targetStem){
+  const diff=((targetStem-dayStem)%10+10)%10;
+  return diff;
+}
+
+// 지지 관계
+function checkChung(b1,b2){return Math.abs(b1-b2)===6}
+const YUKAP=[[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
+function checkYukhap(b1,b2){return YUKAP.some(p=>(p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))}
+const SAMHAP=[[8,0,4],[11,3,7],[2,6,10],[5,9,1]];
+function checkSamhap(b1,b2){return SAMHAP.some(g=>g.includes(b1)&&g.includes(b2))}
+function isGenerating(oh1,oh2){return(oh1+1)%5===oh2}
+function isOvercoming(oh1,oh2){return(oh1+2)%5===oh2}
+
+// ---- 오늘의 운세 분석 ----
+function analyzeDailyFortune(birthSaju, todaySaju){
+  const ds=birthSaju.day.stem; // 일간 (나)
+  const todayDS=todaySaju.day.stem;
+  const todayDB=todaySaju.day.branch;
+  const todayMS=todaySaju.month.stem;
+  const todayMB=todaySaju.month.branch;
+
+  // 오늘 일간의 십신
+  const daySipsin=getSipsin(ds, todayDS);
+  // 오늘 일지의 십신 (지지→오행으로 환산)
+  const dayBranchOheng=BRANCH_OHENG[todayDB];
+
+  // 나의 오행
+  const myOheng=STEM_OHENG[ds];
+  const todayOheng=STEM_OHENG[todayDS];
+
+  // 총운 점수 계산
+  let totalScore=50;
+  let wealthScore=50, loveScore=50, careerScore=50, healthScore=50, studyScore=50;
+
+  // 십신별 운세 영향
+  // 비견(0): 경쟁, 겁재(1): 손재수, 식신(2): 먹복/안정, 상관(3): 창의/구설
+  // 편재(4): 투기재/횡재, 정재(5): 안정재/근로수입, 편관(6): 압박/시험, 정관(7): 승진/안정
+  // 편인(8): 학문/변화, 정인(9): 도움/문서
+  const sipsinEffects={
+    0:{total:5,wealth:-5,love:0,career:5,health:5,study:0,keyword:'활동적',desc:'동료나 비슷한 사람과의 만남이 많은 날입니다. 경쟁심이 자극될 수 있으니 평정심을 유지하세요.'},
+    1:{total:-5,wealth:-15,love:-5,career:0,health:0,study:-5,keyword:'주의',desc:'예상치 못한 지출이 발생할 수 있는 날입니다. 큰 금전 거래나 보증은 피하세요.'},
+    2:{total:15,wealth:10,love:10,career:10,health:10,study:10,keyword:'길일',desc:'먹을 복이 있고 하는 일이 순탄한 좋은 날입니다. 여유를 즐기며 사람들과 교류하기 좋습니다.'},
+    3:{total:5,wealth:5,love:-10,career:-5,health:-5,study:15,keyword:'창의적',desc:'창의력이 넘치는 날이지만 말조심이 필요합니다. 불필요한 언쟁을 피하고 표현력을 긍정적으로 활용하세요.'},
+    4:{total:10,wealth:20,love:5,career:5,health:0,study:-5,keyword:'재물',desc:'뜻밖의 재물 기운이 있는 날입니다. 투자나 새로운 수입원에 관심을 가져볼 만합니다.'},
+    5:{total:10,wealth:15,love:10,career:10,health:5,study:0,keyword:'안정',desc:'안정적인 수입과 관련된 좋은 소식이 있을 수 있습니다. 성실한 노력이 결실을 맺는 날입니다.'},
+    6:{total:-10,wealth:-5,career:-10,love:-5,health:-10,study:5,keyword:'긴장',desc:'압박감이 느껴지는 날입니다. 윗사람이나 권위적인 상황에서 스트레스를 받을 수 있으니 차분하게 대처하세요.'},
+    7:{total:10,wealth:5,love:5,career:15,health:5,study:10,keyword:'질서',desc:'조직적이고 체계적으로 일이 풀리는 날입니다. 공적인 일이나 계약 관련 사안에 좋습니다.'},
+    8:{total:5,wealth:-5,love:0,career:5,health:-5,study:20,keyword:'학습',desc:'새로운 것을 배우기에 좋은 날입니다. 직감이 예리해지니 아이디어가 떠오르면 메모해두세요.'},
+    9:{total:15,wealth:5,love:10,career:10,health:10,study:15,keyword:'도움',desc:'주변의 도움이 있는 길한 날입니다. 문서 관련 일이나 시험, 면접에 좋은 결과를 기대할 수 있습니다.'}
+  };
+
+  const eff=sipsinEffects[daySipsin];
+  totalScore+=eff.total; wealthScore+=eff.wealth; loveScore+=eff.love;
+  careerScore+=eff.career; healthScore+=eff.health; studyScore+=eff.study;
+
+  // 오늘 일지와 나의 일지 관계
+  const myBranch=birthSaju.day.branch;
+  if(checkYukhap(myBranch, todayDB)){totalScore+=10;loveScore+=15;careerScore+=5;}
+  if(checkSamhap(myBranch, todayDB)){totalScore+=8;careerScore+=10;wealthScore+=8;}
+  if(checkChung(myBranch, todayDB)){totalScore-=12;healthScore-=10;loveScore-=10;}
+
+  // 오행 상생/상극
+  if(isGenerating(todayOheng, myOheng)){totalScore+=8;healthScore+=10;} // 오늘이 나를 생
+  if(isGenerating(myOheng, todayOheng)){totalScore+=3;wealthScore+=5;} // 내가 오늘을 생 (설기)
+  if(isOvercoming(todayOheng, myOheng)){totalScore-=8;healthScore-=8;} // 오늘이 나를 극
+  if(isOvercoming(myOheng, todayOheng)){totalScore+=5;wealthScore+=10;} // 내가 오늘을 극 (재성)
+
+  // 월주의 영향 (계절 운)
+  const monthSipsin=getSipsin(ds, todayMS);
+  const monthEff=sipsinEffects[monthSipsin];
+  totalScore+=Math.round(monthEff.total*0.3);
+  wealthScore+=Math.round(monthEff.wealth*0.3);
+  loveScore+=Math.round(monthEff.love*0.3);
+
+  // 나의 일지와 오늘 월지 관계
+  if(checkYukhap(myBranch, todayMB)){totalScore+=5;loveScore+=5;}
+  if(checkChung(myBranch, todayMB)){totalScore-=5;healthScore-=5;}
+
+  // 음양 조화
+  if(STEM_YINYANG[ds]!==STEM_YINYANG[todayDS]){totalScore+=3;loveScore+=5;} // 음양 조화
+
+  // 점수 보정
+  totalScore=Math.max(10,Math.min(100,totalScore));
+  wealthScore=Math.max(10,Math.min(100,wealthScore));
+  loveScore=Math.max(10,Math.min(100,loveScore));
+  careerScore=Math.max(10,Math.min(100,careerScore));
+  healthScore=Math.max(10,Math.min(100,healthScore));
+  studyScore=Math.max(10,Math.min(100,studyScore));
+
+  return{
+    totalScore,wealthScore,loveScore,careerScore,healthScore,studyScore,
+    daySipsin,keyword:eff.keyword,desc:eff.desc,monthSipsin
+  };
+}
+
+// ---- 행운 아이템 ----
+function getLuckyItems(dayStem, todayDS){
+  const myOh=STEM_OHENG[dayStem];
+  // 용신 방향 추정: 나를 생하는 오행
+  const helpOh=(myOh+4)%5; // 나를 생하는 오행 (인성)
+  const colors={0:'초록/청록',1:'빨강/주황',2:'노랑/갈색',3:'흰색/은색',4:'검정/남색'};
+  const dirs={0:'동쪽',1:'남쪽',2:'중앙',3:'서쪽',4:'북쪽'};
+  const nums={0:[3,8],1:[2,7],2:[5,10],3:[4,9],4:[1,6]};
+  const foods={0:'채소/샐러드/녹즙',1:'매운음식/바비큐',2:'단음식/곡물',3:'흰살생선/무/배',4:'해물/수프/차'};
+
+  return{
+    color:colors[helpOh],
+    direction:dirs[helpOh],
+    number:nums[helpOh].join(', '),
+    food:foods[helpOh],
+    avoid_dir:dirs[(myOh+2)%5]
+  };
+}
+
+// ---- 운세 등급 ----
+function getGrade(score){
+  if(score>=80)return{emoji:'🌟',text:'대길',color:'var(--gold)',msg:'하늘이 돕는 최고의 날입니다!'};
+  if(score>=68)return{emoji:'☀️',text:'길',color:'var(--wood)',msg:'긍정적인 기운이 가득한 좋은 날입니다.'};
+  if(score>=55)return{emoji:'⛅',text:'소길',color:'var(--water)',msg:'무난하게 흘러가는 평온한 날입니다.'};
+  if(score>=42)return{emoji:'☁️',text:'평',color:'var(--text-dim)',msg:'큰 변동 없이 평범한 하루입니다.'};
+  if(score>=30)return{emoji:'🌧️',text:'소흉',color:'var(--earth)',msg:'조금 주의가 필요한 날입니다.'};
+  return{emoji:'⚡',text:'주의',color:'var(--accent)',msg:'신중하게 행동해야 하는 날입니다.'};
+}
+
+// ---- 상세 운세 메시지 ----
+function getDetailMessages(result, birthSaju, todaySaju){
+  const ds=birthSaju.day.stem;
+  const myOh=STEM_OHENG[ds];
+  const ohNames=OHENG;
+
+  const msgs={};
+
+  // 재물운
+  if(result.wealthScore>=70)msgs.wealth='금전적으로 좋은 흐름이 있습니다. 투자나 계약에 긍정적 신호가 있으니 기회를 잡으세요. 다만 과욕은 금물입니다.';
+  else if(result.wealthScore>=50)msgs.wealth='재물 운이 평탄합니다. 큰 이득은 없지만 손해도 없는 안정적인 날입니다. 계획적인 소비를 하면 좋겠습니다.';
+  else msgs.wealth='재물에 주의가 필요한 날입니다. 충동적인 지출이나 투기성 거래를 피하고 보수적으로 움직이세요.';
+
+  // 연애운
+  if(result.loveScore>=70)msgs.love='인연의 기운이 강한 날입니다. 새로운 만남에 적극적으로 나서세요. 연인이 있다면 깊은 대화를 나누기 좋습니다.';
+  else if(result.loveScore>=50)msgs.love='대인관계가 무난한 날입니다. 가벼운 모임이나 약속이 즐거울 수 있습니다. 진심을 담아 소통하세요.';
+  else msgs.love='대인관계에서 오해가 생기기 쉬운 날입니다. 감정적인 대응보다는 한 발 물러서서 상황을 바라보세요.';
+
+  // 직장/사업운
+  if(result.careerScore>=70)msgs.career='직장 및 사업에서 좋은 성과를 기대할 수 있습니다. 중요한 프레젠테이션이나 미팅이 있다면 자신감을 가지세요.';
+  else if(result.careerScore>=50)msgs.career='업무가 평탄하게 진행되는 날입니다. 루틴한 업무를 충실히 하면서 내일을 준비하세요.';
+  else msgs.career='직장에서 예상치 못한 변수가 생길 수 있습니다. 중요한 결정은 가급적 미루고 신중하게 판단하세요.';
+
+  // 건강운
+  if(result.healthScore>=70)msgs.health='활력이 넘치는 날입니다. 운동이나 야외 활동을 하면 더욱 기분이 좋아질 것입니다.';
+  else if(result.healthScore>=50)msgs.health='건강 상태가 무난합니다. 규칙적인 생활 리듬을 유지하면 컨디션이 좋아질 것입니다.';
+  else msgs.health='컨디션이 저하될 수 있는 날입니다. 무리하지 말고 충분한 휴식을 취하세요. '+
+    (myOh===0?'간/담 건강에 신경 쓰세요.':myOh===1?'심장/혈액순환에 유의하세요.':myOh===2?'소화기 건강에 주의하세요.':myOh===3?'호흡기/피부에 주의하세요.':'신장/방광 건강에 유의하세요.');
+
+  // 학업/시험운
+  if(result.studyScore>=70)msgs.study='집중력이 높아 학습에 최적인 날입니다. 시험이나 자격증 준비에 좋은 결과를 기대할 수 있습니다.';
+  else if(result.studyScore>=50)msgs.study='학업에 무난한 날입니다. 꾸준히 노력하면 좋은 성과가 있을 것입니다.';
+  else msgs.study='집중이 잘 되지 않을 수 있습니다. 억지로 공부하기보다 가벼운 복습이나 정리에 시간을 투자하세요.';
+
+  return msgs;
+}
+
+// ---- 오늘 운세 표시 ----
+function showDailyFortune(){
+  const by=parseInt(document.getElementById('byear').value);
+  const bm=parseInt(document.getElementById('bmonth').value);
+  const bd=parseInt(document.getElementById('bday').value);
+  const bh=parseInt(document.getElementById('bhour').value);
+  if(!by||by<1900||by>2050){alert('올바른 생년을 입력하세요.');return;}
+
+  const now=new Date();
+  const ty=now.getFullYear(), tm=now.getMonth()+1, td=now.getDate();
+
+  const birthSaju=calcSaju(by,bm,bd,bh);
+  const todaySaju=calcSaju(ty,tm,td,now.getHours());
+
+  const result=analyzeDailyFortune(birthSaju, todaySaju);
+  const grade=getGrade(result.totalScore);
+  const lucky=getLuckyItems(birthSaju.day.stem, todaySaju.day.stem);
+  const msgs=getDetailMessages(result, birthSaju, todaySaju);
+
+  let html='';
+
+  // 종합 운세
+  html+=`<div class="fortune-summary">
+    <div class="grade" style="color:${grade.color}">${grade.emoji} ${grade.text}</div>
+    <div class="grade-text" style="color:${grade.color}">${grade.msg}</div>
+    <div style="margin:10px 0;font-size:0.85em;color:var(--text-dim)">오늘의 십신: <span style="color:var(--gold);font-weight:700">${SIPSIN[result.daySipsin]}</span> | 키워드: <span style="color:var(--gold);font-weight:700">${result.keyword}</span></div>
+    <div class="desc">${result.desc}</div>
+  </div>`;
+
+  // 항목별 점수 바
+  html+=`<div class="fortune-card total" style="margin-bottom:16px"><h4>📊 항목별 운세 점수</h4>`;
+  const items=[
+    {name:'총운',score:result.totalScore,color:'var(--gold)'},
+    {name:'재물',score:result.wealthScore,color:'var(--earth)'},
+    {name:'연애',score:result.loveScore,color:'var(--fire)'},
+    {name:'직업',score:result.careerScore,color:'var(--water)'},
+    {name:'건강',score:result.healthScore,color:'var(--wood)'},
+    {name:'학업',score:result.studyScore,color:'#ab47bc'}
+  ];
+  items.forEach(it=>{
+    html+=`<div class="score-bar"><span class="label">${it.name}</span><div class="bar"><div class="bar-fill" style="width:${it.score}%;background:${it.color}"></div></div><span class="val">${it.score}</span></div>`;
+  });
+  html+=`</div>`;
+
+  // 상세 운세 카드
+  html+=`<div class="fortune-grid">`;
+  html+=`<div class="fortune-card wealth"><h4>💰 재물운</h4><p>${msgs.wealth}</p></div>`;
+  html+=`<div class="fortune-card love"><h4>💕 연애운</h4><p>${msgs.love}</p></div>`;
+  html+=`<div class="fortune-card career"><h4>💼 직장/사업운</h4><p>${msgs.career}</p></div>`;
+  html+=`<div class="fortune-card health"><h4>🏃 건강운</h4><p>${msgs.health}</p></div>`;
+  html+=`<div class="fortune-card study"><h4>📚 학업/시험운</h4><p>${msgs.study}</p></div>`;
+
+  // 시간대별 운세
+  html+=`<div class="fortune-card" style="border-left:4px solid var(--accent)"><h4>⏰ 시간대별 조언</h4>`;
+  html+=getTimeAdvice(birthSaju.day.stem, todaySaju);
+  html+=`</div>`;
+  html+=`</div>`;
+
+  // 행운 아이템
+  html+=`<div class="lucky-box"><h4>🍀 오늘의 행운 아이템</h4><div class="lucky-items">`;
+  html+=`<div class="lucky-item"><div class="lk-label">행운의 색</div><div class="lk-value">${lucky.color}</div></div>`;
+  html+=`<div class="lucky-item"><div class="lk-label">행운의 숫자</div><div class="lk-value">${lucky.number}</div></div>`;
+  html+=`<div class="lucky-item"><div class="lk-label">행운의 방위</div><div class="lk-value">${lucky.direction}</div></div>`;
+  html+=`<div class="lucky-item"><div class="lk-label">행운의 음식</div><div class="lk-value">${lucky.food}</div></div>`;
+  html+=`<div class="lucky-item"><div class="lk-label">피할 방위</div><div class="lk-value">${lucky.avoid_dir}</div></div>`;
+  html+=`</div></div>`;
+
+  // 종합 조언
+  html+=`<div class="advice-box"><h4>💡 오늘의 종합 조언</h4><p>${getDailyAdvice(result, birthSaju, todaySaju)}</p></div>`;
+
+  const area=document.getElementById('resultArea');
+  area.innerHTML=html;
+  area.style.display='block';
+  area.scrollIntoView({behavior:'smooth'});
+}
+
+// ---- 시간대별 조언 ----
+function getTimeAdvice(dayStem, todaySaju){
+  const periods=[
+    {name:'오전 (06~12시)',hours:[5,7,9,11]},
+    {name:'오후 (12~18시)',hours:[13,15,17]},
+    {name:'저녁 (18~24시)',hours:[19,21,23]}
+  ];
+  let html='';
+  periods.forEach(p=>{
+    // 해당 시간대의 대표 지지
+    const midHour=p.hours[Math.floor(p.hours.length/2)];
+    const hBranch=Math.floor(((midHour+1)%24)/2);
+    const sipsin=getSipsin(dayStem, todaySaju.day.stem);
+    const branchOh=BRANCH_OHENG[hBranch];
+    const myOh=STEM_OHENG[dayStem];
+    let quality='보통';
+    if(isGenerating(branchOh, myOh)||checkYukhap(todaySaju.day.branch, hBranch))quality='좋음';
+    if(isOvercoming(branchOh, myOh)||checkChung(todaySaju.day.branch, hBranch))quality='주의';
+    const qColor=quality==='좋음'?'var(--wood)':quality==='주의'?'var(--accent)':'var(--text-dim)';
+    html+=`<p style="margin:4px 0"><span style="color:var(--gold);font-weight:700">${p.name}</span>: <span style="color:${qColor};font-weight:500">${quality}</span></p>`;
+  });
+  return html;
+}
+
+// ---- 종합 조언 ----
+function getDailyAdvice(result, birthSaju, todaySaju){
+  const ds=birthSaju.day.stem;
+  const myOh=STEM_OHENG[ds];
+  let advice='';
+
+  if(result.totalScore>=70){
+    advice+=`오늘은 전반적으로 기운이 좋은 날입니다. 적극적으로 행동하면 좋은 결과를 얻을 수 있습니다. `;
+  }else if(result.totalScore>=50){
+    advice+=`오늘은 무난한 흐름의 날입니다. 무리하지 않고 자연스럽게 하루를 보내면 좋겠습니다. `;
+  }else{
+    advice+=`오늘은 조심스럽게 행동하는 것이 좋습니다. 중요한 결정이나 새로운 시작은 다른 날로 미루는 것을 권합니다. `;
+  }
+
+  // 십신 기반 추가 조언
+  if(result.daySipsin===2||result.daySipsin===9)advice+='주변 사람들과의 교류가 행운을 가져다 줄 수 있습니다. ';
+  if(result.daySipsin===1||result.daySipsin===6)advice+='금전 관리에 각별히 신경 쓰세요. ';
+  if(result.daySipsin===4||result.daySipsin===5)advice+='재물과 관련된 좋은 기회가 올 수 있으니 주변을 살펴보세요. ';
+  if(result.daySipsin===7)advice+='규칙과 원칙을 지키면 좋은 일이 있을 것입니다. ';
+  if(result.daySipsin===8)advice+='직감을 믿되 검증하는 자세가 필요합니다. ';
+
+  advice+=`${OHENG[myOh]} 기운을 가진 당신에게 오늘 하루도 좋은 날이 되길 바랍니다.`;
+  return advice;
+}
+
+// ---- 오늘 배너 ----
+function renderTodayBanner(){
+  const now=new Date();
+  const y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate();
+  const weekdays=['일','월','화','수','목','금','토'];
+  const todaySaju=calcSaju(y,m,d,now.getHours());
+
+  let html=`<div class="today-date">${y}년 ${m}월 ${d}일 (${weekdays[now.getDay()]})</div>`;
+  html+=`<div class="today-lunar">오늘의 간지: ${CHEONGAN[todaySaju.day.stem]}${JIJI[todaySaju.day.branch]}일 (${CHEONGAN_HANJA[todaySaju.day.stem]}${JIJI_HANJA[todaySaju.day.branch]}日)</div>`;
+  html+=`<div class="today-pillars">`;
+
+  const pillars=[
+    {label:'년주',s:todaySaju.year.stem,b:todaySaju.year.branch},
+    {label:'월주',s:todaySaju.month.stem,b:todaySaju.month.branch},
+    {label:'일주',s:todaySaju.day.stem,b:todaySaju.day.branch}
+  ];
+  pillars.forEach(p=>{
+    html+=`<div class="today-pillar">
+      <div class="label">${p.label}</div>
+      <div class="stem" style="color:${OHENG_COLOR[STEM_OHENG[p.s]]}">${CHEONGAN[p.s]}<span class="hanja">${CHEONGAN_HANJA[p.s]}</span></div>
+      <div class="branch" style="color:${OHENG_COLOR[BRANCH_OHENG[p.b]]}">${JIJI[p.b]}<span class="hanja">${JIJI_HANJA[p.b]}</span></div>
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('todayBanner').innerHTML=html;
+}
+
+// ---- 초기화 ----
+function init(){
+  const ms=document.getElementById('bmonth');
+  for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'월';ms.appendChild(o)}
+  const ds=document.getElementById('bday');
+  for(let i=1;i<=31;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'일';ds.appendChild(o)}
+  const hs=document.getElementById('bhour');
+  for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'시';hs.appendChild(o)}
+  renderTodayBanner();
+}
+init();
+</script>
+</body>
+</html>

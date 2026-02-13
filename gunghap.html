@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>궁합 보기 - 사주 궁합 분석</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a2e;--surface:#16213e;--surface2:#0f3460;--accent:#e94560;--gold:#f0c040;--text:#eee;--text-dim:#999;--wood:#4caf50;--fire:#f44336;--earth:#ff9800;--metal:#e0e0e0;--water:#2196f3}
+body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-user-select:none;user-select:none}
+.header{background:linear-gradient(135deg,var(--surface),var(--surface2));padding:20px;text-align:center;border-bottom:2px solid var(--accent);position:relative}
+.header h1{font-size:1.8em;font-weight:900;color:var(--gold)}
+.header h1 span{font-size:0.5em;color:var(--text-dim);display:block;margin-top:4px;font-weight:300}
+.nav{display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333}
+.nav a{color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333;transition:all .2s}
+.nav a:hover,.nav a.active{color:var(--gold);border-color:var(--gold)}
+.container{max-width:900px;margin:0 auto;padding:20px}
+
+/* 입력 영역 */
+.couple-input{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;margin-bottom:24px;align-items:end}
+@media(max-width:700px){.couple-input{grid-template-columns:1fr;}}
+.person-box{background:var(--surface);border-radius:12px;padding:16px;border:1px solid #333}
+.person-box h3{font-size:0.95em;color:var(--gold);margin-bottom:12px;text-align:center}
+.person-box.male h3{color:#64b5f6}
+.person-box.female h3{color:#f48fb1}
+.form-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.form-row select,.form-row input{flex:1;padding:7px 8px;border:1px solid #444;border-radius:6px;background:var(--bg);color:var(--text);font-size:0.9em;min-width:60px}
+.form-row select:focus,.form-row input:focus{border-color:var(--gold);outline:none}
+.form-row label{font-size:0.75em;color:var(--text-dim);width:100%;margin-bottom:2px}
+.heart-col{display:flex;align-items:center;justify-content:center;font-size:2.5em;color:var(--accent)}
+.btn{padding:10px 24px;border:none;border-radius:6px;cursor:pointer;font-size:1em;font-weight:700;transition:all .2s}
+.btn-primary{background:var(--accent);color:white;width:100%}
+.btn-primary:hover{background:#ff5a75;transform:translateY(-1px)}
+
+/* 결과 */
+.result{display:none}
+.score-circle{width:140px;height:140px;border-radius:50%;margin:0 auto 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid var(--gold);position:relative}
+.score-circle .num{font-size:2.5em;font-weight:900;color:var(--gold)}
+.score-circle .lbl{font-size:0.8em;color:var(--text-dim)}
+
+.compat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:500px){.compat-grid{grid-template-columns:1fr}}
+.compat-card{background:var(--surface);border-radius:10px;padding:14px;border:1px solid #333}
+.compat-card h4{font-size:0.9em;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.compat-card p{font-size:0.85em;line-height:1.6;color:#ccc}
+.score-bar{display:flex;align-items:center;gap:8px;margin:6px 0}
+.score-bar .label{font-size:0.8em;min-width:60px;color:var(--text-dim)}
+.score-bar .bar{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.score-bar .bar-fill{height:100%;border-radius:3px}
+
+.saju-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:20px;text-align:center}
+.saju-compare .pillar-col{background:var(--surface);border-radius:8px;padding:10px;border:1px solid #333}
+.saju-compare .vs{display:flex;align-items:center;font-size:1.2em;color:var(--accent);font-weight:900}
+.saju-compare .stem-txt{font-size:1.3em;font-weight:900}
+.saju-compare .branch-txt{font-size:1.3em;font-weight:900}
+.saju-compare .hanja{font-size:0.65em;color:var(--text-dim)}
+
+.relation-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:700;margin:2px}
+.badge-good{background:rgba(76,175,80,0.2);color:var(--wood)}
+.badge-bad{background:rgba(244,67,54,0.2);color:var(--fire)}
+.badge-neutral{background:rgba(255,152,0,0.2);color:var(--earth)}
+
+.advice-box{background:var(--surface);border-radius:10px;padding:16px;border:1px solid #333;margin-top:16px}
+.advice-box h3{font-size:0.95em;color:var(--gold);margin-bottom:10px}
+.advice-box p{font-size:0.88em;line-height:1.7;color:#ccc}
+.footer{text-align:center;padding:16px;font-size:0.75em;color:var(--text-dim)}
+</style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" oncopy="return false;" oncut="return false;">
+
+<div class="header">
+  <h1>궁합 분석<span>사주팔자 기반 궁합 보기</span></h1>
+</div>
+<div class="nav">
+  <a href="index.html">만세력</a>
+  <a href="unsebogi.html">운세보기</a>
+  <a href="gunghap.html" class="active">궁합</a>
+  <a href="daily.html">오늘의 운세</a>
+</div>
+
+<div class="container">
+  <div class="couple-input">
+    <div class="person-box male">
+      <h3>남성 ♂</h3>
+      <div class="form-row"><label>생년월일</label></div>
+      <div class="form-row">
+        <input type="number" id="m_year" min="1900" max="2050" placeholder="년" value="1990">
+        <select id="m_month"></select>
+        <select id="m_day"></select>
+      </div>
+      <div class="form-row"><label>태어난 시</label></div>
+      <div class="form-row">
+        <select id="m_hour"></select>
+      </div>
+    </div>
+    <div class="heart-col">♥</div>
+    <div class="person-box female">
+      <h3>여성 ♀</h3>
+      <div class="form-row"><label>생년월일</label></div>
+      <div class="form-row">
+        <input type="number" id="f_year" min="1900" max="2050" placeholder="년" value="1992">
+        <select id="f_month"></select>
+        <select id="f_day"></select>
+      </div>
+      <div class="form-row"><label>태어난 시</label></div>
+      <div class="form-row">
+        <select id="f_hour"></select>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="analyzeCompat()">궁합 보기</button>
+  <div class="result" id="resultArea"></div>
+</div>
+
+<div class="footer">궁합 분석 &copy; 2026 | 사주 기반 참고용 (오락 목적)</div>
+
+<script>
+// ---- 기본 데이터 ----
+const CHEONGAN=['갑','을','병','정','무','기','경','신','임','계'];
+const CHEONGAN_HANJA=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const JIJI=['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const JIJI_HANJA=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const OHENG=['목','화','토','금','수'];
+const OHENG_COLOR=['#4caf50','#f44336','#ff9800','#e0e0e0','#2196f3'];
+const STEM_OHENG=[0,0,1,1,2,2,3,3,4,4];
+const BRANCH_OHENG=[4,2,0,0,2,1,1,2,3,3,2,4];
+const STEM_YINYANG=[0,1,0,1,0,1,0,1,0,1];
+
+// 절기/사주 계산 함수
+function getJD(y,m,d){if(m<=2){y--;m+=12}const A=Math.floor(y/100);const B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5}
+function getSunLongitude(jd){const T=(jd-2451545)/36525;let L0=280.46646+36000.76983*T+.0003032*T*T;let M=(357.52911+35999.05029*T-.0001537*T*T)*Math.PI/180;const C=(1.914602-.004817*T-.000014*T*T)*Math.sin(M)+(.019993-.000101*T)*Math.sin(2*M)+.000289*Math.sin(3*M);let lon=L0+C;const om=125.04-1934.136*T;lon=lon-.00569-.00478*Math.sin(om*Math.PI/180);return((lon%360)+360)%360}
+function getSolarTermDate(year,ti){const tl=[285,300,315,330,345,0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270];const target=tl[ti];const ma=[1.05,1.20,2.04,2.19,3.06,3.21,4.05,4.20,5.06,5.21,6.06,6.21,7.07,7.23,8.07,8.23,9.08,9.23,10.08,10.23,11.07,11.22,12.07,12.22];let jd=getJD(year,Math.floor(ma[ti]),Math.round((ma[ti]%1)*100));for(let i=0;i<50;i++){let d=target-getSunLongitude(jd);if(d>180)d-=360;if(d<-180)d+=360;if(Math.abs(d)<.0001)break;jd+=d/360*365.25}jd+=.5;const Z=Math.floor(jd),F=jd-Z;let A;if(Z<2299161)A=Z;else{const al=Math.floor((Z-1867216.25)/36524.25);A=Z+1+al-Math.floor(al/4)}const B=A+1524,CC=Math.floor((B-122.1)/365.25),D=Math.floor(365.25*CC),E=Math.floor((B-D)/30.6001);const day=B-D-Math.floor(30.6001*E)+F;const month=(E<14)?E-1:E-13;return{month,day:Math.floor(day)}}
+const _jc={};function getYearJeolgi(y){if(_jc[y])return _jc[y];const t=[];const n=['소한','대한','입춘','우수','경칩','춘분','청명','곡우','입하','소만','망종','하지','소서','대서','입추','처서','백로','추분','한로','상강','입동','소설','대설','동지'];for(let i=0;i<24;i++){const d=getSolarTermDate(y,i);t.push({name:n[i],month:d.month,day:d.day,index:i})}_jc[y]=t;return t}
+
+function getDayGapjaIndex(y,m,d){return((Math.floor(getJD(y,m,d))+50)%60+60)%60}
+function gapjaToStemBranch(i){return{stem:i%10,branch:i%12}}
+
+function getYearPillar(year,month,day){
+  const terms=getYearJeolgi(year);const ip=terms.find(t=>t.name==='입춘');
+  let ay=year;if(month<ip.month||(month===ip.month&&day<ip.day))ay=year-1;
+  const idx=((ay-4)%60+60)%60;return{stem:idx%10,branch:idx%12,gapja:idx};
+}
+
+function getMonthPillar(year,month,day,yearStem){
+  const terms=getYearJeolgi(year);
+  const ji=[{idx:2,br:2},{idx:4,br:3},{idx:6,br:4},{idx:8,br:5},{idx:10,br:6},{idx:12,br:7},{idx:14,br:8},{idx:16,br:9},{idx:18,br:10},{idx:20,br:11},{idx:22,br:0},{idx:0,br:1}];
+  const entries=[];
+  ji.forEach(j=>{const t=terms.find(tt=>tt.index===j.idx);if(t)entries.push({month:t.month,day:t.day,branch:j.br})});
+  if(month>=11){const nt=getYearJeolgi(year+1);const ns=nt.find(t=>t.index===0);if(ns)entries.push({month:ns.month+12,day:ns.day,branch:1})}
+  entries.sort((a,b)=>a.month-b.month||a.day-b.day);
+  let mb=1;for(let i=entries.length-1;i>=0;i--){const e=entries[i];if(month>e.month||(month===e.month&&day>=e.day)){mb=e.branch;break}}
+  const mss=[2,4,6,8,0];const stemStart=mss[yearStem%5];const ms=(stemStart+((mb-2+12)%12))%10;
+  return{stem:ms,branch:mb};
+}
+
+function getHourPillar(hour,minute,dayStem){
+  let ah=hour,am=minute-30;if(am<0){am+=60;ah--}if(ah<0)ah+=24;
+  const tm=ah*60+am;let bi;
+  if(tm>=23*60||tm<1*60)bi=0;else if(tm<3*60)bi=1;else if(tm<5*60)bi=2;else if(tm<7*60)bi=3;else if(tm<9*60)bi=4;else if(tm<11*60)bi=5;else if(tm<13*60)bi=6;else if(tm<15*60)bi=7;else if(tm<17*60)bi=8;else if(tm<19*60)bi=9;else if(tm<21*60)bi=10;else bi=11;
+  const hss=[0,2,4,6,8];const hs=(hss[dayStem%5]+bi)%10;
+  return{stem:hs,branch:bi};
+}
+
+function calcSaju(y,m,d,h){
+  const yp=getYearPillar(y,m,d);
+  const mp=getMonthPillar(y,m,d,yp.stem);
+  const di=getDayGapjaIndex(y,m,d);
+  const dp=gapjaToStemBranch(di);
+  const hp=getHourPillar(h,0,dp.stem);
+  return{year:yp,month:mp,day:{stem:dp.stem,branch:dp.branch},hour:hp};
+}
+
+// ---- 궁합 분석 로직 ----
+
+// 천간합 (天干合) - 서로 합이 되는 천간 쌍 (0-5, 1-6, 2-7, 3-8, 4-9)
+function checkStemHap(s1,s2){return Math.abs(s1-s2)===5}
+
+// 지지 육합 (六合): 자축, 인해, 묘술, 진유, 사신, 오미
+const YUKAP=[[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
+function checkBranchYukhap(b1,b2){return YUKAP.some(p=>(p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))}
+
+// 지지 삼합 (三合): 신자진(수), 해묘미(목), 인오술(화), 사유축(금)
+const SAMHAP=[[8,0,4],[11,3,7],[2,6,10],[5,9,1]];
+function checkSamhap(b1,b2){return SAMHAP.some(g=>g.includes(b1)&&g.includes(b2))}
+
+// 지지 충 (冲): 자오, 축미, 인신, 묘유, 진술, 사해
+function checkChung(b1,b2){return Math.abs(b1-b2)===6}
+
+// 지지 형 (刑): 인사신(삼형), 축술미(삼형), 자묘(무례지형), 진진/오오/유유/해해(자형)
+function checkHyung(b1,b2){
+  const h3=[[2,5,8],[1,10,7]];
+  if(h3.some(g=>g.includes(b1)&&g.includes(b2)&&b1!==b2))return true;
+  if((b1===0&&b2===3)||(b1===3&&b2===0))return true;
+  return false;
+}
+
+// 지지 파 (破): 자유, 축진, 인해, 묘오, 사신, 미술
+const PAHA=[[0,9],[1,4],[2,11],[3,6],[5,8],[7,10]];
+function checkPa(b1,b2){return PAHA.some(p=>(p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))}
+
+// 지지 해 (害): 자미, 축오, 인사, 묘진, 신해, 유술
+const HAEH=[[0,7],[1,6],[2,5],[3,4],[8,11],[9,10]];
+function checkHae(b1,b2){return HAEH.some(p=>(p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))}
+
+// 오행 상생 관계 (목→화→토→금→수→목)
+function isGenerating(oh1,oh2){return(oh1+1)%5===oh2}
+// 오행 상극 (목→토, 토→수, 수→화, 화→금, 금→목)
+function isOvercoming(oh1,oh2){return(oh1+2)%5===oh2}
+
+function analyzeCompat(){
+  const my=parseInt(document.getElementById('m_year').value);
+  const mm=parseInt(document.getElementById('m_month').value);
+  const md=parseInt(document.getElementById('m_day').value);
+  const mh=parseInt(document.getElementById('m_hour').value);
+  const fy=parseInt(document.getElementById('f_year').value);
+  const fm=parseInt(document.getElementById('f_month').value);
+  const fd=parseInt(document.getElementById('f_day').value);
+  const fh=parseInt(document.getElementById('f_hour').value);
+
+  const male=calcSaju(my,mm,md,mh);
+  const female=calcSaju(fy,fm,fd,fh);
+
+  // 각 기둥별 궁합 분석
+  const pillars=['year','month','day','hour'];
+  const pillarNames=['년주','월주','일주','시주'];
+  let totalScore=0;let details=[];let relations=[];
+
+  pillars.forEach((pk,pi)=>{
+    const ms=male[pk].stem, mb_=male[pk].branch;
+    const fs=female[pk].stem, fb=female[pk].branch;
+    let score=50;let rels=[];
+
+    // 천간 분석
+    if(checkStemHap(ms,fs)){score+=15;rels.push({text:'천간합',cls:'badge-good'})}
+    if(ms===fs){score+=5;rels.push({text:'천간동',cls:'badge-neutral'})}
+    const msOh=STEM_OHENG[ms],fsOh=STEM_OHENG[fs];
+    if(isGenerating(msOh,fsOh)||isGenerating(fsOh,msOh)){score+=8;rels.push({text:'천간상생',cls:'badge-good'})}
+    if(isOvercoming(msOh,fsOh)||isOvercoming(fsOh,msOh)){score-=5;rels.push({text:'천간상극',cls:'badge-bad'})}
+
+    // 지지 분석
+    if(checkBranchYukhap(mb_,fb)){score+=15;rels.push({text:'지지육합',cls:'badge-good'})}
+    if(checkSamhap(mb_,fb)){score+=10;rels.push({text:'지지삼합',cls:'badge-good'})}
+    if(mb_===fb){score+=5;rels.push({text:'지지동',cls:'badge-neutral'})}
+    if(checkChung(mb_,fb)){score-=15;rels.push({text:'지지충',cls:'badge-bad'})}
+    if(checkHyung(mb_,fb)){score-=10;rels.push({text:'지지형',cls:'badge-bad'})}
+    if(checkPa(mb_,fb)){score-=5;rels.push({text:'지지파',cls:'badge-bad'})}
+    if(checkHae(mb_,fb)){score-=8;rels.push({text:'지지해',cls:'badge-bad'})}
+
+    const mbOh=BRANCH_OHENG[mb_],fbOh=BRANCH_OHENG[fb];
+    if(isGenerating(mbOh,fbOh)||isGenerating(fbOh,mbOh)){score+=5}
+
+    score=Math.max(10,Math.min(100,score));
+    totalScore+=score*(pk==='day'?1.5:1);
+    details.push({name:pillarNames[pi],score,rels,ms,mb:mb_,fs,fb});
+    relations.push(...rels);
+  });
+
+  const weights=1+1+1.5+1;
+  totalScore=Math.round(totalScore/weights);
+
+  // 오행 보완 분석
+  const maleOheng=[0,0,0,0,0],femaleOheng=[0,0,0,0,0];
+  pillars.forEach(pk=>{
+    maleOheng[STEM_OHENG[male[pk].stem]]++;maleOheng[BRANCH_OHENG[male[pk].branch]]++;
+    femaleOheng[STEM_OHENG[female[pk].stem]]++;femaleOheng[BRANCH_OHENG[female[pk].branch]]++;
+  });
+  const combinedOheng=maleOheng.map((v,i)=>v+femaleOheng[i]);
+  const missingForMale=[];const missingForFemale=[];
+  for(let i=0;i<5;i++){if(maleOheng[i]===0&&femaleOheng[i]>0)missingForMale.push(OHENG[i]);if(femaleOheng[i]===0&&maleOheng[i]>0)missingForFemale.push(OHENG[i])}
+
+  // 일간 궁합 (가장 중요)
+  const dayHap=checkStemHap(male.day.stem,female.day.stem);
+
+  // 띠 궁합
+  const ddiHap=checkBranchYukhap(male.year.branch,female.year.branch);
+  const ddiChung=checkChung(male.year.branch,female.year.branch);
+  const DDI=['쥐','소','호랑이','토끼','용','뱀','말','양','원숭이','닭','개','돼지'];
+
+  // 등급
+  let grade,gradeColor;
+  if(totalScore>=85){grade='천생연분';gradeColor='var(--gold)'}
+  else if(totalScore>=75){grade='좋은 궁합';gradeColor='var(--wood)'}
+  else if(totalScore>=60){grade='무난한 궁합';gradeColor='var(--water)'}
+  else if(totalScore>=45){grade='노력이 필요';gradeColor='var(--earth)'}
+  else{grade='주의 필요';gradeColor='var(--accent)'}
+
+  // ---- 렌더링 ----
+  let html='';
+  html+=`<div style="text-align:center;margin:24px 0"><div class="score-circle"><div class="num" style="color:${gradeColor}">${totalScore}</div><div class="lbl">/ 100</div></div><div style="font-size:1.3em;font-weight:900;color:${gradeColor};margin-bottom:4px">${grade}</div><div style="font-size:0.85em;color:var(--text-dim)">${my}년생 ${DDI[male.year.branch]}띠 ♂ × ${fy}년생 ${DDI[female.year.branch]}띠 ♀</div></div>`;
+
+  // 사주 비교
+  html+=`<div style="margin-bottom:20px">`;
+  details.forEach(d=>{
+    const w=d.name==='일주'?'border:1px solid var(--gold)':'';
+    html+=`<div class="saju-compare" style="margin-bottom:8px">
+      <div class="pillar-col"><div class="stem-txt" style="color:${OHENG_COLOR[STEM_OHENG[d.ms]]}">${CHEONGAN[d.ms]}<span class="hanja">${CHEONGAN_HANJA[d.ms]}</span></div><div class="branch-txt" style="color:${OHENG_COLOR[BRANCH_OHENG[d.mb]]}">${JIJI[d.mb]}<span class="hanja">${JIJI_HANJA[d.mb]}</span></div></div>
+      <div class="vs"><div style="text-align:center"><div style="font-size:0.45em;color:var(--text-dim);margin-bottom:2px">${d.name}</div>${d.rels.map(r=>`<span class="relation-badge ${r.cls}">${r.text}</span>`).join('')}<div style="font-size:0.5em;margin-top:4px;color:var(--gold)">${d.score}점</div></div></div>
+      <div class="pillar-col"><div class="stem-txt" style="color:${OHENG_COLOR[STEM_OHENG[d.fs]]}">${CHEONGAN[d.fs]}<span class="hanja">${CHEONGAN_HANJA[d.fs]}</span></div><div class="branch-txt" style="color:${OHENG_COLOR[BRANCH_OHENG[d.fb]]}">${JIJI[d.fb]}<span class="hanja">${JIJI_HANJA[d.fb]}</span></div></div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // 항목별 분석
+  html+=`<div class="compat-grid">`;
+  // 일간 궁합
+  html+=`<div class="compat-card"><h4>💑 일간 궁합</h4>`;
+  if(dayHap)html+=`<p style="color:var(--gold);font-weight:700">천간합! 서로를 완성시키는 최고의 인연입니다.</p><p>${CHEONGAN[male.day.stem]}(${CHEONGAN_HANJA[male.day.stem]})과 ${CHEONGAN[female.day.stem]}(${CHEONGAN_HANJA[female.day.stem]})이 합을 이루어 깊은 끌림과 조화가 있습니다.</p>`;
+  else{
+    const doh1=STEM_OHENG[male.day.stem],doh2=STEM_OHENG[female.day.stem];
+    if(isGenerating(doh1,doh2))html+=`<p>남성의 일간이 여성을 <span style="color:var(--wood)">생(生)</span>하여 보살피는 관계입니다.</p>`;
+    else if(isGenerating(doh2,doh1))html+=`<p>여성의 일간이 남성을 <span style="color:var(--wood)">생(生)</span>하여 내조하는 관계입니다.</p>`;
+    else if(doh1===doh2)html+=`<p>같은 오행으로 <span style="color:var(--water)">동질감</span>이 강합니다. 비슷한 가치관을 공유합니다.</p>`;
+    else html+=`<p>서로 다른 기운으로 <span style="color:var(--earth)">보완적</span> 관계입니다. 차이를 존중하면 좋은 궁합이 됩니다.</p>`;
+  }
+  html+=`</div>`;
+
+  // 띠 궁합
+  html+=`<div class="compat-card"><h4>🐾 띠 궁합</h4>`;
+  if(ddiHap)html+=`<p style="color:var(--gold)">육합! ${DDI[male.year.branch]}띠와 ${DDI[female.year.branch]}띠는 천생연분입니다.</p>`;
+  else if(ddiChung)html+=`<p style="color:var(--accent)">${DDI[male.year.branch]}띠와 ${DDI[female.year.branch]}띠는 충(冲) 관계입니다. 서로의 차이를 인정하고 배려하면 극복할 수 있습니다.</p>`;
+  else if(checkSamhap(male.year.branch,female.year.branch))html+=`<p style="color:var(--wood)">삼합! ${DDI[male.year.branch]}띠와 ${DDI[female.year.branch]}띠는 좋은 조화를 이룹니다.</p>`;
+  else html+=`<p>${DDI[male.year.branch]}띠와 ${DDI[female.year.branch]}띠는 무난한 관계입니다. 서로의 장점을 살려주세요.</p>`;
+  html+=`</div>`;
+
+  // 오행 보완
+  html+=`<div class="compat-card"><h4>☯ 오행 조화</h4>`;
+  if(missingForMale.length>0)html+=`<p>여성이 남성에게 부족한 <span style="color:var(--gold)">${missingForMale.join(', ')}</span> 기운을 보완해줍니다.</p>`;
+  if(missingForFemale.length>0)html+=`<p>남성이 여성에게 부족한 <span style="color:var(--gold)">${missingForFemale.join(', ')}</span> 기운을 보완해줍니다.</p>`;
+  if(missingForMale.length===0&&missingForFemale.length===0)html+=`<p>두 사람 모두 오행이 고루 갖추어져 있어 균형 잡힌 만남입니다.</p>`;
+  html+=`</div>`;
+
+  // 종합
+  html+=`<div class="compat-card"><h4>📊 항목별 점수</h4>`;
+  details.forEach(d=>{
+    const c=d.score>=70?'var(--wood)':d.score>=50?'var(--gold)':'var(--accent)';
+    html+=`<div class="score-bar"><span class="label">${d.name}</span><div class="bar"><div class="bar-fill" style="width:${d.score}%;background:${c}"></div></div><span style="font-size:0.8em;min-width:30px;text-align:right">${d.score}</span></div>`;
+  });
+  html+=`</div></div>`;
+
+  // 종합 조언
+  html+=`<div class="advice-box"><h3>💡 궁합 종합 조언</h3><p>${getAdvice(totalScore,dayHap,ddiChung,male,female)}</p></div>`;
+
+  const area=document.getElementById('resultArea');
+  area.innerHTML=html;
+  area.style.display='block';
+  area.scrollIntoView({behavior:'smooth'});
+}
+
+function getAdvice(score,dayHap,ddiChung,m,f){
+  let txt='';
+  if(score>=80)txt+='두 분은 전체적으로 매우 좋은 궁합입니다. 서로의 기운이 잘 어울리며, 함께할 때 시너지가 발생합니다. ';
+  else if(score>=65)txt+='두 분은 전반적으로 양호한 궁합입니다. 일부 차이점이 있지만 서로를 보완하는 좋은 관계입니다. ';
+  else if(score>=50)txt+='두 분은 서로 다른 기운을 가지고 있어 노력이 필요한 궁합입니다. ';
+  else txt+='기운의 충돌이 있어 서로를 이해하려는 적극적인 노력이 필요합니다. ';
+  if(dayHap)txt+='특히 일간이 합을 이루어 본질적으로 서로에게 끌리는 인연입니다. ';
+  if(ddiChung)txt+='띠가 충 관계이므로 가치관 차이에서 갈등이 올 수 있으나, 이를 인식하고 배려하면 오히려 성장의 기회가 됩니다. ';
+  txt+='궁합은 참고일 뿐, 가장 중요한 것은 서로를 향한 마음과 노력입니다.';
+  return txt;
+}
+
+// ---- 초기화 ----
+function init(){
+  ['m_','f_'].forEach(prefix=>{
+    const ms=document.getElementById(prefix+'month');
+    for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'월';ms.appendChild(o)}
+    const ds=document.getElementById(prefix+'day');
+    for(let i=1;i<=31;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'일';ds.appendChild(o)}
+    const hs=document.getElementById(prefix+'hour');
+    for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'시';hs.appendChild(o)}
+  });
+}
+init();
+</script>
+</body>
+</html>
