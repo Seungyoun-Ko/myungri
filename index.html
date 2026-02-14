@@ -243,16 +243,24 @@ body {
 <div class="header">
   <h1>만세력 萬歲曆<span>사주팔자 · 음양오행 · 대운 분석</span></h1>
 </div>
-<div class="nav" style="display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333">
+<div class="nav" style="display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333;flex-wrap:wrap">
   <a href="index.html" style="color:var(--gold);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid var(--gold)">만세력</a>
   <a href="unsebogi.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">운세보기</a>
   <a href="gunghap.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">궁합</a>
   <a href="daily.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">오늘의 운세</a>
+  <a href="jamidusu.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">자미두수</a>
 </div>
 
 <div class="input-section">
   <div class="input-group">
-    <label>양력 연도</label>
+    <label>달력 종류</label>
+    <select id="calendarType" onchange="updateYearLabel()">
+      <option value="solar">양력 (陽曆)</option>
+      <option value="lunar">음력 (陰曆)</option>
+    </select>
+  </div>
+  <div class="input-group">
+    <label id="yearLabel">양력 연도</label>
     <input type="number" id="inputYear" min="1900" max="2050" value="1990">
   </div>
   <div class="input-group">
@@ -272,6 +280,22 @@ body {
     <select id="inputMin"></select>
   </div>
   <div class="input-group">
+    <label>출생 지역</label>
+    <select id="birthRegion">
+      <option value="seoul">서울/경기</option>
+      <option value="busan">부산/경남</option>
+      <option value="daegu">대구/경북</option>
+      <option value="incheon">인천</option>
+      <option value="gwangju">광주/전남</option>
+      <option value="daejeon">대전/충남</option>
+      <option value="ulsan">울산</option>
+      <option value="gangwon">강원</option>
+      <option value="chungbuk">충북</option>
+      <option value="jeonbuk">전북</option>
+      <option value="jeju">제주</option>
+    </select>
+  </div>
+  <div class="input-group">
     <label>성별</label>
     <div class="gender-group">
       <input type="radio" name="gender" id="gMale" value="M" checked>
@@ -282,6 +306,9 @@ body {
   </div>
   <button class="btn btn-primary" onclick="calculateSaju()">사주 보기</button>
   <button class="btn btn-secondary" onclick="setToday()">오늘</button>
+</div>
+<div id="dstNotice" style="display:none;background:rgba(233,69,96,0.1);padding:10px;text-align:center;font-size:0.85em;color:var(--accent);border-bottom:1px solid var(--accent)">
+  ⚠️ 서머타임이 적용된 시기입니다. 시간이 자동 조정되었습니다.
 </div>
 
 <div class="main">
@@ -305,6 +332,7 @@ body {
   만세력 萬歲曆 &copy; 2026 | 양력 1900~2050년 지원 | 입춘 기준 년주, 절기 기준 월주, 진태양시 보정
 </div>
 
+<script src="timezone-lunar.js"></script>
 <script>
 // ============================================================
 // 만세력 (萬歲曆) - Perpetual Calendar / Four Pillars Calculator
@@ -918,6 +946,16 @@ function setToday() {
   calculateSaju();
 }
 
+function updateYearLabel() {
+  const calType = document.getElementById('calendarType').value;
+  const yearLabel = document.getElementById('yearLabel');
+  if (calType === 'lunar') {
+    yearLabel.textContent = '음력 연도';
+  } else {
+    yearLabel.textContent = '양력 연도';
+  }
+}
+
 function changeMonth(delta) {
   calMonth += delta;
   if (calMonth > 12) { calMonth = 1; calYear++; }
@@ -1021,16 +1059,46 @@ function renderCalendar() {
 // 사주 결과 렌더링
 // ============================================================
 function calculateSaju() {
-  const year = parseInt(document.getElementById('inputYear').value);
-  const month = parseInt(document.getElementById('inputMonth').value);
-  const day = parseInt(document.getElementById('inputDay').value);
-  const hour = parseInt(document.getElementById('inputHour').value);
+  let year = parseInt(document.getElementById('inputYear').value);
+  let month = parseInt(document.getElementById('inputMonth').value);
+  let day = parseInt(document.getElementById('inputDay').value);
+  let hour = parseInt(document.getElementById('inputHour').value);
   const minute = parseInt(document.getElementById('inputMin').value);
   const gender = document.querySelector('input[name="gender"]:checked').value;
+  const calendarType = document.getElementById('calendarType').value;
+  const region = document.getElementById('birthRegion').value;
+
+  // 음력 -> 양력 변환
+  if (calendarType === 'lunar') {
+    const converted = accurateLunarToSolar(year, month, day, false);
+    if (converted) {
+      year = converted.year;
+      month = converted.month;
+      day = converted.day;
+    } else {
+      alert('음력 변환에 실패했습니다. 양력으로 입력해주세요.');
+      return;
+    }
+  }
 
   if (year < 1900 || year > 2050) {
     alert('1900년~2050년 범위에서 입력해주세요.');
     return;
+  }
+
+  // 서머타임 적용 확인
+  const dstResult = applyDST(year, month, day, hour);
+  if (dstResult.applied) {
+    hour = dstResult.adjustedHour;
+    if (dstResult.dayAdjust !== 0) {
+      // 날짜 조정 필요 (간략화)
+      day += dstResult.dayAdjust;
+    }
+    // DST 공지 표시
+    document.getElementById('dstNotice').style.display = 'block';
+    document.getElementById('dstNotice').innerHTML = `⚠️ ${dstResult.message}`;
+  } else {
+    document.getElementById('dstNotice').style.display = 'none';
   }
 
   const terms = getYearJeolgi(year);
