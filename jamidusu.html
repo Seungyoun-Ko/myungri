@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자미두수 (紫微斗數) 명반</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#1a1a2e;--surface:#16213e;--surface2:#0f3460;--accent:#e94560;--gold:#f0c040;--text:#eee;--text-dim:#999;
+  --wood:#4caf50;--fire:#f44336;--earth:#ff9800;--metal:#e0e0e0;--water:#2196f3;
+}
+body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}
+
+.header{background:linear-gradient(135deg,var(--surface),var(--surface2));padding:20px;text-align:center;border-bottom:2px solid var(--accent);}
+.header h1{font-size:2em;font-weight:900;color:var(--gold);text-shadow:0 2px 10px rgba(240,192,64,0.3);}
+.header h1 span{font-size:0.5em;color:var(--text-dim);display:block;margin-top:4px;font-weight:300;}
+
+.nav{display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333;flex-wrap:wrap;}
+.nav a{color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333;transition:all 0.2s;}
+.nav a:hover{border-color:var(--gold);color:var(--gold);}
+.nav a.active{color:var(--gold);border-color:var(--gold);}
+
+.input-section{background:var(--surface);padding:20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:flex-end;border-bottom:1px solid #333;}
+.input-group{display:flex;flex-direction:column;gap:4px;}
+.input-group label{font-size:0.8em;color:var(--text-dim);}
+.input-group select,.input-group input{
+  padding:8px 12px;border:1px solid #444;border-radius:6px;background:var(--bg);color:var(--text);font-size:1em;min-width:80px;
+}
+.input-group select:focus,.input-group input:focus{border-color:var(--gold);outline:none;}
+.gender-group{display:flex;gap:8px;align-items:center;}
+.gender-group label{font-size:1em;cursor:pointer;padding:8px 16px;border:1px solid #444;border-radius:6px;transition:all 0.2s;}
+.gender-group input[type="radio"]{display:none;}
+.gender-group input[type="radio"]:checked+label{background:var(--accent);border-color:var(--accent);}
+.btn{padding:10px 24px;border:none;border-radius:6px;cursor:pointer;font-size:1em;font-weight:700;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{background:#ff5a75;transform:translateY(-1px);}
+
+/* Chart Grid */
+.chart-container{max-width:1100px;margin:20px auto;padding:0 12px;}
+.chart-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,auto);gap:3px;}
+
+.palace-cell{
+  background:var(--surface);border:1px solid #333;border-radius:6px;padding:8px 6px;min-height:140px;
+  display:flex;flex-direction:column;position:relative;transition:all 0.2s;overflow:hidden;
+}
+.palace-cell:hover{border-color:var(--gold);box-shadow:0 0 12px rgba(240,192,64,0.15);z-index:2;}
+.palace-cell .branch-label{position:absolute;top:4px;right:6px;font-size:0.7em;color:var(--text-dim);}
+.palace-cell .stem-label{position:absolute;top:4px;left:6px;font-size:0.7em;color:var(--text-dim);}
+.palace-name{font-size:0.85em;font-weight:700;color:var(--gold);margin-bottom:2px;text-align:center;margin-top:16px;}
+.palace-name-kr{font-size:0.7em;color:var(--text-dim);text-align:center;margin-bottom:4px;}
+.star-list{flex:1;display:flex;flex-wrap:wrap;gap:2px 4px;align-content:flex-start;justify-content:center;}
+.star-tag{font-size:0.72em;padding:1px 4px;border-radius:3px;white-space:nowrap;}
+.star-main{color:var(--gold);background:rgba(240,192,64,0.1);font-weight:700;}
+.star-aux{color:#aad;background:rgba(170,170,221,0.08);font-size:0.68em;}
+.star-lucun{color:var(--wood);background:rgba(76,175,80,0.1);}
+.star-sha{color:var(--fire);background:rgba(244,67,54,0.1);}
+
+/* Center info */
+.center-info{
+  grid-column:2/4;grid-row:2/4;
+  background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--accent);border-radius:10px;
+  padding:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;
+  min-height:280px;
+}
+.center-info h2{font-size:1.1em;color:var(--gold);margin-bottom:4px;}
+.center-info .info-line{font-size:0.85em;color:var(--text-dim);line-height:1.8;}
+.center-info .info-line strong{color:var(--text);}
+.center-info .highlight{color:var(--accent);font-weight:700;}
+
+/*身宮 indicator */
+.singung-badge{position:absolute;bottom:4px;right:4px;font-size:0.6em;color:var(--accent);font-weight:700;background:rgba(233,69,96,0.15);padding:1px 4px;border-radius:3px;}
+
+/* Analysis */
+.analysis-section{max-width:1100px;margin:20px auto;padding:0 12px;}
+.analysis-box{background:var(--surface);border-radius:10px;padding:16px;margin-bottom:12px;border:1px solid #333;}
+.analysis-box h3{font-size:1em;color:var(--gold);margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:6px;}
+.analysis-box p{font-size:0.9em;line-height:1.7;color:var(--text-dim);}
+.analysis-box .star-name{color:var(--gold);font-weight:700;}
+.palace-analysis{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
+.palace-analysis .pa-item{background:rgba(255,255,255,0.02);border-radius:6px;padding:10px;border:1px solid #2a2a4a;}
+.palace-analysis .pa-item h4{font-size:0.85em;color:var(--gold);margin-bottom:4px;}
+.palace-analysis .pa-item .pa-stars{font-size:0.8em;color:var(--accent);margin-bottom:4px;}
+.palace-analysis .pa-item p{font-size:0.8em;line-height:1.5;}
+
+/* Daehan */
+.daehan-section{overflow-x:auto;}
+.daehan-table{width:100%;border-collapse:collapse;font-size:0.85em;min-width:600px;}
+.daehan-table th{color:var(--text-dim);font-weight:400;padding:6px;border-bottom:1px solid #333;}
+.daehan-table td{text-align:center;padding:6px 4px;border-bottom:1px solid #222;}
+.daehan-table .current{background:rgba(233,69,96,0.15);border-radius:4px;}
+
+.footer{text-align:center;padding:12px;font-size:0.75em;color:var(--text-dim);background:var(--surface);border-top:1px solid #333;margin-top:20px;}
+
+.placeholder-msg{text-align:center;padding:60px 20px;color:var(--text-dim);}
+.placeholder-msg p{margin-bottom:12px;}
+
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
+
+@media(max-width:768px){
+  .chart-grid{gap:2px;}
+  .palace-cell{min-height:110px;padding:5px 3px;}
+  .palace-name{font-size:0.75em;margin-top:14px;}
+  .star-tag{font-size:0.62em;}
+  .center-info{padding:10px;}
+  .center-info h2{font-size:0.95em;}
+  .center-info .info-line{font-size:0.75em;}
+}
+</style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" oncopy="return false;" oncut="return false;">
+
+<script>
+(function(){
+  document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
+  document.addEventListener('selectstart',function(e){e.preventDefault();return false;});
+  document.addEventListener('dragstart',function(e){e.preventDefault();return false;});
+  document.addEventListener('copy',function(e){e.preventDefault();return false;});
+  document.addEventListener('cut',function(e){e.preventDefault();return false;});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='F12'){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i')){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.shiftKey&&(e.key==='J'||e.key==='j')){e.preventDefault();return false;}
+    if(e.ctrlKey&&e.shiftKey&&(e.key==='C'||e.key==='c')){e.preventDefault();return false;}
+    if(e.ctrlKey&&(e.key==='U'||e.key==='u')){e.preventDefault();return false;}
+    if(e.ctrlKey&&(e.key==='S'||e.key==='s')){e.preventDefault();return false;}
+    if(e.ctrlKey&&(e.key==='A'||e.key==='a')){e.preventDefault();return false;}
+    if(e.ctrlKey&&(e.key==='P'||e.key==='p')){e.preventDefault();return false;}
+  });
+  var devToolsOpen=false;var threshold=160;
+  setInterval(function(){
+    var w=window.outerWidth-window.innerWidth>threshold;var h=window.outerHeight-window.innerHeight>threshold;
+    if(w||h){if(!devToolsOpen){devToolsOpen=true;document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e;color:#e94560;font-size:1.5em;font-family:sans-serif;text-align:center;padding:20px;">비인가 접근이 감지되었습니다.<br>개발자 도구를 닫아주세요.</div>';}}
+    else{if(devToolsOpen){devToolsOpen=false;location.reload();}}
+  },1000);
+  var noop=function(){};
+  ['log','debug','info','warn','error','table','dir','trace','group','groupEnd'].forEach(function(m){console[m]=noop;});
+  if(window.self!==window.top){window.top.location=window.self.location;}
+  window.addEventListener('beforeprint',function(e){e.preventDefault();});
+  var ps=document.createElement('style');ps.textContent='@media print{body{display:none !important;}}';document.head.appendChild(ps);
+})();
+</script>
+
+<div class="header">
+  <h1>자미두수 紫微斗數<span>명반 분석 · 12궁 · 주성 배치</span></h1>
+</div>
+<div class="nav">
+  <a href="index.html">만세력</a>
+  <a href="unsebogi.html">운세보기</a>
+  <a href="gunghap.html">궁합</a>
+  <a href="daily.html">오늘의 운세</a>
+  <a href="jamidusu.html" class="active">자미두수</a>
+</div>
+
+<div class="input-section">
+  <div class="input-group">
+    <label>양력 연도</label>
+    <input type="number" id="inputYear" min="1900" max="2050" value="1990">
+  </div>
+  <div class="input-group">
+    <label>월</label>
+    <select id="inputMonth"></select>
+  </div>
+  <div class="input-group">
+    <label>일</label>
+    <select id="inputDay"></select>
+  </div>
+  <div class="input-group">
+    <label>시</label>
+    <select id="inputHour"></select>
+  </div>
+  <div class="input-group">
+    <label>성별</label>
+    <div class="gender-group">
+      <input type="radio" name="gender" id="gMale" value="M" checked>
+      <label for="gMale">남 ♂</label>
+      <input type="radio" name="gender" id="gFemale" value="F">
+      <label for="gFemale">여 ♀</label>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="calculate()">명반 보기</button>
+</div>
+
+<div class="chart-container" id="chartContainer">
+  <div class="placeholder-msg">
+    <p style="font-size:2em;">☯</p>
+    <p>생년월일시를 입력하고<br><strong>명반 보기</strong>를 클릭하세요</p>
+  </div>
+</div>
+
+<div class="analysis-section" id="analysisSection"></div>
+
+<div class="footer">자미두수 명반 분석 &copy; 2024 | 참고용 정보이며, 전문 상담을 대체하지 않습니다.</div>
+
+<script>
+// ============================================================
+// 기초 데이터
+// ============================================================
+const STEMS = ['갑','을','병','정','무','기','경','신','임','계'];
+const STEMS_HANJA = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const BRANCHES = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const BRANCHES_HANJA = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const BRANCH_ANIMALS = ['쥐','소','호랑이','토끼','용','뱀','말','양','원숭이','닭','개','돼지'];
+
+// 시진 (12 시진) - hour ranges
+const HOUR_LABELS = [
+  '자시 (23:00~01:00)', '축시 (01:00~03:00)', '인시 (03:00~05:00)',
+  '묘시 (05:00~07:00)', '진시 (07:00~09:00)', '사시 (09:00~11:00)',
+  '오시 (11:00~13:00)', '미시 (13:00~15:00)', '신시 (15:00~17:00)',
+  '유시 (17:00~19:00)', '술시 (19:00~21:00)', '해시 (21:00~23:00)'
+];
+
+// ============================================================
+// 음력 데이터 (1900~2050)
+// ============================================================
+const LUNAR_DATA = [
+  0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+  0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+  0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+  0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+  0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+  0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+  0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+  0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+  0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+  0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+  0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+  0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+  0x14b63
+];
+
+function lunarMonthDays(year){
+  const data=LUNAR_DATA[year-1900];const months=[];
+  for(let i=0;i<12;i++)months.push((data>>(4+i))&1?30:29);
+  return months;
+}
+function lunarLeapMonth(year){return LUNAR_DATA[year-1900]&0xf;}
+function lunarLeapMonthDays(year){
+  const leap=lunarLeapMonth(year);if(!leap)return 0;
+  return(LUNAR_DATA[year-1900]>>16)&1?30:29;
+}
+function lunarYearDays(year){
+  let total=0;const months=lunarMonthDays(year);
+  for(let i=0;i<12;i++)total+=months[i];total+=lunarLeapMonthDays(year);return total;
+}
+function solarToLunar(sy,sm,sd){
+  const baseDate=new Date(1900,0,31);const target=new Date(sy,sm-1,sd);
+  let offset=Math.floor((target-baseDate)/86400000);
+  let lunarYear=1900;let yearDays;
+  while(lunarYear<2051&&offset>0){yearDays=lunarYearDays(lunarYear);if(offset<yearDays)break;offset-=yearDays;lunarYear++;}
+  const leap=lunarLeapMonth(lunarYear);const months=lunarMonthDays(lunarYear);
+  let lunarMonth=1;let isLeap=false;let monthDays;
+  for(let i=0;i<12;i++){
+    monthDays=months[i];if(offset<monthDays){lunarMonth=i+1;break;}offset-=monthDays;
+    if(leap===(i+1)){monthDays=lunarLeapMonthDays(lunarYear);if(offset<monthDays){lunarMonth=i+1;isLeap=true;break;}offset-=monthDays;}
+    if(i===11)lunarMonth=12;
+  }
+  return{year:lunarYear,month:lunarMonth,day:offset+1,isLeap};
+}
+
+// ============================================================
+// 절기 계산
+// ============================================================
+function getJD(y,m,d){if(m<=2){y--;m+=12;}const A=Math.floor(y/100);const B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;}
+function jdToDate(jd){jd+=0.5;const Z=Math.floor(jd);const F=jd-Z;let A;if(Z<2299161)A=Z;else{const a=Math.floor((Z-1867216.25)/36524.25);A=Z+1+a-Math.floor(a/4);}const B=A+1524;const C=Math.floor((B-122.1)/365.25);const D=Math.floor(365.25*C);const E=Math.floor((B-D)/30.6001);const day=B-D-Math.floor(30.6001*E)+F;const month=(E<14)?E-1:E-13;const year=(month>2)?C-4716:C-4715;return{year,month,day:Math.floor(day)};}
+function getSunLongitude(jd){const T=(jd-2451545.0)/36525.0;let L0=280.46646+36000.76983*T+0.0003032*T*T;let M=357.52911+35999.05029*T-0.0001537*T*T;M=M*Math.PI/180;const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);let lon=L0+C;const omega=125.04-1934.136*T;lon=lon-0.00569-0.00478*Math.sin(omega*Math.PI/180);lon=((lon%360)+360)%360;return lon;}
+function getSolarTermDate(year,termIndex){
+  const targetLongitudes=[285,300,315,330,345,0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270];
+  const targetLon=targetLongitudes[termIndex];
+  const monthApprox=[1.05,1.20,2.04,2.19,3.06,3.21,4.05,4.20,5.06,5.21,6.06,6.21,7.07,7.23,8.07,8.23,9.08,9.23,10.08,10.23,11.07,11.22,12.07,12.22];
+  const approxMonth=Math.floor(monthApprox[termIndex]);const approxDay=Math.round((monthApprox[termIndex]%1)*100);
+  let jd=getJD(year,approxMonth,approxDay);
+  for(let i=0;i<50;i++){const lon=getSunLongitude(jd);let diff=targetLon-lon;if(diff>180)diff-=360;if(diff<-180)diff+=360;if(Math.abs(diff)<0.0001)break;jd+=diff/360*365.25;}
+  return jdToDate(jd);
+}
+
+// 년주 (입춘 기준)
+function getYearStemBranch(year,month,day){
+  const ipchun=getSolarTermDate(year,2);
+  let adjYear=year;
+  if(month<ipchun.month||(month===ipchun.month&&day<ipchun.day))adjYear--;
+  const idx=((adjYear-4)%60+60)%60;
+  return{stem:idx%10,branch:idx%12};
+}
+
+// 일주
+function getDayGapjaIndex(y,m,d){const jd=getJD(y,m,d);return((Math.floor(jd)+50)%60+60)%60;}
+
+// ============================================================
+// 자미두수 핵심 데이터
+// ============================================================
+
+// 12궁 이름
+const PALACE_NAMES = ['명궁','형제궁','부부궁','자녀궁','재백궁','질액궁','천이궁','교우궁','관록궁','전택궁','복덕궁','부모궁'];
+const PALACE_HANJA = ['命宮','兄弟宮','夫妻宮','子女宮','財帛宮','疾厄宮','遷移宮','交友宮','官祿宮','田宅宮','福德宮','父母宮'];
+
+// 4x4 grid에서 12지지의 위치 매핑 (row, col)
+// 巳(5)  午(6)  未(7)  申(8)
+// 辰(4)  [중앙]  [중앙]  酉(9)
+// 卯(3)  [중앙]  [중앙]  戌(10)
+// 寅(2)  丑(1)  子(0)  亥(11)
+const GRID_POS = {
+  5:[0,0], 6:[0,1], 7:[0,2], 8:[0,3],
+  4:[1,0], 9:[1,3],
+  3:[2,0], 10:[2,3],
+  2:[3,0], 1:[3,1], 0:[3,2], 11:[3,3]
+};
+
+// 납음오행 (60甲子)
+// 0=금, 1=화, 2=목, 3=수, 4=토
+const NAYIN_OHENG = [
+  0,0,1,1,2,2,4,4,0,0,
+  1,1,3,3,4,4,0,0,2,2,
+  0,0,2,2,3,3,4,4,1,1,
+  2,2,0,0,1,1,3,3,4,4,
+  3,3,4,4,0,0,1,1,2,2,
+  1,1,3,3,2,2,0,0,4,4
+];
+// 납음오행 → 오행국: 금=4, 화=6, 목=3, 수=2, 토=5
+const NAYIN_TO_JU = [4,6,3,2,5];
+
+// 궁의 천간 결정: 년간으로부터 시작하여 인궁(寅)부터 순서대로 배정
+// 년간에 따른 인궁(寅)의 천간 시작 인덱스
+// 갑/기 → 병인, 을/경 → 무인, 병/신 → 경인, 정/임 → 임인, 무/계 → 갑인
+const YIN_START_STEM = [2, 4, 6, 8, 0]; // 갑기→2(병), 을경→4(무), 병신→6(경), 정임→8(임), 무계→0(갑)
+
+// 자미성 위치 결정표 (ZIWEI_TABLE[국수][음력일] = 지지인덱스)
+// juNumber: 2=수이국, 3=목삼국, 4=금사국, 5=토오국, 6=화육국
+const ZIWEI_TABLE = {
+  2:[1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,0,0,1,1,2,2,3,3,4],
+  3:[2,3,3,3,4,5,5,5,6,7,7,7,8,9,9,9,10,11,11,11,0,1,1,1,2,3,3,3,4,5],
+  4:[3,4,4,4,4,5,6,6,6,6,7,8,8,8,8,9,10,10,10,10,11,0,0,0,0,1,2,2,2,2],
+  5:[4,5,5,5,5,5,6,7,7,7,7,7,8,9,9,9,9,9,10,11,11,11,11,11,0,1,1,1,1,1],
+  6:[5,6,6,6,6,6,6,7,8,8,8,8,8,8,9,10,10,10,10,10,10,11,0,0,0,0,0,0,1,2]
+};
+
+// 자미 계열 성 위치 (자미 위치에 따라)
+// [자미, 천기, 태양, 무곡, 천동, 염정]
+const ZIWEI_SERIES = {};
+for(let p=0;p<12;p++){
+  ZIWEI_SERIES[p] = [p, (p+11)%12, (p+9)%12, (p+8)%12, (p+7)%12, (p+4)%12];
+}
+
+// 천부 위치 (자미로부터 미러링: 寅申 축 기준)
+const TIANFU_FROM_ZIWEI = [4,3,2,1,0,11,10,9,8,7,6,5];
+
+// 천부 계열 오프셋 [천부, 태음, 탐랑, 거문, 천상, 천량, 칠살, 파군]
+const TIANFU_OFFSETS = [0,1,2,3,4,5,6,10];
+
+// 14주성 이름
+const MAIN_STAR_NAMES_ZW = ['자미','천기','태양','무곡','천동','염정'];
+const MAIN_STAR_NAMES_TF = ['천부','태음','탐랑','거문','천상','천량','칠살','파군'];
+
+// ============================================================
+// 보성 배치 테이블
+// ============================================================
+// 문창 by birth hour (시지 index 0-11)
+const WENCHANG_POS = [10,9,8,7,6,5,4,3,2,1,0,11];
+// 문곡 by birth hour
+const WENQU_POS = [4,5,6,7,8,9,10,11,0,1,2,3];
+// 좌보 by birth month (음력 1-12 → index 0-11)
+const ZUOFU_POS = [4,5,6,7,8,9,10,11,0,1,2,3];
+// 우필 by birth month
+const YOUBI_POS = [10,9,8,7,6,5,4,3,2,1,0,11];
+// 록존 by year stem (0-9)
+const LUCUN_POS = [2,3,5,6,5,6,8,9,11,0];
+// 천괴 by year stem
+const TIANKUI_POS = [1,0,11,11,1,0,7,6,3,3];
+// 천월 by year stem
+const TIANYUE_POS = [7,8,9,9,7,8,1,2,5,5];
+// 천마 by year branch (0-11)
+const TIANMA_POS = [2,11,8,5,2,11,8,5,2,11,8,5];
+
+// 화성 by year branch group and hour
+// 인오술→丑起, 신자진→寅起, 사유축→卯起, 해묘미→酉起
+const HUOXING_START = [1,9,2,3,1,9,2,3,1,9,2,3]; // yearBranch → start branch
+// 영성 similarly
+const LINGXING_START = [10,3,10,10,10,3,10,10,10,3,10,10]; // yearBranch → start branch
+
+// ============================================================
+// 성 해석 데이터
+// ============================================================
+const STAR_MEANINGS = {
+  '자미':{nature:'제왕의 별',desc:'리더십, 존엄, 포용력. 자미성이 명궁에 있으면 리더 기질이 강하고 존경받는 위치에 오를 수 있습니다.',element:'토'},
+  '천기':{nature:'지혜의 별',desc:'총명하고 기획력이 뛰어남. 분석력과 학문적 재능이 있으나 우유부단할 수 있습니다.',element:'목'},
+  '태양':{nature:'광명의 별',desc:'밝고 적극적이며 공적인 일에 유리. 남성에게 특히 길하며 사회적 성공을 나타냅니다.',element:'화'},
+  '무곡':{nature:'재물의 별',desc:'실행력이 강하고 재물 관리 능력이 탁월. 무곡이 명궁에 있으면 강직하고 결단력이 있습니다.',element:'금'},
+  '천동':{nature:'복록의 별',desc:'온화하고 즐거움을 추구. 복이 있으나 게으를 수 있으며 만년에 운이 트입니다.',element:'수'},
+  '염정':{nature:'정치의 별',desc:'정열적이고 다재다능. 복잡한 상황을 처리하는 능력이 있으나 감정 기복에 주의.',element:'화'},
+  '천부':{nature:'재고의 별',desc:'재물을 모으고 지키는 능력. 안정적이고 보수적이며 관리 능력이 뛰어납니다.',element:'토'},
+  '태음':{nature:'재성의 별',desc:'섬세하고 감성적. 부동산, 청정한 재물에 유리. 여성에게 특히 길합니다.',element:'수'},
+  '탐랑':{nature:'욕망의 별',desc:'다재다능하고 매력적. 사교성이 뛰어나나 욕심과 집착에 주의가 필요합니다.',element:'목'},
+  '거문':{nature:'암성의 별',desc:'언변이 뛰어나고 분석력이 강함. 구설수에 주의하나 전문직에서 두각을 나타냅니다.',element:'수'},
+  '천상':{nature:'인수의 별',desc:'공정하고 봉사정신이 강함. 관직이나 전문직에 적합하며 의존적 성향도 있습니다.',element:'수'},
+  '천량':{nature:'음덕의 별',desc:'인자하고 장수함. 어른의 덕이 있으며 종교, 의약, 공익 분야에 재능이 있습니다.',element:'토'},
+  '칠살':{nature:'장군의 별',desc:'용감하고 결단력이 있음. 개척 정신이 강하나 고독할 수 있으며 변동이 많습니다.',element:'금'},
+  '파군':{nature:'파괴의 별',desc:'변혁과 파괴를 통한 재건. 모험적이고 개혁적이나 안정을 잃기 쉽습니다.',element:'수'}
+};
+
+const PALACE_MEANINGS = {
+  '명궁':'나의 성격, 외모, 인생 전반적 방향을 나타내는 가장 중요한 궁입니다.',
+  '형제궁':'형제자매 관계, 동료 관계, 협력 관계를 나타냅니다.',
+  '부부궁':'배우자, 연애, 결혼 생활의 질을 나타냅니다.',
+  '자녀궁':'자녀 관계, 성생활, 투자 성향을 나타냅니다.',
+  '재백궁':'재물, 수입, 재산 관리 능력을 나타냅니다.',
+  '질액궁':'건강, 질병, 재액에 대한 정보를 나타냅니다.',
+  '천이궁':'사회 활동, 외부 환경, 여행운을 나타냅니다.',
+  '교우궁':'부하, 친구, 인간관계의 질을 나타냅니다.',
+  '관록궁':'직업, 사업, 사회적 지위를 나타냅니다.',
+  '전택궁':'부동산, 주거 환경, 가정을 나타냅니다.',
+  '복덕궁':'정신세계, 취미, 복과 덕을 나타냅니다.',
+  '부모궁':'부모 관계, 교육, 유전적 요소를 나타냅니다.'
+};
+
+// ============================================================
+// 초기화
+// ============================================================
+function initInputs(){
+  const mSel=document.getElementById('inputMonth');
+  for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'월';mSel.appendChild(o);}
+  const dSel=document.getElementById('inputDay');
+  for(let i=1;i<=31;i++){const o=document.createElement('option');o.value=i;o.textContent=i+'일';dSel.appendChild(o);}
+  const hSel=document.getElementById('inputHour');
+  for(let i=0;i<12;i++){const o=document.createElement('option');o.value=i;o.textContent=HOUR_LABELS[i];hSel.appendChild(o);}
+  // 기본값: 오늘
+  const now=new Date();
+  document.getElementById('inputYear').value=now.getFullYear();
+  mSel.value=now.getMonth()+1;
+  dSel.value=now.getDate();
+  const h=now.getHours();
+  hSel.value = h===23?0:h<1?0:Math.floor((h+1)/2);
+}
+initInputs();
+
+// ============================================================
+// 명궁 위치 결정
+// ============================================================
+// 명궁: 음력 월(1~12)과 시진(0~11, 0=子) 기준
+// 인궁(寅=2)에서 시작, 월수만큼 순행(+), 시진수만큼 역행(-)
+function getMingGongBranch(lunarMonth, hourBranch){
+  // 寅(2)에서 시작, 음력 월만큼 전진, 시진만큼 후퇴
+  let pos = (2 + lunarMonth - 1 - hourBranch + 12*10) % 12;
+  return pos;
+}
+
+// 신궁: 인궁에서 시작, 월수만큼 순행, 시진수만큼 순행
+function getShenGongBranch(lunarMonth, hourBranch){
+  let pos = (2 + lunarMonth - 1 + hourBranch) % 12;
+  return pos;
+}
+
+// ============================================================
+// 궁의 천간 결정
+// ============================================================
+function getPalaceStems(yearStem){
+  // 년간에 따라 인궁(寅)의 천간이 결정됨
+  const group = yearStem % 5; // 갑기=0, 을경=1, 병신=2, 정임=3, 무계=4
+  const yinStem = YIN_START_STEM[group];
+  const stems = new Array(12);
+  for(let i=0;i<12;i++){
+    // 寅=2 → index starts at branch 2
+    stems[(2+i)%12] = (yinStem + i) % 10;
+  }
+  return stems; // branch → stem
+}
+
+// ============================================================
+// 오행국 결정
+// ============================================================
+function getWuxingJu(mingGongBranch, palaceStems){
+  const stem = palaceStems[mingGongBranch];
+  // 60갑자 인덱스 = stem*12 + branch 가 아닌, 정확한 60甲子 인덱스를 계산
+  // 60甲子에서 천간=stem, 지지=branch인 조합의 인덱스
+  // stem과 branch가 같은 홀짝일 때만 유효한 조합
+  // index = (stem * 6 + ((branch - stem + 12) % 12) / 2) ... 복잡함
+  // 간단 공식: 60甲子 인덱스 = (stem + 10 - branch%10) * 6 + ...
+  // 더 간단: 두 값의 차이로 계산
+  const branch = mingGongBranch;
+  // 60甲子 index 공식: index에서 index%10=stem, index%12=branch
+  // 풀면: index = (6*stem - 5*branch + 60) % 60  ... 검증 필요
+  // 실제 공식: 만약 stem과 branch가 같은 홀짝이면
+  // index를 0-59에서 찾음
+  let idx = -1;
+  for(let i=0;i<60;i++){
+    if(i%10===stem && i%12===branch){idx=i;break;}
+  }
+  if(idx===-1) idx=0;
+
+  const nayinElement = NAYIN_OHENG[idx];
+  return NAYIN_TO_JU[nayinElement];
+}
+
+// ============================================================
+// 주성 배치
+// ============================================================
+function placeMainStars(ziweiPos){
+  const stars = {}; // branch → [star names]
+  for(let i=0;i<12;i++) stars[i]=[];
+
+  // 자미 계열
+  const zwSeries = ZIWEI_SERIES[ziweiPos];
+  for(let i=0;i<MAIN_STAR_NAMES_ZW.length;i++){
+    stars[zwSeries[i]].push({name:MAIN_STAR_NAMES_ZW[i],type:'main'});
+  }
+
+  // 천부 계열
+  const tfPos = TIANFU_FROM_ZIWEI[ziweiPos];
+  for(let i=0;i<MAIN_STAR_NAMES_TF.length;i++){
+    const pos = (tfPos + TIANFU_OFFSETS[i]) % 12;
+    stars[pos].push({name:MAIN_STAR_NAMES_TF[i],type:'main'});
+  }
+
+  return stars;
+}
+
+// ============================================================
+// 보성 배치
+// ============================================================
+function placeAuxStars(stars, yearStem, yearBranch, lunarMonth, hourBranch){
+  // 문창
+  stars[WENCHANG_POS[hourBranch]].push({name:'문창',type:'aux'});
+  // 문곡
+  stars[WENQU_POS[hourBranch]].push({name:'문곡',type:'aux'});
+  // 좌보
+  stars[ZUOFU_POS[lunarMonth-1]].push({name:'좌보',type:'aux'});
+  // 우필
+  stars[YOUBI_POS[lunarMonth-1]].push({name:'우필',type:'aux'});
+  // 록존
+  const lucunPos = LUCUN_POS[yearStem];
+  stars[lucunPos].push({name:'록존',type:'lucun'});
+  // 경양 (록존+1)
+  stars[(lucunPos+1)%12].push({name:'경양',type:'sha'});
+  // 타라 (록존-1)
+  stars[(lucunPos+11)%12].push({name:'타라',type:'sha'});
+  // 천괴
+  stars[TIANKUI_POS[yearStem]].push({name:'천괴',type:'aux'});
+  // 천월
+  stars[TIANYUE_POS[yearStem]].push({name:'천월',type:'aux'});
+  // 천마
+  stars[TIANMA_POS[yearBranch]].push({name:'천마',type:'aux'});
+  // 화성
+  const hStart = HUOXING_START[yearBranch];
+  const hPos = (hStart + hourBranch) % 12;
+  stars[hPos].push({name:'화성',type:'sha'});
+  // 영성
+  const lStart = LINGXING_START[yearBranch];
+  const lPos = (lStart + hourBranch) % 12;
+  stars[lPos].push({name:'영성',type:'sha'});
+}
+
+// ============================================================
+// 대한(大限) 계산
+// ============================================================
+function getDaehan(mingGongBranch, wuxingJu, yearStem, gender){
+  // 대한 시작 나이 = 오행국 수 + 1 (실제로는 국수에 따라 다름)
+  // 수이국=2세, 목삼국=3세, 금사국=4세, 토오국=5세, 화육국=6세 시작
+  // 양남음녀 순행, 음남양녀 역행
+  const isYangStem = yearStem % 2 === 0;
+  const isMale = gender === 'M';
+  const forward = (isYangStem && isMale) || (!isYangStem && !isMale);
+
+  const startAge = wuxingJu;
+  const periods = [];
+  let currentBranch = mingGongBranch;
+
+  for(let i=0;i<12;i++){
+    const fromAge = startAge + i*10;
+    const toAge = fromAge + 9;
+    periods.push({
+      branch: currentBranch,
+      branchName: BRANCHES_HANJA[currentBranch],
+      fromAge, toAge
+    });
+    if(forward) currentBranch = (currentBranch + 1) % 12;
+    else currentBranch = (currentBranch + 11) % 12;
+  }
+  return periods;
+}
+
+// ============================================================
+// 메인 계산 함수
+// ============================================================
+function calculate(){
+  const sy = parseInt(document.getElementById('inputYear').value);
+  const sm = parseInt(document.getElementById('inputMonth').value);
+  const sd = parseInt(document.getElementById('inputDay').value);
+  const hourBranch = parseInt(document.getElementById('inputHour').value);
+  const gender = document.querySelector('input[name="gender"]:checked').value;
+
+  // 양력 → 음력
+  const lunar = solarToLunar(sy, sm, sd);
+
+  // 년주 (입춘 기준)
+  const yearPillar = getYearStemBranch(sy, sm, sd);
+  const yearStem = yearPillar.stem;
+  const yearBranch = yearPillar.branch;
+
+  // 궁의 천간
+  const palaceStems = getPalaceStems(yearStem);
+
+  // 명궁 위치
+  const mingGong = getMingGongBranch(lunar.month, hourBranch);
+
+  // 신궁 위치
+  const shenGong = getShenGongBranch(lunar.month, hourBranch);
+
+  // 오행국
+  const wuxingJu = getWuxingJu(mingGong, palaceStems);
+  const juNames = {2:'수이국(水二局)',3:'목삼국(木三局)',4:'금사국(金四局)',5:'토오국(土五局)',6:'화육국(火六局)'};
+
+  // 자미성 위치
+  const lunarDay = Math.min(lunar.day, 30);
+  const ziweiPos = ZIWEI_TABLE[wuxingJu][lunarDay-1];
+
+  // 12궁 배정 (명궁부터 역행)
+  const palaces = new Array(12); // branch → palace index
+  for(let i=0;i<12;i++){
+    const branch = (mingGong - i + 12) % 12;
+    palaces[branch] = i;
+  }
+
+  // 주성 배치
+  const stars = placeMainStars(ziweiPos);
+
+  // 보성 배치
+  placeAuxStars(stars, yearStem, yearBranch, lunar.month, hourBranch);
+
+  // 대한 계산
+  const daehan = getDaehan(mingGong, wuxingJu, yearStem, gender);
+
+  // ============================================================
+  // 렌더링
+  // ============================================================
+  renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan);
+}
+
+function renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan){
+  const container = document.getElementById('chartContainer');
+
+  // Build 4x4 grid
+  let html = '<div class="chart-grid">';
+
+  // Grid layout:
+  // row0: branch 5,6,7,8
+  // row1: branch 4, [center], [center], branch 9
+  // row2: branch 3, [center], [center], branch 10
+  // row3: branch 2, 1, 0, 11
+
+  const gridOrder = [
+    [5,6,7,8],
+    [4,-1,-1,9],
+    [3,-1,-1,10],
+    [2,1,0,11]
+  ];
+
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      const branch = gridOrder[r][c];
+      if(branch===-1){
+        // Center cells
+        if(r===1&&c===1){
+          // Render center info spanning 2x2
+          html += renderCenterInfo(lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, mingGong, shenGong, palaceStems);
+        }
+        // skip other center cells (handled by grid-column/grid-row span)
+        continue;
+      }
+      html += renderPalaceCell(branch, palaces, palaceStems, stars, mingGong, shenGong);
+    }
+  }
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Analysis section
+  renderAnalysis(palaces, stars, mingGong, shenGong, daehan, palaceStems, lunar, sy);
+}
+
+function renderCenterInfo(lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, mingGong, shenGong, palaceStems){
+  const genderStr = gender==='M'?'남(男)':'여(女)';
+  return `<div class="center-info">
+    <h2>자미두수 명반</h2>
+    <div class="info-line">
+      <strong>양력:</strong> ${sy}년 ${sm}월 ${sd}일 ${HOUR_LABELS[hourBranch].split('(')[0]}<br>
+      <strong>음력:</strong> ${lunar.year}년 ${lunar.isLeap?'윤':''}${lunar.month}월 ${lunar.day}일<br>
+      <strong>성별:</strong> ${genderStr}<br>
+      <strong>년주:</strong> ${STEMS_HANJA[yearStem]}${BRANCHES_HANJA[yearBranch]} (${STEMS[yearStem]}${BRANCHES[yearBranch]}) ${BRANCH_ANIMALS[yearBranch]}띠<br>
+      <strong>명궁:</strong> ${BRANCHES_HANJA[mingGong]}궁 (${STEMS_HANJA[palaceStems[mingGong]]}${BRANCHES_HANJA[mingGong]})<br>
+      <strong>신궁:</strong> ${BRANCHES_HANJA[shenGong]}궁<br>
+      <strong>오행국:</strong> <span class="highlight">${juNames[wuxingJu]}</span><br>
+      <strong>자미성:</strong> ${BRANCHES_HANJA[ziweiPos]}궁
+    </div>
+  </div>`;
+}
+
+function renderPalaceCell(branch, palaces, palaceStems, stars, mingGong, shenGong){
+  const palaceIdx = palaces[branch];
+  const palaceName = PALACE_HANJA[palaceIdx];
+  const palaceNameKr = PALACE_NAMES[palaceIdx];
+  const stem = palaceStems[branch];
+  const branchStars = stars[branch] || [];
+
+  let isMing = branch === mingGong;
+  let isShen = branch === shenGong;
+
+  let cellClass = 'palace-cell';
+  if(isMing) cellClass += ' ming-gong';
+
+  let starsHtml = '';
+  // Main stars first
+  const mainStars = branchStars.filter(s=>s.type==='main');
+  const lucunStars = branchStars.filter(s=>s.type==='lucun');
+  const auxStars = branchStars.filter(s=>s.type==='aux');
+  const shaStars = branchStars.filter(s=>s.type==='sha');
+
+  mainStars.forEach(s=>{starsHtml+=`<span class="star-tag star-main">${s.name}</span>`;});
+  lucunStars.forEach(s=>{starsHtml+=`<span class="star-tag star-lucun">${s.name}</span>`;});
+  auxStars.forEach(s=>{starsHtml+=`<span class="star-tag star-aux">${s.name}</span>`;});
+  shaStars.forEach(s=>{starsHtml+=`<span class="star-tag star-sha">${s.name}</span>`;});
+
+  let badges = '';
+  if(isShen) badges += '<div class="singung-badge">身宮</div>';
+
+  let nameStyle = isMing ? 'border-bottom:1px solid var(--accent);padding-bottom:2px;' : '';
+
+  return `<div class="${cellClass}" style="${isMing?'border-color:var(--accent);background:rgba(233,69,96,0.05);':''}">
+    <span class="stem-label">${STEMS_HANJA[stem]}</span>
+    <span class="branch-label">${BRANCHES_HANJA[branch]}</span>
+    <div class="palace-name" style="${nameStyle}">${palaceName}${isMing?' ★':''}</div>
+    <div class="palace-name-kr">${palaceNameKr}</div>
+    <div class="star-list">${starsHtml}</div>
+    ${badges}
+  </div>`;
+}
+
+function renderAnalysis(palaces, stars, mingGong, shenGong, daehan, palaceStems, lunar, sy){
+  const section = document.getElementById('analysisSection');
+  let html = '';
+
+  // 명궁 분석
+  const mingStars = (stars[mingGong]||[]).filter(s=>s.type==='main');
+  html += '<div class="analysis-box"><h3>命宮(명궁) 분석</h3>';
+  if(mingStars.length>0){
+    mingStars.forEach(s=>{
+      const info = STAR_MEANINGS[s.name];
+      if(info){
+        html += `<p><span class="star-name">${s.name}(${info.nature})</span> - ${info.desc}</p><br>`;
+      }
+    });
+  } else {
+    html += '<p>명궁에 주성이 없습니다. 이를 "공궁(空宮)"이라 하며, 대궁(천이궁)의 주성을 빌려와 해석합니다. 일반적으로 독립적 성향이 강하고 자기만의 길을 개척하는 특성이 있습니다.</p>';
+  }
+  html += '</div>';
+
+  // 각 궁별 간략 해석
+  html += '<div class="analysis-box"><h3>12궁 배치 분석</h3><div class="palace-analysis">';
+  for(let i=0;i<12;i++){
+    // branch for this palace
+    let branch = -1;
+    for(let b=0;b<12;b++){if(palaces[b]===i){branch=b;break;}}
+    const pStars = (stars[branch]||[]).filter(s=>s.type==='main');
+    const pName = PALACE_NAMES[i];
+    const pHanja = PALACE_HANJA[i];
+    const meaning = PALACE_MEANINGS[pName];
+
+    let starNames = pStars.map(s=>s.name).join(', ');
+    if(!starNames) starNames = '(공궁)';
+
+    let desc = meaning;
+    if(pStars.length>0){
+      const firstStar = STAR_MEANINGS[pStars[0].name];
+      if(firstStar){
+        desc += ' ' + pStars[0].name + '이(가) 이 궁에 있어 ' + firstStar.desc.split('.')[0] + '의 영향을 받습니다.';
+      }
+    }
+
+    html += `<div class="pa-item">
+      <h4>${pHanja} (${pName}) - ${BRANCHES_HANJA[branch]}궁</h4>
+      <div class="pa-stars">${starNames}</div>
+      <p>${desc}</p>
+    </div>`;
+  }
+  html += '</div></div>';
+
+  // 대한(大限)
+  const currentYear = new Date().getFullYear();
+  const birthYear = sy;
+  const currentAge = currentYear - birthYear + 1; // 한국 나이 (만이 아님, 세는나이 근사)
+
+  html += '<div class="analysis-box"><h3>大限(대한) - 10년 대운</h3><div class="daehan-section"><table class="daehan-table"><thead><tr>';
+  html += '<th>대한</th>';
+  daehan.forEach(d=>{
+    html += `<th>${d.fromAge}~${d.toAge}세</th>`;
+  });
+  html += '</tr></thead><tbody><tr><td>궁위</td>';
+  daehan.forEach(d=>{
+    const isCurrent = currentAge >= d.fromAge && currentAge <= d.toAge;
+    html += `<td class="${isCurrent?'current':''}">${d.branchName}궁</td>`;
+  });
+  html += '</tr><tr><td>주성</td>';
+  daehan.forEach(d=>{
+    const dStars = (stars[d.branch]||[]).filter(s=>s.type==='main').map(s=>s.name).join('<br>');
+    const isCurrent = currentAge >= d.fromAge && currentAge <= d.toAge;
+    html += `<td class="${isCurrent?'current':''}" style="font-size:0.8em;">${dStars||'-'}</td>`;
+  });
+  html += '</tr></tbody></table></div></div>';
+
+  section.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
