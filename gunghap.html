@@ -339,6 +339,60 @@ function analyzeCompat(){
   });
   html+=`</div></div>`;
 
+  // 소통 궁합
+  html+=`<div class="compat-card" style="grid-column:1/-1"><h4>💬 소통 궁합</h4>`;
+  const mDayOh=STEM_OHENG[male.day.stem], fDayOh=STEM_OHENG[female.day.stem];
+  const mYY=STEM_YINYANG[male.day.stem], fYY=STEM_YINYANG[female.day.stem];
+  if(mYY!==fYY){
+    html+=`<p>음양이 조화를 이루어 <span style="color:var(--gold)">서로 다른 관점에서 균형 잡힌 대화</span>가 가능합니다. 한쪽이 말하면 다른 쪽이 잘 들어주는 패턴이 형성됩니다.</p>`;
+  } else {
+    html+=`<p>같은 음양으로 <span style="color:var(--earth)">비슷한 방식의 소통</span>을 합니다. 공감이 잘 되지만 때로 평행선을 달릴 수 있으니 적극적 경청이 필요합니다.</p>`;
+  }
+  if(isGenerating(mDayOh,fDayOh)||isGenerating(fDayOh,mDayOh)){
+    html+=`<p>오행이 상생 관계로 대화가 부드럽고 자연스럽게 흐릅니다.</p>`;
+  }
+  if(isOvercoming(mDayOh,fDayOh)||isOvercoming(fDayOh,mDayOh)){
+    html+=`<p>오행이 상극 관계로 의견 충돌이 생길 수 있으나, 갈등을 건설적으로 풀면 성장의 원동력이 됩니다.</p>`;
+  }
+  html+=`</div>`;
+
+  // 재물 궁합
+  html+=`<div class="compat-card"><h4>💰 재물 궁합</h4>`;
+  const mJae=STEM_OHENG[(male.day.stem+4)%10], fJae=STEM_OHENG[(female.day.stem+4)%10];
+  const wealthCompat = maleOheng.map((v,i)=>v+femaleOheng[i]).reduce((a,b)=>a+b,0);
+  if(combinedOheng.every(v=>v>=1)){
+    html+=`<p>오행이 고루 갖춰져 <span style="color:var(--gold)">안정적인 재물 구조</span>를 형성합니다. 함께하면 재물 관리가 체계적입니다.</p>`;
+  } else {
+    const missing=[];for(let i=0;i<5;i++)if(combinedOheng[i]===0)missing.push(OHENG[i]);
+    html+=`<p>합산 오행에서 ${missing.join(', ')}이(가) 부족합니다. 해당 분야(${missing.map(m=>m==='목'?'성장/시작':m==='화'?'투자/확장':m==='토'?'저축/부동산':m==='금'?'재무관리':' 유동자산').join(', ')})에 함께 보완하면 좋습니다.</p>`;
+  }
+  html+=`</div>`;
+
+  // 자녀 궁합
+  html+=`<div class="compat-card"><h4>👶 자녀·가정 궁합</h4>`;
+  const mChildBranch=male.hour.branch, fChildBranch=female.hour.branch;
+  if(checkBranchYukhap(mChildBranch,fChildBranch)){
+    html+=`<p>시주가 육합으로 <span style="color:var(--gold)">자녀복이 좋고 가정이 화목</span>합니다.</p>`;
+  } else if(checkChung(mChildBranch,fChildBranch)){
+    html+=`<p>시주가 충 관계로 자녀 교육관에서 차이가 있을 수 있습니다. 서로 양보하며 조율하세요.</p>`;
+  } else if(checkSamhap(mChildBranch,fChildBranch)){
+    html+=`<p>시주가 삼합으로 자녀에 대한 가치관이 비슷하고 협력적인 양육이 가능합니다.</p>`;
+  } else {
+    html+=`<p>시주의 관계가 무난하여 일반적인 가정 운입니다. 소통과 배려가 가정의 행복을 키웁니다.</p>`;
+  }
+  html+=`</div>`;
+
+  // 장기 전망
+  html+=`<div class="compat-card"><h4>📈 장기 전망</h4>`;
+  if(totalScore>=75){
+    html+=`<p>함께할수록 시너지가 커지는 관계입니다. 시간이 지날수록 서로에 대한 이해와 신뢰가 깊어져 <span style="color:var(--gold)">안정적인 동반자</span>가 됩니다.</p>`;
+  } else if(totalScore>=55){
+    html+=`<p>초반에 적응 기간이 필요하지만, 서로의 차이를 인정하고 노력하면 점차 좋아지는 관계입니다. 5년 이후가 더 안정적입니다.</p>`;
+  } else {
+    html+=`<p>서로 다른 기운이 강해 갈등이 있을 수 있지만, 역으로 성장의 촉매가 됩니다. 끈기 있는 소통이 관계의 열쇠입니다.</p>`;
+  }
+  html+=`</div></div>`;
+
   // 종합 조언
   html+=`<div class="advice-box"><h3>💡 궁합 종합 조언</h3><p>${getAdvice(totalScore,dayHap,ddiChung,male,female)}</p></div>`;
 

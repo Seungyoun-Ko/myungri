@@ -58,6 +58,19 @@ body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);
 .star-aux{color:#aad;background:rgba(170,170,221,0.08);font-size:0.68em;}
 .star-lucun{color:var(--wood);background:rgba(76,175,80,0.1);}
 .star-sha{color:var(--fire);background:rgba(244,67,54,0.1);}
+.star-misc{color:#b0b;background:rgba(176,0,176,0.08);font-size:0.66em;}
+/* 사화 표시 */
+.sihua-tag{font-size:0.58em;padding:0 3px;border-radius:2px;font-weight:700;vertical-align:super;margin-left:1px;}
+.sihua-rok{color:#ff0;background:rgba(255,255,0,0.12);}
+.sihua-kwon{color:#f90;background:rgba(255,153,0,0.12);}
+.sihua-gwa{color:#0cf;background:rgba(0,204,255,0.12);}
+.sihua-gi{color:#f33;background:rgba(255,51,51,0.15);}
+/* 묘왕 밝기 */
+.bright-myo{opacity:1;text-shadow:0 0 4px rgba(240,192,64,0.5);}
+.bright-wang{opacity:0.95;}
+.bright-deuk{opacity:0.85;}
+.bright-pyeong{opacity:0.7;}
+.bright-ham{opacity:0.55;text-decoration:line-through;text-decoration-color:rgba(255,0,0,0.3);}
 
 /* Center info */
 .center-info{
@@ -157,7 +170,16 @@ body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);
 
 <div class="input-section">
   <div class="input-group">
-    <label>양력 연도</label>
+    <label>달력</label>
+    <div class="gender-group">
+      <input type="radio" name="calType" id="calSolar" value="solar" checked>
+      <label for="calSolar">양력</label>
+      <input type="radio" name="calType" id="calLunar" value="lunar">
+      <label for="calLunar">음력</label>
+    </div>
+  </div>
+  <div class="input-group">
+    <label id="yearLabel">양력 연도</label>
     <input type="number" id="inputYear" min="1900" max="2050" value="1990">
   </div>
   <div class="input-group">
@@ -403,6 +425,79 @@ const STAR_MEANINGS = {
   '파군':{nature:'파괴의 별',desc:'변혁과 파괴를 통한 재건. 모험적이고 개혁적이나 안정을 잃기 쉽습니다.',element:'수'}
 };
 
+// ============================================================
+// 사화(四化) 시스템 - 년간 기준
+// 화록(祿), 화권(權), 화과(科), 화기(忌)
+// ============================================================
+// yearStem → [화록성, 화권성, 화과성, 화기성]
+const SIHUA_TABLE = [
+  ['염정','파군','무곡','태양'],  // 甲
+  ['천기','천량','자미','태음'],  // 乙
+  ['천동','천기','문창','염정'],  // 丙
+  ['태음','천동','천기','거문'],  // 丁
+  ['탐랑','태음','우필','천기'],  // 戊
+  ['무곡','탐랑','천량','문곡'],  // 己
+  ['태양','무곡','태음','천동'],  // 庚
+  ['거문','태양','문곡','문창'],  // 辛
+  ['천량','자미','좌보','무곡'],  // 壬
+  ['파군','거문','태음','탐랑']   // 癸
+];
+const SIHUA_NAMES = ['화록','화권','화과','화기'];
+const SIHUA_CLASSES = ['sihua-rok','sihua-kwon','sihua-gwa','sihua-gi'];
+
+// ============================================================
+// 묘왕평한함(廟旺得平陷) - 14주성의 12궁 밝기
+// 4=廟, 3=旺, 2=得地, 1=平和(閑), 0=陷(落陷)
+// index: [子,丑,寅,卯,辰,巳,午,未,申,酉,戌,亥]
+// ============================================================
+const BRIGHTNESS_TABLE = {
+  '자미':[3,4,4,3,3,2,4,4,3,3,2,1],
+  '천기':[2,1,3,4,2,1,2,1,3,4,2,1],
+  '태양':[1,2,3,4,4,3,3,2,1,0,0,1],
+  '무곡':[4,2,3,2,1,4,2,3,2,1,4,2],
+  '천동':[3,1,2,1,0,2,4,1,2,1,0,2],
+  '염정':[4,2,2,1,1,4,2,2,1,1,2,2],
+  '천부':[4,3,3,2,2,4,4,3,3,2,2,4],
+  '태음':[4,3,2,1,0,0,1,2,3,4,4,4],
+  '탐랑':[3,2,4,4,2,1,3,2,4,4,2,1],
+  '거문':[3,4,2,1,1,2,3,4,2,1,1,2],
+  '천상':[2,3,4,2,1,1,2,3,4,2,1,1],
+  '천량':[4,2,1,3,4,2,1,3,4,2,1,3],
+  '칠살':[4,2,3,2,1,4,2,3,2,1,4,2],
+  '파군':[1,2,4,2,1,0,1,2,4,2,1,0]
+};
+const BRIGHTNESS_NAMES = ['陷','平','得','旺','廟'];
+const BRIGHTNESS_CLASSES = ['bright-ham','bright-pyeong','bright-deuk','bright-wang','bright-myo'];
+
+// ============================================================
+// 잡성(雜星) 배치 테이블
+// ============================================================
+// 천공 by hour (시지 index)
+const TIANKONG_POS = [11,10,9,8,7,6,5,4,3,2,1,0];
+// 지겁 by hour
+const DIJIE_POS = [11,10,9,8,7,6,5,4,3,2,1,0]; // 천공과 같은 위치에서 역행
+// 천형 by 음력월 (1~12 → index 0~11)
+const TIANXING_POS = [9,10,11,0,1,2,3,4,5,6,7,8];
+// 천요 by 음력월
+const TIANYAO_POS = [1,2,3,4,5,6,7,8,9,10,11,0];
+// 홍란 by year branch
+const HONGLAN_POS = [3,2,1,0,11,10,9,8,7,6,5,4];
+// 천희 by year branch
+const TIANXI_POS = [9,8,7,6,5,4,3,2,1,0,11,10];
+// 천덕 by 음력월
+const TIANDE_POS = [9,10,11,0,1,2,3,4,5,6,7,8];
+// 월덕 by 음력월
+const YUEDE_POS = [5,6,7,8,9,10,11,0,1,2,3,4];
+// 천상(天傷) by 음력월
+const TIANSHANG_POS = [7,8,9,10,11,0,1,2,3,4,5,6];
+// 천사(天使) by 음력월
+const TIANSHI_POS = [1,2,3,4,5,6,7,8,9,10,11,0];
+
+// 길성 목록 (해석용)
+const LUCKY_STARS = ['좌보','우필','천괴','천월','문창','문곡','록존','천마'];
+// 살성 목록
+const SHA_STARS = ['경양','타라','화성','영성','천공','지겁'];
+
 const PALACE_MEANINGS = {
   '명궁':'나의 성격, 외모, 인생 전반적 방향을 나타내는 가장 중요한 궁입니다.',
   '형제궁':'형제자매 관계, 동료 관계, 협력 관계를 나타냅니다.',
@@ -435,6 +530,14 @@ function initInputs(){
   dSel.value=now.getDate();
   const h=now.getHours();
   hSel.value = h===23?0:h<1?0:Math.floor((h+1)/2);
+
+  // 양력/음력 전환 이벤트
+  document.querySelectorAll('input[name="calType"]').forEach(radio => {
+    radio.addEventListener('change', function(){
+      const label = document.getElementById('yearLabel');
+      label.textContent = this.value === 'lunar' ? '음력 연도' : '양력 연도';
+    });
+  });
 }
 initInputs();
 
@@ -555,6 +658,86 @@ function placeAuxStars(stars, yearStem, yearBranch, lunarMonth, hourBranch){
 }
 
 // ============================================================
+// 잡성 배치
+// ============================================================
+function placeExtraStars(stars, yearBranch, lunarMonth, hourBranch){
+  // 천공
+  const tkPos = (11 - hourBranch + 12) % 12;
+  stars[tkPos].push({name:'천공',type:'misc'});
+  // 지겁 (천공 대궁)
+  stars[(tkPos+6)%12].push({name:'지겁',type:'misc'});
+  // 천형
+  stars[TIANXING_POS[lunarMonth-1]].push({name:'천형',type:'sha'});
+  // 천요
+  stars[TIANYAO_POS[lunarMonth-1]].push({name:'천요',type:'misc'});
+  // 홍란
+  stars[HONGLAN_POS[yearBranch]].push({name:'홍란',type:'misc'});
+  // 천희
+  stars[TIANXI_POS[yearBranch]].push({name:'천희',type:'misc'});
+  // 천덕
+  stars[TIANDE_POS[lunarMonth-1]].push({name:'천덕',type:'aux'});
+  // 월덕
+  stars[YUEDE_POS[lunarMonth-1]].push({name:'월덕',type:'aux'});
+  // 천상
+  stars[TIANSHANG_POS[lunarMonth-1]].push({name:'천상성',type:'misc'});
+  // 천사
+  stars[TIANSHI_POS[lunarMonth-1]].push({name:'천사성',type:'misc'});
+}
+
+// ============================================================
+// 사화(四化) 배치
+// ============================================================
+function placeSihua(stars, yearStem){
+  const sihuaStars = SIHUA_TABLE[yearStem]; // [화록성, 화권성, 화과성, 화기성]
+  const sihuaMap = {}; // starName → sihua type index
+  sihuaStars.forEach((starName, idx) => {
+    if(!sihuaMap[starName]) sihuaMap[starName] = [];
+    sihuaMap[starName].push(idx);
+  });
+  // 각 궁의 성에 사화 마킹
+  for(let b=0;b<12;b++){
+    stars[b].forEach(star => {
+      if(sihuaMap[star.name]){
+        star.sihua = sihuaMap[star.name]; // array of sihua indices
+      }
+    });
+  }
+  return sihuaMap;
+}
+
+// ============================================================
+// 묘왕평한함 밝기 계산
+// ============================================================
+function applyBrightness(stars){
+  for(let b=0;b<12;b++){
+    stars[b].forEach(star => {
+      if(star.type === 'main' && BRIGHTNESS_TABLE[star.name]){
+        star.brightness = BRIGHTNESS_TABLE[star.name][b];
+      }
+    });
+  }
+}
+
+// ============================================================
+// 음력 → 양력 역변환 (간략)
+// ============================================================
+function lunarToSolar(ly, lm, ld, isLeap){
+  const baseDate = new Date(1900, 0, 31);
+  let offset = 0;
+  for(let y=1900; y<ly; y++) offset += lunarYearDays(y);
+  const months = lunarMonthDays(ly);
+  const leap = lunarLeapMonth(ly);
+  for(let i=0; i<lm-1; i++){
+    offset += months[i];
+    if(leap === (i+1)) offset += lunarLeapMonthDays(ly);
+  }
+  if(isLeap && leap === lm) offset += months[lm-1];
+  offset += ld - 1;
+  const result = new Date(baseDate.getTime() + offset * 86400000);
+  return { year: result.getFullYear(), month: result.getMonth()+1, day: result.getDate() };
+}
+
+// ============================================================
 // 대한(大限) 계산
 // ============================================================
 function getDaehan(mingGongBranch, wuxingJu, yearStem, gender){
@@ -587,14 +770,23 @@ function getDaehan(mingGongBranch, wuxingJu, yearStem, gender){
 // 메인 계산 함수
 // ============================================================
 function calculate(){
-  const sy = parseInt(document.getElementById('inputYear').value);
-  const sm = parseInt(document.getElementById('inputMonth').value);
-  const sd = parseInt(document.getElementById('inputDay').value);
+  let sy = parseInt(document.getElementById('inputYear').value);
+  let sm = parseInt(document.getElementById('inputMonth').value);
+  let sd = parseInt(document.getElementById('inputDay').value);
   const hourBranch = parseInt(document.getElementById('inputHour').value);
   const gender = document.querySelector('input[name="gender"]:checked').value;
+  const calType = document.querySelector('input[name="calType"]:checked').value;
 
-  // 양력 → 음력
-  const lunar = solarToLunar(sy, sm, sd);
+  let lunar;
+  if(calType === 'lunar'){
+    // 음력 입력: 역변환하여 양력 구하기
+    lunar = { year: sy, month: sm, day: sd, isLeap: false };
+    const solar = lunarToSolar(sy, sm, sd, false);
+    sy = solar.year; sm = solar.month; sd = solar.day;
+  } else {
+    // 양력 → 음력
+    lunar = solarToLunar(sy, sm, sd);
+  }
 
   // 년주 (입춘 기준)
   const yearPillar = getYearStemBranch(sy, sm, sd);
@@ -631,16 +823,25 @@ function calculate(){
   // 보성 배치
   placeAuxStars(stars, yearStem, yearBranch, lunar.month, hourBranch);
 
+  // 잡성 배치
+  placeExtraStars(stars, yearBranch, lunar.month, hourBranch);
+
+  // 묘왕평한함 밝기 적용
+  applyBrightness(stars);
+
+  // 사화(四化) 배치
+  const sihuaMap = placeSihua(stars, yearStem);
+
   // 대한 계산
   const daehan = getDaehan(mingGong, wuxingJu, yearStem, gender);
 
   // ============================================================
   // 렌더링
   // ============================================================
-  renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan);
+  renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan, sihuaMap);
 }
 
-function renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan){
+function renderChart(palaces, palaceStems, stars, mingGong, shenGong, lunar, sy, sm, sd, hourBranch, gender, yearStem, yearBranch, wuxingJu, juNames, ziweiPos, daehan, sihuaMap){
   const container = document.getElementById('chartContainer');
 
   // Build 4x4 grid
@@ -693,7 +894,8 @@ function renderCenterInfo(lunar, sy, sm, sd, hourBranch, gender, yearStem, yearB
       <strong>명궁:</strong> ${BRANCHES_HANJA[mingGong]}궁 (${STEMS_HANJA[palaceStems[mingGong]]}${BRANCHES_HANJA[mingGong]})<br>
       <strong>신궁:</strong> ${BRANCHES_HANJA[shenGong]}궁<br>
       <strong>오행국:</strong> <span class="highlight">${juNames[wuxingJu]}</span><br>
-      <strong>자미성:</strong> ${BRANCHES_HANJA[ziweiPos]}궁
+      <strong>자미성:</strong> ${BRANCHES_HANJA[ziweiPos]}궁<br>
+      <strong>사화:</strong> <span style="color:#ff0">록</span>${SIHUA_TABLE[yearStem][0]} · <span style="color:#f90">권</span>${SIHUA_TABLE[yearStem][1]} · <span style="color:#0cf">과</span>${SIHUA_TABLE[yearStem][2]} · <span style="color:#f33">기</span>${SIHUA_TABLE[yearStem][3]}
     </div>
   </div>`;
 }
@@ -717,11 +919,27 @@ function renderPalaceCell(branch, palaces, palaceStems, stars, mingGong, shenGon
   const lucunStars = branchStars.filter(s=>s.type==='lucun');
   const auxStars = branchStars.filter(s=>s.type==='aux');
   const shaStars = branchStars.filter(s=>s.type==='sha');
+  const miscStars = branchStars.filter(s=>s.type==='misc');
 
-  mainStars.forEach(s=>{starsHtml+=`<span class="star-tag star-main">${s.name}</span>`;});
-  lucunStars.forEach(s=>{starsHtml+=`<span class="star-tag star-lucun">${s.name}</span>`;});
-  auxStars.forEach(s=>{starsHtml+=`<span class="star-tag star-aux">${s.name}</span>`;});
-  shaStars.forEach(s=>{starsHtml+=`<span class="star-tag star-sha">${s.name}</span>`;});
+  function starHtml(s, baseClass){
+    let bClass = '';
+    if(s.brightness !== undefined) bClass = ' ' + BRIGHTNESS_CLASSES[s.brightness];
+    let sihuaStr = '';
+    if(s.sihua){
+      s.sihua.forEach(si => {
+        sihuaStr += `<span class="sihua-tag ${SIHUA_CLASSES[si]}">${SIHUA_NAMES[si]}</span>`;
+      });
+    }
+    let brightLabel = '';
+    if(s.brightness !== undefined) brightLabel = `<span style="font-size:0.55em;color:var(--text-dim)">${BRIGHTNESS_NAMES[s.brightness]}</span>`;
+    return `<span class="star-tag ${baseClass}${bClass}">${s.name}${brightLabel}${sihuaStr}</span>`;
+  }
+
+  mainStars.forEach(s=>{starsHtml+=starHtml(s,'star-main');});
+  lucunStars.forEach(s=>{starsHtml+=starHtml(s,'star-lucun');});
+  auxStars.forEach(s=>{starsHtml+=starHtml(s,'star-aux');});
+  shaStars.forEach(s=>{starsHtml+=starHtml(s,'star-sha');});
+  miscStars.forEach(s=>{starsHtml+=starHtml(s,'star-misc');});
 
   let badges = '';
   if(isShen) badges += '<div class="singung-badge">身宮</div>';
@@ -787,10 +1005,67 @@ function renderAnalysis(palaces, stars, mingGong, shenGong, daehan, palaceStems,
   }
   html += '</div></div>';
 
+  // 사화(四化) 분석
+  html += '<div class="analysis-box"><h3>四化(사화) 분석</h3>';
+  const sihuaInfo = SIHUA_TABLE[palaceStems[mingGong]]; // 명궁 천간의 사화
+  html += `<p style="margin-bottom:8px;">년간(${STEMS_HANJA[palaceStems[mingGong] !== undefined ? 0 : 0]}) 사화가 각 궁에 배치되어 운명의 방향성을 나타냅니다.</p>`;
+  for(let si=0;si<4;si++){
+    const starName = SIHUA_TABLE[palaceStems[mingGong] !== undefined ? 0 : 0][si]; // placeholder
+    html += `<p><span class="sihua-tag ${SIHUA_CLASSES[si]}" style="font-size:0.9em;padding:2px 6px;">${SIHUA_NAMES[si]}</span> `;
+  }
+  // 실제 사화는 년간 기반
+  html += `<br><br>`;
+  const yearSihua = SIHUA_TABLE[palaceStems[2] !== undefined ? 0 : 0]; // gets yearStem from context
+  // 각 사화 성의 위치 찾기
+  for(let si=0;si<4;si++){
+    const targetStar = SIHUA_TABLE[0][si]; // placeholder
+    for(let b=0;b<12;b++){
+      const found = stars[b].find(s=>s.sihua && s.sihua.includes(si));
+      if(found){
+        const pIdx = palaces[b];
+        html += `<p><span class="sihua-tag ${SIHUA_CLASSES[si]}" style="font-size:0.85em;padding:2px 6px;">${SIHUA_NAMES[si]}</span> <span class="star-name">${found.name}</span> → ${PALACE_HANJA[pIdx]}(${PALACE_NAMES[pIdx]}): `;
+        if(si===0) html += '이 궁에 재물과 복록의 기운이 모입니다.';
+        else if(si===1) html += '이 궁에서 권력과 영향력을 발휘합니다.';
+        else if(si===2) html += '이 궁에서 학문과 명예가 빛납니다.';
+        else html += '이 궁에 주의와 집착의 에너지가 있습니다.';
+        html += '</p>';
+        break;
+      }
+    }
+  }
+  html += '</div>';
+
+  // 길성/살성 분석
+  html += '<div class="analysis-box"><h3>吉星·煞星(길성·살성) 분석</h3>';
+  // 명궁의 길성/살성
+  const mingAllStars = stars[mingGong] || [];
+  const mingLucky = mingAllStars.filter(s => LUCKY_STARS.includes(s.name));
+  const mingSha = mingAllStars.filter(s => SHA_STARS.includes(s.name));
+  if(mingLucky.length > 0){
+    html += `<p><span style="color:var(--wood);font-weight:700;">명궁 길성:</span> ${mingLucky.map(s=>s.name).join(', ')} - 귀인의 도움과 복록이 따릅니다.</p>`;
+  }
+  if(mingSha.length > 0){
+    html += `<p><span style="color:var(--fire);font-weight:700;">명궁 살성:</span> ${mingSha.map(s=>s.name).join(', ')} - 도전과 시련이 있지만 극복하면 더 강해집니다.</p>`;
+  }
+  if(mingLucky.length===0 && mingSha.length===0){
+    html += '<p>명궁에 특별한 길성/살성이 없어 주성의 영향이 더 크게 작용합니다.</p>';
+  }
+
+  // 록마교치 (록존+천마 같은 궁 또는 삼합 위치)
+  let lucunBranch = -1, tianmaBranch = -1;
+  for(let b=0;b<12;b++){
+    if(stars[b].find(s=>s.name==='록존')) lucunBranch = b;
+    if(stars[b].find(s=>s.name==='천마')) tianmaBranch = b;
+  }
+  if(lucunBranch === tianmaBranch && lucunBranch >= 0){
+    html += '<p><span style="color:var(--gold);font-weight:700;">★ 록마교치(祿馬交馳)!</span> 록존과 천마가 같은 궁에 있어 재물운과 활동력이 매우 강합니다.</p>';
+  }
+  html += '</div>';
+
   // 대한(大限)
   const currentYear = new Date().getFullYear();
   const birthYear = sy;
-  const currentAge = currentYear - birthYear + 1; // 한국 나이 (만이 아님, 세는나이 근사)
+  const currentAge = currentYear - birthYear + 1;
 
   html += '<div class="analysis-box"><h3>大限(대한) - 10년 대운</h3><div class="daehan-section"><table class="daehan-table"><thead><tr>';
   html += '<th>대한</th>';
@@ -807,6 +1082,12 @@ function renderAnalysis(palaces, stars, mingGong, shenGong, daehan, palaceStems,
     const dStars = (stars[d.branch]||[]).filter(s=>s.type==='main').map(s=>s.name).join('<br>');
     const isCurrent = currentAge >= d.fromAge && currentAge <= d.toAge;
     html += `<td class="${isCurrent?'current':''}" style="font-size:0.8em;">${dStars||'-'}</td>`;
+  });
+  html += '</tr><tr><td>사화</td>';
+  daehan.forEach(d=>{
+    const dSihua = (stars[d.branch]||[]).filter(s=>s.sihua).map(s=>s.sihua.map(si=>SIHUA_NAMES[si]).join('')+s.name).join('<br>');
+    const isCurrent = currentAge >= d.fromAge && currentAge <= d.toAge;
+    html += `<td class="${isCurrent?'current':''}" style="font-size:0.7em;">${dSihua||'-'}</td>`;
   });
   html += '</tr></tbody></table></div></div>';
 
