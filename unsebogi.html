@@ -406,14 +406,64 @@ function renderFortune() {
     </div>
   </div>`;
 
-  // 8. 종합 조언
+  // 8. 대운(大運) - 10년 단위 운세 미리보기
+  const sy = birthYear;
+  const seunBase = ((sy - 4) % 60 + 60) % 60;
+  html += `<div class="fortune-card" style="border-left:4px solid var(--gold);">
+    <div class="card-header"><span class="card-icon">🔮</span><div><div class="card-title">대운(大運) 흐름</div><div class="card-subtitle">10년 단위 운세 변화</div></div></div>
+    <div class="card-body">`;
+  const ageNow = currentYear - birthYear + 1;
+  for(let decade = 0; decade < 3; decade++){
+    const decadeAge = Math.floor((ageNow-1)/10)*10 + decade*10 + 1;
+    const decadeYear = birthYear + decadeAge - 1;
+    const dIdx = ((decadeYear - 4) % 60 + 60) % 60;
+    const dStem = dIdx % 10;
+    const dBranch = dIdx % 12;
+    const dSipsin = getSipsin(dayStem, dStem);
+    const dFortune = yearlyFortuneBySipsin[dSipsin] || yearlyFortuneBySipsin['비견'];
+    const label = decade === 0 ? '현재' : `${decade}0년 후`;
+    html += `<p style="margin-bottom:6px;"><span class="highlight">${decadeAge}~${decadeAge+9}세 (${label})</span>: ${CHEONGAN[dStem]}${JIJI[dBranch]}(${dSipsin}) - ${dFortune.summary} <span style="color:var(--gold)">${dFortune.score}점</span></p>`;
+  }
+  html += `</div></div>`;
+
+  // 9. 계절 운세 (현재 계절 기반)
+  const seasonIdx = currentMonth <= 2 ? 3 : currentMonth <= 5 ? 0 : currentMonth <= 8 ? 1 : currentMonth <= 11 ? 2 : 3;
+  const seasonNames = ['봄(春)','여름(夏)','가을(秋)','겨울(冬)'];
+  const seasonOheng = [0,1,3,4]; // 목,화,금,수
+  const seasonCompat = seasonOheng[seasonIdx];
+  const myRelSeason = ((dayOheng - seasonCompat + 5) % 5);
+  const seasonMsgs = [
+    `현재 ${seasonNames[seasonIdx]} 계절의 ${OHENG[seasonCompat]} 기운은 당신의 ${OHENG[dayOheng]} 일간과 비화(比和) 관계로, 자연스러운 흐름을 탑니다.`,
+    `현재 ${seasonNames[seasonIdx]} 계절의 ${OHENG[seasonCompat]} 기운이 당신을 설기(洩氣)하므로, 무리하지 말고 에너지를 보존하세요.`,
+    `현재 ${seasonNames[seasonIdx]} 계절의 ${OHENG[seasonCompat]} 기운을 당신이 극하므로, 재물과 활동에 유리한 시기입니다.`,
+    `현재 ${seasonNames[seasonIdx]} 계절의 ${OHENG[seasonCompat]} 기운이 당신을 극하므로, 건강과 안전에 주의하세요.`,
+    `현재 ${seasonNames[seasonIdx]} 계절의 ${OHENG[seasonCompat]} 기운이 당신을 생(生)하여, 도움과 지지를 받기 좋은 시기입니다.`
+  ];
+  html += `<div class="fortune-card" style="border-left:4px solid var(--water);">
+    <div class="card-header"><span class="card-icon">🌿</span><div><div class="card-title">${seasonNames[seasonIdx]} 계절 운세</div><div class="card-subtitle">계절 오행과 일간의 관계</div></div></div>
+    <div class="card-body"><p>${seasonMsgs[myRelSeason]}</p></div>
+  </div>`;
+
+  // 10. 인생 시기별 운세
+  html += `<div class="fortune-card" style="border-left:4px solid #ab47bc;">
+    <div class="card-header"><span class="card-icon">🌊</span><div><div class="card-title">인생 시기별 운세</div><div class="card-subtitle">사주 구조 기반 시기별 흐름</div></div></div>
+    <div class="card-body">
+      <p><span class="highlight">초년운 (1~25세):</span> 년주·월주의 ${CHEONGAN[ys]}${JIJI[yb]}, ${CHEONGAN[ms]}${JIJI[mb]} 기운으로, ${sipsinYear} 성향의 가정환경에서 ${sipsinMonth}의 교육 영향을 받습니다.</p>
+      <p><span class="highlight">중년운 (26~50세):</span> 일주 ${CHEONGAN[ds]}${JIJI[db]}의 본질이 드러나는 시기로, ${isStrong ? '독립적으로 일을 추진하며 성과를 만들어갑니다' : '주변의 도움을 잘 활용하며 기반을 다져갑니다'}.</p>
+      <p><span class="highlight">만년운 (51세~):</span> 시주 ${CHEONGAN[hs]}${JIJI[hb]}의 ${sipsinHour} 기운이 말년을 좌우하며, ${['비견','겁재'].includes(sipsinHour)?'자녀나 후배와의 경쟁이 있을 수 있으나 활력이 유지됩니다':['식신','상관'].includes(sipsinHour)?'풍요롭고 표현력이 좋은 말년이 기대됩니다':['편재','정재'].includes(sipsinHour)?'재물이 풍족한 안정된 말년이 됩니다':['편관','정관'].includes(sipsinHour)?'사회적 활동이 지속되며 존경받는 말년입니다':'자녀의 효도와 정신적 풍요가 있는 말년입니다'}.</p>
+    </div>
+  </div>`;
+
+  // 11. 종합 조언
   html += `<div class="fortune-card advice">
     <div class="card-header"><span class="card-icon">💡</span><div><div class="card-title">종합 조언</div><div class="card-subtitle">용신과 오행 균형 기반</div></div></div>
     <div class="card-body">
       <p><span class="highlight">용신(用神):</span> ${OHENG[yongshin[0]]}(${OHENG_HANJA[yongshin[0]]}) - ${getYongshinAdvice(yongshin[0])}</p>
+      <p><span class="highlight">희신(喜神):</span> ${OHENG[yongshin[1]]}(${OHENG_HANJA[yongshin[1]]}) - 용신을 돕는 기운으로 함께 활용하면 좋습니다.</p>
       <p><span class="highlight">행운의 색:</span> <span style="color:${OHENG_COLOR[yongshin[0]]}">${getLuckyColor(yongshin[0])}</span></p>
       <p><span class="highlight">행운의 숫자:</span> ${getLuckyNumber(yongshin[0])}</p>
       <p><span class="highlight">행운의 방위:</span> ${getLuckyDirection(yongshin[0])}</p>
+      <p><span class="highlight">기피 방위:</span> ${getLuckyDirection((dayOheng + 2) % 5)} (기신 방향)</p>
       <p style="margin-top:12px; padding:10px; background:rgba(240,192,64,0.1); border-radius:6px; font-size:0.85em;">
         ※ 이 운세는 사주팔자의 기본 구성을 바탕으로 한 참고용 분석입니다. 실제 운세는 개인의 노력과 선택에 따라 달라질 수 있습니다.
       </p>

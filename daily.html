@@ -398,11 +398,34 @@ function showDailyFortune(){
   html+=`<div class="fortune-card health"><h4>🏃 건강운</h4><p>${msgs.health}</p></div>`;
   html+=`<div class="fortune-card study"><h4>📚 학업/시험운</h4><p>${msgs.study}</p></div>`;
 
-  // 시간대별 운세
+  // 시간대별 운세 (6개 시간대로 확장)
   html+=`<div class="fortune-card" style="border-left:4px solid var(--accent)"><h4>⏰ 시간대별 조언</h4>`;
   html+=getTimeAdvice(birthSaju.day.stem, todaySaju);
   html+=`</div>`;
   html+=`</div>`;
+
+  // 일진(日辰) 상세 해석
+  html+=`<div class="fortune-card" style="border-left:4px solid #ab47bc;margin-bottom:16px"><h4>📜 오늘의 일진 해석</h4>`;
+  const todayGanjiName = CHEONGAN[todaySaju.day.stem]+JIJI[todaySaju.day.branch];
+  const todayGanjiHanja = CHEONGAN_HANJA[todaySaju.day.stem]+JIJI_HANJA[todaySaju.day.branch];
+  html+=`<p style="margin-bottom:6px">오늘은 <span style="color:var(--gold);font-weight:700">${todayGanjiName}(${todayGanjiHanja})일</span>입니다.</p>`;
+  const todayDayOh = STEM_OHENG[todaySaju.day.stem];
+  const todayDayYY = STEM_YINYANG[todaySaju.day.stem] === 0 ? '양' : '음';
+  html+=`<p>오행: <span style="color:${OHENG_COLOR[todayDayOh]};font-weight:700">${todayDayYY} ${OHENG[todayDayOh]}</span> · `;
+  html+=`이 날의 기운은 ${OHENG[todayDayOh]}의 성질을 띠어 `;
+  const dayOhengDesc = ['성장과 시작에 유리하며 창의적 활동이 좋습니다','열정과 표현에 좋으며 사교 활동이 활발합니다','안정과 중재에 유리하며 부동산/계약에 좋습니다','결단과 정리에 유리하며 중요한 결정에 좋습니다','지혜와 소통에 유리하며 학습/연구에 좋습니다'];
+  html+=`${dayOhengDesc[todayDayOh]}.</p>`;
+
+  // 나의 일주와 오늘 일주의 납음 관계
+  const myDayIdx = getDayGapjaIndex(by,bm,bd);
+  const todayDayIdx = getDayGapjaIndex(ty,tm,td);
+  html+=`<p style="margin-top:6px">당신의 일주(${CHEONGAN[birthSaju.day.stem]}${JIJI[birthSaju.day.branch]})와 오늘의 관계: `;
+  if(STEM_YINYANG[birthSaju.day.stem] !== STEM_YINYANG[todaySaju.day.stem]){
+    html+=`<span style="color:var(--wood)">음양이 조화</span>를 이루어 균형 잡힌 하루입니다.`;
+  } else {
+    html+=`<span style="color:var(--earth)">같은 음양</span>으로 동질적 에너지가 흐르며, 추진력이 강한 하루입니다.`;
+  }
+  html+=`</p></div>`;
 
   // 행운 아이템
   html+=`<div class="lucky-box"><h4>🍀 오늘의 행운 아이템</h4><div class="lucky-items">`;
@@ -411,6 +434,12 @@ function showDailyFortune(){
   html+=`<div class="lucky-item"><div class="lk-label">행운의 방위</div><div class="lk-value">${lucky.direction}</div></div>`;
   html+=`<div class="lucky-item"><div class="lk-label">행운의 음식</div><div class="lk-value">${lucky.food}</div></div>`;
   html+=`<div class="lucky-item"><div class="lk-label">피할 방위</div><div class="lk-value">${lucky.avoid_dir}</div></div>`;
+  // 추가 행운 아이템
+  const luckyAnimals={0:'토끼/호랑이',1:'말/뱀',2:'소/용/양/개',3:'닭/원숭이',4:'쥐/돼지'};
+  const luckyTimes={0:'05~09시',1:'09~13시',2:'항상 무난',3:'13~17시',4:'21~01시'};
+  const helpOh=(STEM_OHENG[birthSaju.day.stem]+4)%5;
+  html+=`<div class="lucky-item"><div class="lk-label">좋은 띠</div><div class="lk-value">${luckyAnimals[helpOh]}</div></div>`;
+  html+=`<div class="lucky-item"><div class="lk-label">행운 시간</div><div class="lk-value">${luckyTimes[helpOh]}</div></div>`;
   html+=`</div></div>`;
 
   // 종합 조언
@@ -425,23 +454,33 @@ function showDailyFortune(){
 // ---- 시간대별 조언 ----
 function getTimeAdvice(dayStem, todaySaju){
   const periods=[
-    {name:'오전 (06~12시)',hours:[5,7,9,11]},
-    {name:'오후 (12~18시)',hours:[13,15,17]},
-    {name:'저녁 (18~24시)',hours:[19,21,23]}
+    {name:'새벽 (01~05시)',branch:[1,2]},
+    {name:'아침 (05~09시)',branch:[3,4]},
+    {name:'오전 (09~13시)',branch:[5,6]},
+    {name:'오후 (13~17시)',branch:[7,8]},
+    {name:'저녁 (17~21시)',branch:[9,10]},
+    {name:'밤 (21~01시)',branch:[11,0]}
   ];
+  const advices={
+    '좋음':['활동하기 좋은 시간입니다','중요한 일을 추진하세요','좋은 인연을 만날 수 있습니다','재물 운이 따르는 시간대입니다'],
+    '보통':['무난하게 흘러가는 시간입니다','안정적으로 일상을 보내세요'],
+    '주의':['무리하지 마세요','중요 결정은 피하는 것이 좋습니다','건강에 유의하세요']
+  };
   let html='';
   periods.forEach(p=>{
-    // 해당 시간대의 대표 지지
-    const midHour=p.hours[Math.floor(p.hours.length/2)];
-    const hBranch=Math.floor(((midHour+1)%24)/2);
-    const sipsin=getSipsin(dayStem, todaySaju.day.stem);
+    const hBranch=p.branch[0];
     const branchOh=BRANCH_OHENG[hBranch];
     const myOh=STEM_OHENG[dayStem];
-    let quality='보통';
-    if(isGenerating(branchOh, myOh)||checkYukhap(todaySaju.day.branch, hBranch))quality='좋음';
-    if(isOvercoming(branchOh, myOh)||checkChung(todaySaju.day.branch, hBranch))quality='주의';
+    let quality='보통';let score=50;
+    if(isGenerating(branchOh, myOh)){quality='좋음';score=75;}
+    if(checkYukhap(todaySaju.day.branch, hBranch)){quality='좋음';score=80;}
+    if(checkSamhap(todaySaju.day.branch, hBranch)){score+=10;if(score>=70)quality='좋음';}
+    if(isOvercoming(branchOh, myOh)){quality='주의';score=35;}
+    if(checkChung(todaySaju.day.branch, hBranch)){quality='주의';score=25;}
     const qColor=quality==='좋음'?'var(--wood)':quality==='주의'?'var(--accent)':'var(--text-dim)';
-    html+=`<p style="margin:4px 0"><span style="color:var(--gold);font-weight:700">${p.name}</span>: <span style="color:${qColor};font-weight:500">${quality}</span></p>`;
+    const advList=advices[quality];
+    const adv=advList[Math.abs(hBranch*3+myOh)%advList.length];
+    html+=`<p style="margin:4px 0"><span style="color:var(--gold);font-weight:700">${p.name}</span>: <span style="color:${qColor};font-weight:500">${quality}</span> <span style="font-size:0.8em;color:var(--text-dim)">- ${adv}</span></p>`;
   });
   return html;
 }

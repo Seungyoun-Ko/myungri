@@ -248,6 +248,7 @@ body {
   <a href="unsebogi.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">운세보기</a>
   <a href="gunghap.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">궁합</a>
   <a href="daily.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">오늘의 운세</a>
+  <a href="jamidusu.html" style="color:var(--text-dim);text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">자미두수</a>
 </div>
 
 <div class="input-section">
@@ -1018,6 +1019,270 @@ function renderCalendar() {
 }
 
 // ============================================================
+// 신살 (神煞) 계산
+// ============================================================
+
+// 천을귀인 (天乙貴人) - 년간/일간 기준
+const CHEONUL_GUIIN = {
+  0: [1,7],  // 갑 → 축,미
+  1: [0,8],  // 을 → 자,신
+  2: [11,9], // 병 → 해,유
+  3: [11,9], // 정 → 해,유
+  4: [1,7],  // 무 → 축,미
+  5: [0,8],  // 기 → 자,신
+  6: [7,1],  // 경 → 미,축 (낮=미, 밤=축)
+  7: [6,2],  // 신 → 오,인
+  8: [5,3],  // 임 → 사,묘
+  9: [5,3],  // 계 → 사,묘
+};
+
+// 역마살 (驛馬殺) - 년지/일지 기준
+const YEOKMA = { 0:2, 1:11, 2:8, 3:5, 4:2, 5:11, 6:8, 7:5, 8:2, 9:11, 10:8, 11:5 };
+
+// 도화살 (桃花殺) - 년지/일지 기준
+const DOHWA = { 0:9, 1:6, 2:3, 3:0, 4:9, 5:6, 6:3, 7:0, 8:9, 9:6, 10:3, 11:0 };
+
+// 화개살 (華蓋殺) - 년지/일지 기준
+const HWAGAE = { 0:4, 1:1, 2:10, 3:7, 4:4, 5:1, 6:10, 7:7, 8:4, 9:1, 10:10, 11:7 };
+
+// 공망 (空亡) - 일주의 순(旬) 기준
+function getGongmang(dayGapjaIdx) {
+  const xunStart = Math.floor(dayGapjaIdx / 10) * 10;
+  const stemOfXunStart = xunStart % 10; // 항상 갑(0)
+  const branchOfXunStart = xunStart % 12;
+  // 공망은 해당 순에서 빠지는 두 지지
+  const gm1 = (branchOfXunStart + 10) % 12;
+  const gm2 = (branchOfXunStart + 11) % 12;
+  return [gm1, gm2];
+}
+
+// 괴강살 (魁罡殺) - 일주 기준 (경진, 임진, 경술, 임술)
+function isGwaegang(dayGapja) {
+  return [16, 28, 46, 58].includes(dayGapja); // 경진=16 아니고...
+  // 경진: 경=6, 진=4 → 갑자 인덱스? 6*12+4 안됨. 60갑자 순서로:
+  // 갑자(0), 을축(1), ..., 경진(16? 아님)
+  // 실제: 경진 = stem6 branch4 → 6+10*?
+  // 60갑자: idx%10=stem, idx%12=branch
+  // 경(6)진(4): 6%10=6, x%12=4 → x=16 (16%10=6, 16%12=4) ✓
+  // 임(8)진(4): 8%10=8, x%12=4 → x=28 (28%10=8, 28%12=4) ✓
+  // 경(6)술(10): x%10=6, x%12=10 → x=46 (46%10=6, 46%12=10) ✓
+  // 임(8)술(10): x%10=8, x%12=10 → x=58 (58%10=8, 58%12=10) ✓
+}
+
+// 신살 종합 분석
+function analyzeSinsal(yearPillar, monthPillar, dayPillar, hourPillar) {
+  const results = [];
+  const allBranches = [yearPillar.branch, monthPillar.branch, dayPillar.branch, hourPillar.branch];
+  const pillarNames = ['년지','월지','일지','시지'];
+
+  // 천을귀인 (일간 기준)
+  const guiinBranches = CHEONUL_GUIIN[dayPillar.stem];
+  allBranches.forEach((b, i) => {
+    if (guiinBranches.includes(b)) {
+      results.push({ name: '천을귀인', hanja: '天乙貴人', pos: pillarNames[i], type: 'good',
+        desc: '귀인의 도움을 받는 길신. 어려울 때 귀인이 나타나 도움을 줍니다.' });
+    }
+  });
+
+  // 역마살 (년지/일지 기준)
+  [0, 2].forEach(base => {
+    const yeokma = YEOKMA[allBranches[base]];
+    allBranches.forEach((b, i) => {
+      if (b === yeokma && i !== base) {
+        results.push({ name: '역마살', hanja: '驛馬殺', pos: `${pillarNames[base]}→${pillarNames[i]}`, type: 'neutral',
+          desc: '이동과 변동이 많습니다. 해외, 출장, 이사 등과 인연이 깊습니다.' });
+      }
+    });
+  });
+
+  // 도화살 (년지/일지 기준)
+  [0, 2].forEach(base => {
+    const dohwa = DOHWA[allBranches[base]];
+    allBranches.forEach((b, i) => {
+      if (b === dohwa && i !== base) {
+        results.push({ name: '도화살', hanja: '桃花殺', pos: `${pillarNames[base]}→${pillarNames[i]}`, type: 'neutral',
+          desc: '이성 인연이 많고 매력적입니다. 예술, 연예 분야에서 재능을 발휘합니다.' });
+      }
+    });
+  });
+
+  // 화개살 (년지/일지 기준)
+  [0, 2].forEach(base => {
+    const hwagae = HWAGAE[allBranches[base]];
+    allBranches.forEach((b, i) => {
+      if (b === hwagae && i !== base) {
+        results.push({ name: '화개살', hanja: '華蓋殺', pos: `${pillarNames[base]}→${pillarNames[i]}`, type: 'neutral',
+          desc: '종교, 학문, 예술에 재능이 있습니다. 고독을 즐기며 내면이 깊습니다.' });
+      }
+    });
+  });
+
+  // 괴강살
+  if (isGwaegang(dayPillar.gapja)) {
+    results.push({ name: '괴강살', hanja: '魁罡殺', pos: '일주', type: 'strong',
+      desc: '성격이 강하고 결단력이 뛰어납니다. 문무를 겸비하며 리더십이 있습니다.' });
+  }
+
+  // 공망
+  const gongmang = getGongmang(dayPillar.gapja);
+  allBranches.forEach((b, i) => {
+    if (gongmang.includes(b) && i !== 2) {
+      results.push({ name: '공망', hanja: '空亡', pos: pillarNames[i], type: 'caution',
+        desc: `${pillarNames[i]}가 공망에 해당합니다. 해당 궁의 기운이 약해질 수 있으나, 오히려 정신적 성장의 계기가 됩니다.` });
+    }
+  });
+
+  return results;
+}
+
+// ============================================================
+// 합충형파해 (合冲刑破害) 관계 분석
+// ============================================================
+const YUKAP_PAIRS = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
+const SAMHAP_GROUPS = [[8,0,4],[11,3,7],[2,6,10],[5,9,1]];
+const CHUNG_OFFSET = 6;
+const HYUNG_PAIRS = [[2,5],[5,8],[2,8],[1,10],[10,7],[1,7],[0,3]]; // 인사, 사신, 인신(삼형), 축술, 술미, 축미(삼형), 자묘(무례)
+const PA_PAIRS = [[0,9],[1,4],[2,11],[3,6],[5,8],[7,10]];
+const HAE_PAIRS = [[0,7],[1,6],[2,5],[3,4],[8,11],[9,10]];
+
+function analyzeRelations(pillars) {
+  const relations = [];
+  const names = ['시','일','월','년'];
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = i + 1; j < 4; j++) {
+      const b1 = pillars[i].p.branch;
+      const b2 = pillars[j].p.branch;
+      const s1 = pillars[i].p.stem;
+      const s2 = pillars[j].p.stem;
+
+      // 천간합 (5 차이)
+      if (Math.abs(s1 - s2) === 5) {
+        relations.push({ type: '천간합', hanja: '天干合', pair: `${names[i]}↔${names[j]}`,
+          detail: `${CHEONGAN[s1]}${CHEONGAN[s2]}합`, cls: 'good' });
+      }
+
+      // 지지 육합
+      if (YUKAP_PAIRS.some(p => (p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))) {
+        relations.push({ type: '지지육합', hanja: '六合', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]}합`, cls: 'good' });
+      }
+
+      // 지지 삼합 (부분합)
+      if (SAMHAP_GROUPS.some(g => g.includes(b1) && g.includes(b2)) && !YUKAP_PAIRS.some(p => (p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))) {
+        relations.push({ type: '삼합', hanja: '三合', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]} 반합`, cls: 'good' });
+      }
+
+      // 지지 충
+      if (Math.abs(b1 - b2) === 6) {
+        relations.push({ type: '충', hanja: '冲', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]}충`, cls: 'bad' });
+      }
+
+      // 지지 형
+      if (HYUNG_PAIRS.some(p => (p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))) {
+        relations.push({ type: '형', hanja: '刑', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]}형`, cls: 'bad' });
+      }
+
+      // 지지 파
+      if (PA_PAIRS.some(p => (p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))) {
+        relations.push({ type: '파', hanja: '破', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]}파`, cls: 'caution' });
+      }
+
+      // 지지 해
+      if (HAE_PAIRS.some(p => (p[0]===b1&&p[1]===b2)||(p[0]===b2&&p[1]===b1))) {
+        relations.push({ type: '해', hanja: '害', pair: `${names[i]}↔${names[j]}`,
+          detail: `${JIJI[b1]}${JIJI[b2]}해`, cls: 'caution' });
+      }
+    }
+  }
+  return relations;
+}
+
+// ============================================================
+// 60갑자 일주론 (日柱論)
+// ============================================================
+const ILJU_60 = {
+  0: {name:'갑자',title:'바다 위의 큰 나무',desc:'기획력이 뛰어나고 이상이 높습니다. 지혜롭고 학문을 좋아하며 리더십이 있습니다. 초년에 고생할 수 있으나 중년 이후 크게 발전합니다.'},
+  1: {name:'을축',title:'겨울 화분의 꽃',desc:'인내심이 강하고 실속 있는 성격입니다. 겸손하면서도 내면에 강한 의지가 있습니다. 꾸준한 노력으로 안정을 이룹니다.'},
+  2: {name:'병인',title:'새벽의 태양',desc:'열정적이고 활기찬 성격입니다. 진취적이고 모험을 좋아하며 리더의 기질이 있습니다. 추진력이 강하나 끈기를 기르면 더 큰 성과를 얻습니다.'},
+  3: {name:'정묘',title:'봄날의 등불',desc:'섬세하고 감성적이며 예술적 감각이 뛰어납니다. 온화하고 인정이 많으며 학문과 문학에 재능이 있습니다.'},
+  4: {name:'무진',title:'우뚝 선 산봉우리',desc:'포부가 크고 자존심이 강합니다. 재물복이 있으며 사업 수완이 좋습니다. 괴강에 해당하여 결단력과 추진력이 탁월합니다.'},
+  5: {name:'기사',title:'여름 들판',desc:'지략이 뛰어나고 처세에 능합니다. 인복이 있으며 사교성이 좋습니다. 다방면에 재능이 있어 여러 분야에서 성공할 수 있습니다.'},
+  6: {name:'경오',title:'강인한 칼날',desc:'성격이 강하고 의지가 굳습니다. 정의감이 넘치고 불의를 참지 못합니다. 독립심이 강하며 실행력이 뛰어납니다.'},
+  7: {name:'신미',title:'정원의 보석',desc:'섬세하고 품위 있으며 예술적 감각이 탁월합니다. 온화한 성품으로 주변의 사랑을 받으며 꾸준한 성장을 이룹니다.'},
+  8: {name:'임신',title:'넓은 바다의 물결',desc:'지혜롭고 적응력이 뛰어납니다. 다재다능하며 변화를 즐깁니다. 머리가 좋고 학문적 성취가 높습니다.'},
+  9: {name:'계유',title:'가을비의 은빛',desc:'총명하고 분석력이 뛰어납니다. 재물 관리에 능하며 예리한 판단력을 가졌습니다. 심미안이 탁월합니다.'},
+  10:{name:'갑술',title:'가을 산의 큰 나무',desc:'의리가 있고 책임감이 강합니다. 고집이 있으나 신뢰받는 성격입니다. 중년 이후 안정적인 삶을 이룹니다.'},
+  11:{name:'을해',title:'겨울 정원의 풀',desc:'유연하고 지혜로우며 인내심이 강합니다. 내면의 힘이 크며 학문과 예술에 재능이 있습니다.'},
+  12:{name:'병자',title:'한겨울의 태양',desc:'밝고 따뜻한 성격이지만 내면에 외로움이 있을 수 있습니다. 지적이고 학문을 좋아하며 사교성이 좋습니다.'},
+  13:{name:'정축',title:'어둠 속의 등불',desc:'꾸준하고 성실하며 참을성이 강합니다. 실속 있는 성격으로 재물을 잘 관리합니다. 말년이 편안합니다.'},
+  14:{name:'무인',title:'거대한 산맥',desc:'대범하고 씩씩하며 야망이 큽니다. 리더십이 강하고 모험을 즐기며 큰 일을 도모합니다.'},
+  15:{name:'기묘',title:'봄날의 화원',desc:'겸손하고 부드러우며 인정이 많습니다. 예술적 재능이 있으며 대인관계가 원만합니다.'},
+  16:{name:'경진',title:'용의 갑옷',desc:'괴강에 해당하여 성격이 매우 강합니다. 문무를 겸비하며 권위 있는 위치에 오를 수 있습니다. 결단력이 탁월합니다.'},
+  17:{name:'신사',title:'뜨거운 보석',desc:'지략이 뛰어나고 임기응변에 능합니다. 섬세하면서도 추진력이 있으며 전문 분야에서 두각을 나타냅니다.'},
+  18:{name:'임오',title:'여름 바다',desc:'열정과 지혜를 겸비합니다. 활동적이고 사교성이 좋으며 다재다능합니다. 예술과 학문 모두에 재능이 있습니다.'},
+  19:{name:'계미',title:'여름비의 은혜',desc:'부드럽고 겸손하며 주변을 배려합니다. 꾸준한 노력으로 성과를 이루며 가정적입니다.'},
+  20:{name:'갑신',title:'가을 바람의 나무',desc:'진취적이고 변화를 즐깁니다. 적응력이 뛰어나며 새로운 환경에서 빛을 발합니다.'},
+  21:{name:'을유',title:'가을날의 화초',desc:'섬세하고 예민하며 미적 감각이 뛰어납니다. 완벽주의적 성향이 있으며 전문 분야에서 능력을 발휘합니다.'},
+  22:{name:'병술',title:'저녁놀의 태양',desc:'의리가 있고 따뜻한 성격입니다. 신뢰받는 인물로 리더십이 있으며 중후합니다.'},
+  23:{name:'정해',title:'밤바다의 등대',desc:'직관력이 뛰어나고 감성이 풍부합니다. 지혜로우며 영적인 세계에 관심이 많습니다.'},
+  24:{name:'무자',title:'눈 덮인 산',desc:'듬직하면서도 지혜가 깊습니다. 포용력이 넓고 내면이 풍부합니다. 대기만성형입니다.'},
+  25:{name:'기축',title:'겨울 논밭',desc:'인내심이 강하고 실속 있습니다. 묵묵히 노력하며 안정적인 삶을 만들어 갑니다.'},
+  26:{name:'경인',title:'숲속의 강철',desc:'강인하면서도 진취적입니다. 리더십과 실행력을 겸비하며 새로운 분야를 개척합니다.'},
+  27:{name:'신묘',title:'봄바람의 은빛',desc:'섬세하고 유연하며 대인관계가 좋습니다. 예술적 감각과 분석력을 겸비합니다.'},
+  28:{name:'임진',title:'용을 탄 바다',desc:'괴강에 해당하여 기상이 크고 결단력이 뛰어납니다. 큰 뜻을 품고 거침없이 나아갑니다.'},
+  29:{name:'계사',title:'뜨거운 이슬',desc:'총명하고 기획력이 뛰어납니다. 지략이 있으며 임기응변에 능합니다.'},
+  30:{name:'갑오',title:'여름의 큰 나무',desc:'열정적이고 활기차며 리더의 기질이 있습니다. 추진력이 강하고 명예를 중시합니다.'},
+  31:{name:'을미',title:'여름 화원의 꽃',desc:'부드럽고 정이 많으며 가정적입니다. 예술적 재능이 있고 꾸준한 성장을 이룹니다.'},
+  32:{name:'병신',title:'가을 하늘의 태양',desc:'밝고 활동적이며 다재다능합니다. 변화에 능하고 적응력이 뛰어납니다.'},
+  33:{name:'정유',title:'보석을 비추는 촛불',desc:'섬세하고 예리하며 심미안이 뛰어납니다. 전문 분야에서 인정받으며 꼼꼼합니다.'},
+  34:{name:'무술',title:'가을 산의 봉우리',desc:'듬직하고 의리가 있으며 신뢰받는 성격입니다. 안정적이고 책임감이 강합니다.'},
+  35:{name:'기해',title:'겨울 들판의 바다',desc:'겸손하면서도 지혜가 깊습니다. 포용력이 넓고 학문에 재능이 있습니다.'},
+  36:{name:'경자',title:'겨울의 강철',desc:'날카롭고 결단력이 있습니다. 지혜와 실행력을 겸비하며 시작과 혁신에 강합니다.'},
+  37:{name:'신축',title:'겨울밤의 보석',desc:'인내심이 강하고 실속 있습니다. 꼼꼼하며 재물 관리에 능합니다.'},
+  38:{name:'임인',title:'봄비가 내리는 숲',desc:'지혜롭고 활동적이며 진취적입니다. 인복이 있고 리더의 기질을 가졌습니다.'},
+  39:{name:'계묘',title:'봄비의 새싹',desc:'부드럽고 지적이며 감성이 풍부합니다. 학문과 예술에 재능이 있습니다.'},
+  40:{name:'갑진',title:'봄의 용나무',desc:'포부가 크고 야심이 있습니다. 큰 일을 도모하며 리더십이 뛰어납니다.'},
+  41:{name:'을사',title:'여름 덩굴',desc:'지략이 뛰어나고 적응력이 좋습니다. 처세에 능하며 인간관계가 넓습니다.'},
+  42:{name:'병오',title:'한낮의 태양',desc:'열정이 최고조에 달하며 활기가 넘칩니다. 사교성이 좋고 리더십이 있으나 과열에 주의합니다.'},
+  43:{name:'정미',title:'석양의 불꽃',desc:'따뜻하고 배려심이 깊습니다. 가정적이며 예술적 감각이 뛰어납니다.'},
+  44:{name:'무신',title:'금광이 있는 산',desc:'듬직하면서도 변화에 능합니다. 실용적이며 재물운이 좋습니다.'},
+  45:{name:'기유',title:'가을 수확의 땅',desc:'실속 있고 분석력이 뛰어납니다. 꼼꼼하며 재물 관리에 능합니다.'},
+  46:{name:'경술',title:'가을의 강철칼',desc:'괴강에 해당하여 의지가 매우 강합니다. 의리 있고 결단력이 뛰어나며 문무를 겸비합니다.'},
+  47:{name:'신해',title:'겨울 바다의 진주',desc:'지혜롭고 포용력이 넓습니다. 섬세하면서도 대범하며 영적 감각이 있습니다.'},
+  48:{name:'임자',title:'한겨울의 큰 바다',desc:'지혜가 깊고 포용력이 넓습니다. 학문적 성취가 높으며 창의력이 뛰어납니다.'},
+  49:{name:'계축',title:'겨울밤의 이슬',desc:'인내심이 강하고 꾸준합니다. 실속 있게 재물을 모으며 안정적인 삶을 추구합니다.'},
+  50:{name:'갑인',title:'봄숲의 대나무',desc:'곧고 바르며 진취적입니다. 리더십이 뛰어나고 초년부터 두각을 나타냅니다.'},
+  51:{name:'을묘',title:'만개한 꽃동산',desc:'아름답고 유연하며 매력적입니다. 예술적 재능이 뛰어나고 인기가 많습니다.'},
+  52:{name:'병진',title:'용을 타고 날으는 태양',desc:'기상이 크고 야심이 있습니다. 화려한 성공을 이룰 수 있으며 리더의 기질이 강합니다.'},
+  53:{name:'정사',title:'지혜로운 불꽃',desc:'총명하고 기획력이 뛰어납니다. 지략이 있으며 전문 분야에서 빛을 발합니다.'},
+  54:{name:'무오',title:'평원의 대지',desc:'듬직하고 열정적이며 리더십이 있습니다. 명예를 중시하고 당당합니다.'},
+  55:{name:'기미',title:'여름날의 정원',desc:'온화하고 배려심이 깊습니다. 가정적이며 주변의 신뢰를 받습니다.'},
+  56:{name:'경신',title:'단련된 금강석',desc:'강인하고 변화에 능합니다. 날카로운 판단력과 실행력을 겸비합니다.'},
+  57:{name:'신유',title:'완벽한 순금',desc:'예리하고 완벽을 추구합니다. 분석력이 탁월하며 전문 분야의 최고를 지향합니다.'},
+  58:{name:'임술',title:'가을비와 황야',desc:'괴강에 해당하여 기상이 웅장합니다. 결단력이 뛰어나고 큰 뜻을 품습니다.'},
+  59:{name:'계해',title:'깊은 겨울 바다',desc:'지혜가 깊고 직관력이 뛰어납니다. 포용력이 넓으며 영적인 감각이 있습니다. 대기만성형으로 큰 그릇입니다.'}
+};
+
+// 신강/신약 간략 판단
+function judgeStrength(dayPillar, yearPillar, monthPillar, hourPillar) {
+  const dayOheng = STEM_OHENG[dayPillar.stem];
+  const oheng = [0,0,0,0,0];
+  [yearPillar, monthPillar, dayPillar, hourPillar].forEach(p => {
+    oheng[STEM_OHENG[p.stem]]++;
+    oheng[BRANCH_OHENG[p.branch]]++;
+  });
+  const selfCount = oheng[dayOheng];
+  const inCount = oheng[(dayOheng + 4) % 5];
+  const strength = selfCount + inCount;
+  return { isStrong: strength >= 4, selfCount, inCount, totalStrength: strength };
+}
+
+// ============================================================
 // 사주 결과 렌더링
 // ============================================================
 function calculateSaju() {
@@ -1134,11 +1399,26 @@ function calculateSaju() {
   });
   html += `</div>`;
 
-  // 12운성
+  // 12운성 (with descriptions)
+  const unseongDesc = {
+    '장생': '탄생, 새로운 시작의 기운',
+    '목욕': '성장통, 변화와 불안정',
+    '관대': '성인, 자신감과 활동',
+    '건록': '전성기, 독립과 번영',
+    '제왕': '최고봉, 권력과 영향력',
+    '쇠': '쇠퇴 시작, 안정 추구',
+    '병': '기력 저하, 내면 성찰',
+    '사': '소멸, 정신적 전환',
+    '묘': '잠복, 재충전 기간',
+    '절': '단절, 새 시작 준비',
+    '태': '잉태, 새 생명의 씨앗',
+    '양': '양육, 준비와 성장'
+  };
   html += `<div class="info-box"><h3>12운성 (十二運星)</h3>`;
   html += `<div class="unseong-grid">`;
   pillars.forEach(pi => {
-    html += `<div class="item">${pi.unseong}</div>`;
+    const desc = unseongDesc[pi.unseong] || '';
+    html += `<div class="item" title="${desc}">${pi.unseong}<div style="font-size:0.7em;color:var(--text-dim);margin-top:2px;">${desc.split(',')[0]}</div></div>`;
   });
   html += `</div></div>`;
 
@@ -1169,6 +1449,67 @@ function calculateSaju() {
   if (weakList.length > 0) {
     html += `<div style="margin-top:8px; font-size:0.85em; color:var(--accent);">부족한 오행: ${weakList.join(', ')}</div>`;
   }
+  html += `</div>`;
+
+  // 신강/신약 판단
+  const strengthResult = judgeStrength(dayPillar, yearPillar, monthPillar, hourPillar);
+  const dayOhengIdx = STEM_OHENG[dayPillar.stem];
+  const yongshinOheng = strengthResult.isStrong
+    ? [(dayOhengIdx + 1) % 5, (dayOhengIdx + 2) % 5]
+    : [(dayOhengIdx + 4) % 5, dayOhengIdx];
+  html += `<div class="info-box"><h3>신강/신약 판단 (身强身弱)</h3>`;
+  html += `<div style="text-align:center;padding:8px;">`;
+  html += `<div style="font-size:1.6em;font-weight:900;color:${strengthResult.isStrong ? 'var(--fire)' : 'var(--water)'};">${strengthResult.isStrong ? '身强 (신강)' : '身弱 (신약)'}</div>`;
+  html += `<div style="font-size:0.85em;color:var(--text-dim);margin-top:6px;">비겁(같은 오행) ${strengthResult.selfCount}개 + 인성(나를 생하는 오행) ${strengthResult.inCount}개 = ${strengthResult.totalStrength}</div>`;
+  html += `<div style="font-size:0.85em;margin-top:8px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;">`;
+  html += strengthResult.isStrong
+    ? '일간의 힘이 강하여 <span style="color:var(--gold)">식상(食傷)과 재성(財星)</span>을 용신으로 활용하면 좋습니다. 활동적이고 독립적인 운영이 유리합니다.'
+    : '일간의 힘이 약하여 <span style="color:var(--gold)">인성(印星)과 비겁(比劫)</span>의 도움이 필요합니다. 안정적인 환경에서 전문성을 키우는 것이 유리합니다.';
+  html += `</div>`;
+  html += `<div style="font-size:0.85em;margin-top:8px;">용신(用神): <span style="color:${OHENG_COLOR[yongshinOheng[0]]};font-weight:700;">${OHENG[yongshinOheng[0]]}(${OHENG_HANJA[yongshinOheng[0]]})</span></div>`;
+  html += `</div></div>`;
+
+  // 합충형파해 분석
+  const relations = analyzeRelations(pillars);
+  if (relations.length > 0) {
+    html += `<div class="info-box"><h3>합충형파해 (合冲刑破害) 관계</h3>`;
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">`;
+    relations.forEach(r => {
+      const color = r.cls === 'good' ? 'var(--wood)' : r.cls === 'bad' ? 'var(--accent)' : 'var(--earth)';
+      const bg = r.cls === 'good' ? 'rgba(76,175,80,0.15)' : r.cls === 'bad' ? 'rgba(233,69,96,0.15)' : 'rgba(255,152,0,0.15)';
+      html += `<div style="padding:4px 10px;border-radius:8px;background:${bg};font-size:0.82em;">`;
+      html += `<span style="color:${color};font-weight:700;">${r.type}(${r.hanja})</span> `;
+      html += `<span style="color:var(--text-dim);">${r.pair}</span> `;
+      html += `<span>${r.detail}</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+    // 합충 해석
+    const hasChung = relations.some(r => r.type === '충');
+    const hasHap = relations.some(r => r.type === '천간합' || r.type === '지지육합');
+    if (hasChung) html += `<div style="font-size:0.82em;color:var(--accent);margin-top:4px;">충(冲)이 있어 변동과 갈등이 있을 수 있으나, 이는 변화의 에너지이기도 합니다.</div>`;
+    if (hasHap) html += `<div style="font-size:0.82em;color:var(--wood);margin-top:4px;">합(合)이 있어 조화와 협력의 기운이 있습니다. 대인관계가 원만합니다.</div>`;
+    html += `</div>`;
+  }
+
+  // 신살 분석
+  const sinsalResults = analyzeSinsal(yearPillar, monthPillar, dayPillar, hourPillar);
+  html += `<div class="info-box"><h3>신살 분석 (神煞)</h3>`;
+  if (sinsalResults.length > 0) {
+    sinsalResults.forEach(ss => {
+      const color = ss.type === 'good' ? 'var(--gold)' : ss.type === 'caution' ? 'var(--accent)' : ss.type === 'strong' ? 'var(--fire)' : 'var(--water)';
+      const bg = ss.type === 'good' ? 'rgba(240,192,64,0.1)' : ss.type === 'caution' ? 'rgba(233,69,96,0.1)' : ss.type === 'strong' ? 'rgba(244,67,54,0.1)' : 'rgba(33,150,243,0.1)';
+      html += `<div style="padding:8px 12px;margin-bottom:6px;border-radius:8px;background:${bg};border-left:3px solid ${color};">`;
+      html += `<div style="font-weight:700;color:${color};font-size:0.9em;">${ss.name} (${ss.hanja}) <span style="color:var(--text-dim);font-weight:400;font-size:0.85em;">— ${ss.pos}</span></div>`;
+      html += `<div style="font-size:0.82em;color:#ccc;margin-top:3px;">${ss.desc}</div>`;
+      html += `</div>`;
+    });
+  } else {
+    html += `<div style="font-size:0.85em;color:var(--text-dim);padding:8px;">특이 신살이 발견되지 않았습니다.</div>`;
+  }
+  // 공망 표시
+  const gm = getGongmang(dayPillar.gapja);
+  html += `<div style="font-size:0.82em;color:var(--text-dim);margin-top:8px;padding:6px;background:rgba(255,255,255,0.02);border-radius:4px;">공망(空亡): ${JIJI[gm[0]]}(${JIJI_HANJA[gm[0]]}), ${JIJI[gm[1]]}(${JIJI_HANJA[gm[1]]})</div>`;
   html += `</div>`;
 
   // 대운
