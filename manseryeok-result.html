@@ -435,19 +435,31 @@ const inputData = {
 };
 
 // 데이터 검증
+console.log('입력 데이터:', inputData);
+
 if (!inputData.name || !inputData.year || !inputData.month || !inputData.day) {
-  document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">입력 데이터가 올바르지 않습니다.</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+  document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">입력 데이터가 올바르지 않습니다.</p><p>받은 데이터: ' + JSON.stringify(inputData) + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
 } else {
   // 사주 분석 시작
-  setTimeout(() => analyzeSaju(), 500);
+  setTimeout(() => {
+    try {
+      analyzeSaju();
+    } catch (error) {
+      console.error('분석 오류:', error);
+      document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">분석 중 오류가 발생했습니다.</p><p>' + error.message + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+    }
+  }, 500);
 }
 
 function analyzeSaju() {
+  console.log('analyzeSaju 시작');
   let year = inputData.year;
   let month = inputData.month;
   let day = inputData.day;
-  let hour = inputData.hour;
-  let minute = inputData.minute;
+  let hour = inputData.hour || 0;
+  let minute = inputData.minute || 0;
+
+  console.log('분석 시작:', year, month, day, hour, minute);
 
   // 음력 → 양력 변환
   if (inputData.calType === 'lunar') {
@@ -537,15 +549,28 @@ function analyzeSaju() {
   });
 
   // 렌더링
-  renderProfile(inputData, year, month, day, hour, minute, lunar, dstResult);
-  renderPillars(yearPillar, monthPillar, dayPillar, hourPillar, sipsinData, unseongList);
-  renderOheng(ohengNormal, ohengWeighted);
-  renderSipsin(sipsinNormal, sipsinWeighted);
-  renderDaeun(daeun, inputData.gender);
-  renderSeun(year);
+  console.log('렌더링 시작');
+  try {
+    renderProfile(inputData, year, month, day, hour, minute, lunar, dstResult);
+    console.log('프로필 렌더링 완료');
+    renderPillars(yearPillar, monthPillar, dayPillar, hourPillar, sipsinData, unseongList);
+    console.log('사주 렌더링 완료');
+    renderOheng(ohengNormal, ohengWeighted);
+    console.log('오행 렌더링 완료');
+    renderSipsin(sipsinNormal, sipsinWeighted);
+    console.log('십신 렌더링 완료');
+    renderDaeun(daeun, inputData.gender);
+    console.log('대운 렌더링 완료');
+    renderSeun(year);
+    console.log('세운 렌더링 완료');
 
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('result').style.display = 'block';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+    console.log('결과 표시 완료');
+  } catch (error) {
+    console.error('렌더링 오류:', error);
+    document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">결과 표시 중 오류가 발생했습니다.</p><p>' + error.message + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+  }
 }
 
 function renderProfile(input, year, month, day, hour, minute, lunar, dstResult) {
