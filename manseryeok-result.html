@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>만세력 사주분석 결과</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #2c3e50;
+  --accent: #3498db;
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --text: #2c3e50;
+  --text-light: #7f8c8d;
+  --border: #e1e8ed;
+  --shadow: rgba(0,0,0,0.08);
+  --wood: #4caf50;
+  --fire: #f44336;
+  --earth: #ff9800;
+  --metal: #9e9e9e;
+  --water: #2196f3;
+}
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px 20px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.header h1 {
+  font-size: 1.8em;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.header .subtitle {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.profile-item .label {
+  font-size: 0.85em;
+  color: var(--text-light);
+  font-weight: 500;
+}
+.profile-item .value {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--primary);
+}
+.section-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+}
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+.pillar {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  padding: 16px 12px;
+  text-align: center;
+  border: 2px solid var(--border);
+}
+.pillar-label {
+  font-size: 0.8em;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.pillar-han {
+  font-size: 2em;
+  font-weight: 900;
+  margin: 8px 0;
+}
+.pillar-hanja {
+  font-size: 0.9em;
+  color: var(--text-light);
+  display: block;
+  margin-top: 4px;
+}
+.pillar-element {
+  font-size: 0.75em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.oheng-wood { color: var(--wood); background: rgba(76,175,80,0.1); }
+.oheng-fire { color: var(--fire); background: rgba(244,67,54,0.1); }
+.oheng-earth { color: var(--earth); background: rgba(255,152,0,0.1); }
+.oheng-metal { color: var(--metal); background: rgba(158,158,158,0.1); }
+.oheng-water { color: var(--water); background: rgba(33,150,243,0.1); }
+.distribution-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+@media (max-width: 768px) {
+  .distribution-row { grid-template-columns: 1fr; }
+}
+.dist-card {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 16px;
+}
+.dist-title {
+  font-size: 1em;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+.dist-subtitle {
+  font-size: 0.8em;
+  color: var(--text-light);
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bar-label {
+  min-width: 60px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+.bar-track {
+  flex: 1;
+  height: 28px;
+  background: #e9ecef;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.bar-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: white;
+  transition: width 0.5s ease;
+}
+.bar-value {
+  min-width: 50px;
+  text-align: right;
+  font-size: 0.9em;
+  font-weight: 700;
+}
+.daeun-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+.daeun-table th {
+  background: var(--bg);
+  padding: 10px 8px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+.daeun-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9em;
+}
+.daeun-han {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.daeun-hanja {
+  font-size: 0.75em;
+  color: var(--text-light);
+}
+.seun-scroll {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+.seun-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+.seun-table th {
+  background: var(--bg);
+  padding: 8px;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+}
+.seun-table td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85em;
+}
+.seun-current {
+  background: rgba(52, 152, 219, 0.1);
+  border: 2px solid var(--accent);
+}
+.btn-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+.btn-secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--border);
+}
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.info-item {
+  background: var(--bg);
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.info-item .label {
+  font-size: 0.9em;
+  color: var(--text-light);
+}
+.info-item .value {
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--primary);
+}
+.footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-light);
+  font-size: 0.85em;
+}
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.2em;
+  color: var(--text-light);
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>만세력 사주분석 결과</h1>
+  <p class="subtitle">四柱八字 · 大運 · 歲運 · 五行 · 十神 分析</p>
+</div>
+
+<div class="container">
+  <div id="loading" class="loading">
+    분석 중입니다...
+  </div>
+  <div id="result" style="display:none;">
+    <!-- 프로필 정보 -->
+    <div class="profile-card">
+      <h2 class="section-title">기본 정보</h2>
+      <div class="profile-grid" id="profileGrid"></div>
+    </div>
+
+    <!-- 사주팔자 -->
+    <div class="card">
+      <h2 class="section-title">사주팔자 (四柱八字)</h2>
+      <div class="pillars-grid" id="pillarsGrid"></div>
+      <div class="info-grid" id="pillarsInfo" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- 오행 분포 -->
+    <div class="card">
+      <h2 class="section-title">오행 분포 (五行 分布)</h2>
+      <div class="distribution-row">
+        <div class="dist-card">
+          <div class="dist-title">일반 분포</div>
+          <div class="dist-subtitle">천간 4개 + 지지 4개 = 총 8개</div>
+          <div class="bar-chart" id="ohengNormal"></div>
+        </div>
+        <div class="dist-card">
+          <div class="dist-title">가중 분포</div>
+          <div class="dist-subtitle">년주 10% · 월주 20% · 일주 50% · 시주 20%</div>
+          <div class="bar-chart" id="ohengWeighted"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 십신 분포 -->
+    <div class="card">
+      <h2 class="section-title">십신 분포 (十神 分布)</h2>
+      <div class="distribution-row">
+        <div class="dist-card">
+          <div class="dist-title">일반 분포</div>
+          <div class="dist-subtitle">천간 3개 + 지지 4개 = 총 7개 (일간 제외)</div>
+          <div class="bar-chart" id="sipsinNormal"></div>
+        </div>
+        <div class="dist-card">
+          <div class="dist-title">가중 분포</div>
+          <div class="dist-subtitle">년주 10% · 월주 20% · 일주 50% · 시주 20%</div>
+          <div class="bar-chart" id="sipsinWeighted"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대운 -->
+    <div class="card">
+      <h2 class="section-title">대운 (大運)</h2>
+      <div id="daeunInfo" style="margin-bottom: 12px; color: var(--text-light); font-size: 0.9em;"></div>
+      <div style="overflow-x: auto;">
+        <table class="daeun-table" id="daeunTable"></table>
+      </div>
+    </div>
+
+    <!-- 세운 -->
+    <div class="card">
+      <h2 class="section-title">세운 (歲運) - 연운</h2>
+      <div class="seun-scroll">
+        <table class="seun-table" id="seunTable"></table>
+      </div>
+    </div>
+
+    <!-- 버튼 -->
+    <div class="btn-group">
+      <a href="manseryeok-input.html" class="btn btn-primary">새로운 분석</a>
+      <a href="unsebogi.html" class="btn btn-secondary">운세 보기</a>
+      <a href="gunghap.html" class="btn btn-secondary">궁합 보기</a>
+      <button class="btn btn-secondary" onclick="window.print()">인쇄하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>만세력 萬歲曆 &copy; 2026</p>
+  <p style="margin-top: 8px; font-size: 0.9em;">입춘 기준 년주 · 절기 기준 월주 · 진태양시 보정 · 서머타임 자동 적용</p>
+</div>
+
+<script src="timezone-lunar.js"></script>
+<script src="saju-calculator.js"></script>
+<script>
+// URL 파라미터 파싱
+const params = new URLSearchParams(window.location.search);
+const inputData = {
+  name: params.get('name'),
+  calType: params.get('calType'),
+  year: parseInt(params.get('year')),
+  month: parseInt(params.get('month')),
+  day: parseInt(params.get('day')),
+  hour: parseInt(params.get('hour')),
+  minute: parseInt(params.get('minute')),
+  region: params.get('region'),
+  gender: params.get('gender')
+};
+
+// 데이터 검증
+if (!inputData.name || !inputData.year || !inputData.month || !inputData.day) {
+  document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">입력 데이터가 올바르지 않습니다.</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+} else {
+  // 사주 분석 시작
+  setTimeout(() => analyzeSaju(), 500);
+}
+
+function analyzeSaju() {
+  let year = inputData.year;
+  let month = inputData.month;
+  let day = inputData.day;
+  let hour = inputData.hour;
+  let minute = inputData.minute;
+
+  // 음력 → 양력 변환
+  if (inputData.calType === 'lunar') {
+    const converted = accurateLunarToSolar(year, month, day, false);
+    if (converted) {
+      year = converted.year;
+      month = converted.month;
+      day = converted.day;
+    }
+  }
+
+  // DST 적용
+  const dstResult = applyDST(year, month, day, hour);
+  if (dstResult.applied) {
+    hour = dstResult.adjustedHour;
+    if (dstResult.dayAdjust !== 0) {
+      day += dstResult.dayAdjust;
+    }
+  }
+
+  // 절기 데이터
+  const terms = getYearJeolgi(year);
+
+  // 사주 계산
+  const yearPillar = getYearPillar(year, month, day, terms);
+  const monthPillar = getMonthPillar(year, month, day, yearPillar.stem, terms);
+  const dayGapja = getDayGapjaIndex(year, month, day);
+  const dayPillar = { gapja: dayGapja, ...gapjaToStemBranch(dayGapja) };
+  const hourPillar = getHourPillar(hour, minute, dayPillar.stem);
+
+  // 음력 정보
+  const lunar = solarToLunar(year, month, day);
+
+  // 대운
+  const daeun = calculateDaeun(yearPillar.stem, monthPillar, inputData.gender, year, month, day, terms);
+
+  // 십신 계산
+  const dayStem = dayPillar.stem;
+  const sipsinData = {
+    year: { stem: getSipsin(dayStem, yearPillar.stem), branch: getSipsinBranch(dayStem, yearPillar.branch) },
+    month: { stem: getSipsin(dayStem, monthPillar.stem), branch: getSipsinBranch(dayStem, monthPillar.branch) },
+    day: { stem: '일주', branch: getSipsinBranch(dayStem, dayPillar.branch) },
+    hour: { stem: getSipsin(dayStem, hourPillar.stem), branch: getSipsinBranch(dayStem, hourPillar.branch) }
+  };
+
+  // 12운성
+  const unseongList = [
+    getUnseong(dayStem, yearPillar.branch),
+    getUnseong(dayStem, monthPillar.branch),
+    getUnseong(dayStem, dayPillar.branch),
+    getUnseong(dayStem, hourPillar.branch)
+  ];
+
+  // 오행 분포 계산 (일반)
+  const ohengNormal = [0, 0, 0, 0, 0];
+  const pillars = [yearPillar, monthPillar, dayPillar, hourPillar];
+  pillars.forEach(p => {
+    ohengNormal[STEM_OHENG[p.stem]]++;
+    ohengNormal[BRANCH_OHENG[p.branch]]++;
+  });
+
+  // 오행 분포 계산 (가중)
+  const ohengWeighted = [0, 0, 0, 0, 0];
+  const weights = [PILLAR_WEIGHT.year, PILLAR_WEIGHT.month, PILLAR_WEIGHT.day, PILLAR_WEIGHT.hour];
+  pillars.forEach((p, idx) => {
+    ohengWeighted[STEM_OHENG[p.stem]] += weights[idx];
+    ohengWeighted[BRANCH_OHENG[p.branch]] += weights[idx];
+  });
+
+  // 십신 분포 계산 (일반)
+  const sipsinNormal = {};
+  SIPSIN_NAME.forEach(s => sipsinNormal[s] = 0);
+  [sipsinData.year, sipsinData.month, sipsinData.hour].forEach(s => {
+    if (s.stem !== '일주') sipsinNormal[s.stem]++;
+  });
+  [sipsinData.year, sipsinData.month, sipsinData.day, sipsinData.hour].forEach(s => {
+    sipsinNormal[s.branch]++;
+  });
+
+  // 십신 분포 계산 (가중)
+  const sipsinWeighted = {};
+  SIPSIN_NAME.forEach(s => sipsinWeighted[s] = 0);
+  const sipsinArr = [sipsinData.year, sipsinData.month, sipsinData.day, sipsinData.hour];
+  sipsinArr.forEach((s, idx) => {
+    if (s.stem !== '일주') sipsinWeighted[s.stem] += weights[idx];
+    sipsinWeighted[s.branch] += weights[idx];
+  });
+
+  // 렌더링
+  renderProfile(inputData, year, month, day, hour, minute, lunar, dstResult);
+  renderPillars(yearPillar, monthPillar, dayPillar, hourPillar, sipsinData, unseongList);
+  renderOheng(ohengNormal, ohengWeighted);
+  renderSipsin(sipsinNormal, sipsinWeighted);
+  renderDaeun(daeun, inputData.gender);
+  renderSeun(year);
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+}
+
+function renderProfile(input, year, month, day, hour, minute, lunar, dstResult) {
+  const grid = document.getElementById('profileGrid');
+  const calTypeText = input.calType === 'lunar' ? '음력' : '양력';
+  const genderText = input.gender === 'M' ? '남성 ♂' : '여성 ♀';
+  const lunarText = lunar.isLeap ? `${lunar.year}년 윤${lunar.month}월 ${lunar.day}일` : `${lunar.year}년 ${lunar.month}월 ${lunar.day}일`;
+
+  let dstNotice = '';
+  if (dstResult.applied) {
+    dstNotice = `<br><span style="color: #e74c3c; font-size: 0.85em;">※ ${dstResult.message}</span>`;
+  }
+
+  grid.innerHTML = `
+    <div class="profile-item">
+      <div class="label">이름</div>
+      <div class="value">${input.name}</div>
+    </div>
+    <div class="profile-item">
+      <div class="label">입력 구분</div>
+      <div class="value">${calTypeText}</div>
+    </div>
+    <div class="profile-item">
+      <div class="label">양력 생년월일</div>
+      <div class="value">${year}년 ${month}월 ${day}일</div>
+    </div>
+    <div class="profile-item">
+      <div class="label">음력 생년월일</div>
+      <div class="value">${lunarText}</div>
+    </div>
+    <div class="profile-item">
+      <div class="label">출생 시간</div>
+      <div class="value">${hour}시 ${minute}분${dstNotice}</div>
+    </div>
+    <div class="profile-item">
+      <div class="label">성별</div>
+      <div class="value">${genderText}</div>
+    </div>
+  `;
+}
+
+function renderPillars(yp, mp, dp, hp, sipsin, unseong) {
+  const pillarsGrid = document.getElementById('pillarsGrid');
+  const pillarsInfo = document.getElementById('pillarsInfo');
+
+  const pillars = [
+    { label: '년주 (年柱)', sub: '조상', p: yp, sipsin: sipsin.year, unseong: unseong[0] },
+    { label: '월주 (月柱)', sub: '부모', p: mp, sipsin: sipsin.month, unseong: unseong[1] },
+    { label: '일주 (日柱)', sub: '나', p: dp, sipsin: sipsin.day, unseong: unseong[2] },
+    { label: '시주 (時柱)', sub: '자녀', p: hp, sipsin: sipsin.hour, unseong: unseong[3] }
+  ];
+
+  let html = '';
+  pillars.forEach(pi => {
+    const stemOh = STEM_OHENG[pi.p.stem];
+    const branchOh = BRANCH_OHENG[pi.p.branch];
+    html += `
+      <div class="pillar">
+        <div class="pillar-label">${pi.label}<br><span style="font-size: 0.9em;">${pi.sub}의 기둥</span></div>
+        <div style="font-size: 0.75em; color: var(--text-light); margin: 6px 0;">${pi.sipsin.stem}</div>
+        <div class="pillar-han" style="color: ${OHENG_COLOR[stemOh]}">
+          ${CHEONGAN[pi.p.stem]}
+          <span class="pillar-hanja">${CHEONGAN_HANJA[pi.p.stem]}</span>
+        </div>
+        <div class="pillar-han" style="color: ${OHENG_COLOR[branchOh]}">
+          ${JIJI[pi.p.branch]}
+          <span class="pillar-hanja">${JIJI_HANJA[pi.p.branch]}</span>
+        </div>
+        <div style="font-size: 0.75em; color: var(--text-light); margin: 6px 0;">${pi.sipsin.branch}</div>
+        <div class="pillar-element oheng-${['wood','fire','earth','metal','water'][stemOh]}">${OHENG[stemOh]}</div>
+        <div class="pillar-element oheng-${['wood','fire','earth','metal','water'][branchOh]}">${OHENG[branchOh]}</div>
+      </div>
+    `;
+  });
+  pillarsGrid.innerHTML = html;
+
+  // 12운성 표시
+  let infoHtml = `
+    <div class="info-item">
+      <div class="label">12운성 (년)</div>
+      <div class="value">${unseong[0]}</div>
+    </div>
+    <div class="info-item">
+      <div class="label">12운성 (월)</div>
+      <div class="value">${unseong[1]}</div>
+    </div>
+    <div class="info-item">
+      <div class="label">12운성 (일)</div>
+      <div class="value">${unseong[2]}</div>
+    </div>
+    <div class="info-item">
+      <div class="label">12운성 (시)</div>
+      <div class="value">${unseong[3]}</div>
+    </div>
+  `;
+  pillarsInfo.innerHTML = infoHtml;
+}
+
+function renderOheng(normal, weighted) {
+  renderDistribution('ohengNormal', normal, OHENG, OHENG_COLOR, 8);
+  renderDistribution('ohengWeighted', weighted, OHENG, OHENG_COLOR, 4.0);
+}
+
+function renderSipsin(normal, weighted) {
+  const values = SIPSIN_NAME.map(s => normal[s]);
+  const wValues = SIPSIN_NAME.map(s => weighted[s]);
+  const colors = ['#e74c3c', '#c0392b', '#3498db', '#2980b9', '#f39c12', '#d68910', '#9b59b6', '#8e44ad', '#1abc9c', '#16a085'];
+  renderDistribution('sipsinNormal', values, SIPSIN_NAME, colors, 7);
+  renderDistribution('sipsinWeighted', wValues, SIPSIN_NAME, colors, 3.5);
+}
+
+function renderDistribution(containerId, values, labels, colors, maxTotal) {
+  const container = document.getElementById(containerId);
+  let html = '';
+
+  values.forEach((val, idx) => {
+    const pct = maxTotal > 0 ? (val / maxTotal * 100) : 0;
+    const displayVal = Number.isInteger(val) ? val : val.toFixed(2);
+    html += `
+      <div class="bar-item">
+        <div class="bar-label">${labels[idx]}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: ${pct}%; background: ${colors[idx]};">
+            ${pct > 15 ? displayVal : ''}
+          </div>
+        </div>
+        <div class="bar-value">${displayVal}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderDaeun(daeun, gender) {
+  const info = document.getElementById('daeunInfo');
+  const table = document.getElementById('daeunTable');
+
+  info.innerHTML = `대운 시작: ${daeun.startAge}세 / ${daeun.isForward ? '순행 ▶' : '역행 ◀'} / 성별: ${gender === 'M' ? '남성' : '여성'}`;
+
+  let html = '<tr><th colspan="10">대운 (大運) - 10년 주기</th></tr><tr>';
+  daeun.list.forEach(d => {
+    const stemOh = STEM_OHENG[d.stem];
+    html += `<td><div class="daeun-han" style="color: ${OHENG_COLOR[stemOh]}">${CHEONGAN[d.stem]}<br>${CHEONGAN_HANJA[d.stem]}</div></td>`;
+  });
+  html += '</tr><tr>';
+  daeun.list.forEach(d => {
+    const branchOh = BRANCH_OHENG[d.branch];
+    html += `<td><div class="daeun-han" style="color: ${OHENG_COLOR[branchOh]}">${JIJI[d.branch]}<br>${JIJI_HANJA[d.branch]}</div></td>`;
+  });
+  html += '</tr><tr>';
+  daeun.list.forEach(d => {
+    html += `<td><strong>${d.age}세</strong><br><span class="daeun-hanja">${d.year}년</span></td>`;
+  });
+  html += '</tr>';
+
+  table.innerHTML = html;
+}
+
+function renderSeun(birthYear) {
+  const table = document.getElementById('seunTable');
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 2;
+
+  let html = '<tr><th colspan="10">세운 (歲運) - 연도별 운세</th></tr><tr>';
+  for (let y = startYear; y < startYear + 10; y++) {
+    const isCurrent = y === currentYear;
+    html += `<th${isCurrent ? ' class="seun-current"' : ''}>${y}년</th>`;
+  }
+  html += '</tr><tr>';
+  for (let y = startYear; y < startYear + 10; y++) {
+    const seunIdx = ((y - 4) % 60 + 60) % 60;
+    const stem = seunIdx % 10;
+    const stemOh = STEM_OHENG[stem];
+    const isCurrent = y === currentYear;
+    html += `<td${isCurrent ? ' class="seun-current"' : ''}><div style="color: ${OHENG_COLOR[stemOh]}; font-weight: 700;">${CHEONGAN[stem]}<br><span style="font-size: 0.8em;">${CHEONGAN_HANJA[stem]}</span></div></td>`;
+  }
+  html += '</tr><tr>';
+  for (let y = startYear; y < startYear + 10; y++) {
+    const seunIdx = ((y - 4) % 60 + 60) % 60;
+    const branch = seunIdx % 12;
+    const branchOh = BRANCH_OHENG[branch];
+    const isCurrent = y === currentYear;
+    html += `<td${isCurrent ? ' class="seun-current"' : ''}><div style="color: ${OHENG_COLOR[branchOh]}; font-weight: 700;">${JIJI[branch]}<br><span style="font-size: 0.8em;">${JIJI_HANJA[branch]}</span></div></td>`;
+  }
+  html += '</tr><tr>';
+  for (let y = startYear; y < startYear + 10; y++) {
+    const age = y - birthYear + 1;
+    const isCurrent = y === currentYear;
+    html += `<td${isCurrent ? ' class="seun-current"' : ''}>${age > 0 ? age + '세' : ''}</td>`;
+  }
+  html += '</tr>';
+
+  table.innerHTML = html;
+}
+</script>
+</body>
+</html>
