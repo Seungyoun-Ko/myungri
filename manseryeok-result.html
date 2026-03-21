@@ -417,39 +417,51 @@ body {
   <p style="margin-top: 8px; font-size: 0.9em;">입춘 기준 년주 · 절기 기준 월주 · 진태양시 보정 · 서머타임 자동 적용</p>
 </div>
 
-<script src="timezone-lunar.js"></script>
-<script src="saju-calculator.js"></script>
+<script src="./timezone-lunar.js"></script>
+<script src="./saju-calculator.js"></script>
 <script>
-// URL 파라미터 파싱
-const params = new URLSearchParams(window.location.search);
-const inputData = {
-  name: params.get('name'),
-  calType: params.get('calType'),
-  year: parseInt(params.get('year')),
-  month: parseInt(params.get('month')),
-  day: parseInt(params.get('day')),
-  hour: parseInt(params.get('hour')),
-  minute: parseInt(params.get('minute')),
-  region: params.get('region'),
-  gender: params.get('gender')
-};
+// 전역 변수
+let inputData = null;
 
-// 데이터 검증
-console.log('입력 데이터:', inputData);
+// 모든 스크립트가 로드된 후 실행
+window.addEventListener('DOMContentLoaded', function() {
+  // 필수 함수들이 정의되었는지 확인
+  if (typeof getYearJeolgi === 'undefined') {
+    document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">필수 스크립트 파일이 로드되지 않았습니다.</p><p>페이지를 새로고침(Ctrl+Shift+R)해주세요.</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+    return;
+  }
 
-if (!inputData.name || !inputData.year || !inputData.month || !inputData.day) {
-  document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">입력 데이터가 올바르지 않습니다.</p><p>받은 데이터: ' + JSON.stringify(inputData) + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
-} else {
-  // 사주 분석 시작
-  setTimeout(() => {
-    try {
-      analyzeSaju();
-    } catch (error) {
-      console.error('분석 오류:', error);
-      document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">분석 중 오류가 발생했습니다.</p><p>' + error.message + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
-    }
-  }, 500);
-}
+  // URL 파라미터 파싱
+  const params = new URLSearchParams(window.location.search);
+  inputData = {
+    name: params.get('name'),
+    calType: params.get('calType'),
+    year: parseInt(params.get('year')),
+    month: parseInt(params.get('month')),
+    day: parseInt(params.get('day')),
+    hour: parseInt(params.get('hour')),
+    minute: parseInt(params.get('minute')),
+    region: params.get('region'),
+    gender: params.get('gender')
+  };
+
+  // 데이터 검증
+  console.log('입력 데이터:', inputData);
+
+  if (!inputData.name || !inputData.year || !inputData.month || !inputData.day) {
+    document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">입력 데이터가 올바르지 않습니다.</p><p>받은 데이터: ' + JSON.stringify(inputData) + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+  } else {
+    // 사주 분석 시작
+    setTimeout(() => {
+      try {
+        analyzeSaju();
+      } catch (error) {
+        console.error('분석 오류:', error);
+        document.getElementById('loading').innerHTML = '<p style="color: #e74c3c;">분석 중 오류가 발생했습니다.</p><p>' + error.message + '</p><p><a href="manseryeok-input.html">다시 입력하기</a></p>';
+      }
+    }, 500);
+  }
+});
 
 function analyzeSaju() {
   console.log('analyzeSaju 시작');
