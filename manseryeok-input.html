@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>만세력 사주분석 - 입력</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #2c3e50;
+  --accent: #3498db;
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --text: #2c3e50;
+  --text-light: #7f8c8d;
+  --border: #e1e8ed;
+  --shadow: rgba(0,0,0,0.08);
+}
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.container {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-width: 600px;
+  width: 100%;
+  overflow: hidden;
+}
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 30px;
+  text-align: center;
+  color: white;
+}
+.header h1 {
+  font-size: 2em;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.header p {
+  font-size: 0.95em;
+  opacity: 0.9;
+  font-weight: 300;
+}
+.form-container {
+  padding: 40px 30px;
+}
+.form-group {
+  margin-bottom: 24px;
+}
+.form-group label {
+  display: block;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.form-group label .required {
+  color: #e74c3c;
+  margin-left: 2px;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 1em;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.3s;
+  background: var(--bg);
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+.date-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 10px;
+}
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.radio-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.radio-group label {
+  flex: 1;
+  margin: 0;
+}
+.radio-group input[type="radio"] {
+  display: none;
+}
+.radio-option {
+  display: block;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: var(--bg);
+  font-weight: 500;
+}
+.radio-group input[type="radio"]:checked + .radio-option {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 30px;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+.helper-text {
+  font-size: 0.85em;
+  color: var(--text-light);
+  margin-top: 6px;
+}
+.nav-back {
+  text-align: center;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+.nav-back a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.nav-back a:hover {
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>만세력 사주분석</h1>
+    <p>四柱八字 · 大運 · 歲運 · 五行 · 十神 分析</p>
+  </div>
+
+  <form class="form-container" id="sajuForm">
+    <div class="form-group">
+      <label>이름 <span class="required">*</span></label>
+      <input type="text" id="name" placeholder="성명을 입력하세요" required>
+    </div>
+
+    <div class="form-group">
+      <label>달력 구분</label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="calType" value="solar" checked>
+          <span class="radio-option">양력 (陽曆)</span>
+        </label>
+        <label>
+          <input type="radio" name="calType" value="lunar">
+          <span class="radio-option">음력 (陰曆)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>생년월일 <span class="required">*</span></label>
+      <div class="date-grid">
+        <input type="number" id="year" placeholder="연도" min="1900" max="2050" required>
+        <select id="month" required>
+          <option value="">월</option>
+        </select>
+        <select id="day" required>
+          <option value="">일</option>
+        </select>
+      </div>
+      <div class="helper-text">※ 1900년~2050년 범위 내에서 입력하세요</div>
+    </div>
+
+    <div class="form-group">
+      <label>출생 시간 <span class="required">*</span></label>
+      <div class="time-grid">
+        <select id="hour" required>
+          <option value="">시</option>
+        </select>
+        <select id="minute" required>
+          <option value="">분</option>
+        </select>
+      </div>
+      <div class="helper-text">※ 모르는 경우 12시 00분을 입력하세요</div>
+    </div>
+
+    <div class="form-group">
+      <label>출생 지역</label>
+      <select id="region">
+        <option value="seoul">서울/경기</option>
+        <option value="busan">부산/경남</option>
+        <option value="daegu">대구/경북</option>
+        <option value="incheon">인천</option>
+        <option value="gwangju">광주/전남</option>
+        <option value="daejeon">대전/충남</option>
+        <option value="ulsan">울산</option>
+        <option value="gangwon">강원</option>
+        <option value="chungbuk">충북</option>
+        <option value="jeonbuk">전북</option>
+        <option value="jeju">제주</option>
+      </select>
+      <div class="helper-text">※ 지역별 경도 차이 및 서머타임이 자동 보정됩니다</div>
+    </div>
+
+    <div class="form-group">
+      <label>성별 <span class="required">*</span></label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="gender" value="M" checked>
+          <span class="radio-option">남성 ♂</span>
+        </label>
+        <label>
+          <input type="radio" name="gender" value="F">
+          <span class="radio-option">여성 ♀</span>
+        </label>
+      </div>
+      <div class="helper-text">※ 대운(大運) 계산에 영향을 미칩니다</div>
+    </div>
+
+    <button type="submit" class="btn-submit">
+      사주팔자 분석하기 →
+    </button>
+  </form>
+
+  <div class="nav-back">
+    <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <a href="manseryeok-input.html" style="color:var(--accent);text-decoration:none;padding:6px 12px;border-radius:4px;font-size:0.85em;border:1px solid var(--accent)">만세력</a>
+      <a href="unsebogi.html" style="color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:4px;font-size:0.85em;border:1px solid var(--border)">운세보기</a>
+      <a href="gunghap.html" style="color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:4px;font-size:0.85em;border:1px solid var(--border)">궁합</a>
+      <a href="daily.html" style="color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:4px;font-size:0.85em;border:1px solid var(--border)">오늘의 운세</a>
+      <a href="jamidusu.html" style="color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:4px;font-size:0.85em;border:1px solid var(--border)">자미두수</a>
+    </div>
+    <a href="index.html" style="color:var(--text-light);">← 달력 보기</a>
+  </div>
+</div>
+
+<script src="timezone-lunar.js"></script>
+<script>
+// 월 옵션 생성
+const monthSel = document.getElementById('month');
+for (let i = 1; i <= 12; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = i + '월';
+  monthSel.appendChild(opt);
+}
+
+// 일 옵션 생성
+const daySel = document.getElementById('day');
+for (let i = 1; i <= 31; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = i + '일';
+  daySel.appendChild(opt);
+}
+
+// 시 옵션 생성
+const hourSel = document.getElementById('hour');
+for (let i = 0; i < 24; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = i + '시';
+  hourSel.appendChild(opt);
+}
+
+// 분 옵션 생성
+const minSel = document.getElementById('minute');
+for (let i = 0; i < 60; i += 5) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = (i < 10 ? '0' : '') + i + '분';
+  minSel.appendChild(opt);
+}
+
+// 오늘 날짜로 기본값 설정
+const today = new Date();
+document.getElementById('year').value = today.getFullYear();
+document.getElementById('month').value = today.getMonth() + 1;
+document.getElementById('day').value = today.getDate();
+document.getElementById('hour').value = 12;
+document.getElementById('minute').value = 0;
+
+// 폼 제출
+document.getElementById('sajuForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const formData = {
+    name: document.getElementById('name').value.trim(),
+    calType: document.querySelector('input[name="calType"]:checked').value,
+    year: parseInt(document.getElementById('year').value),
+    month: parseInt(document.getElementById('month').value),
+    day: parseInt(document.getElementById('day').value),
+    hour: parseInt(document.getElementById('hour').value),
+    minute: parseInt(document.getElementById('minute').value),
+    region: document.getElementById('region').value,
+    gender: document.querySelector('input[name="gender"]:checked').value
+  };
+
+  if (!formData.name) {
+    alert('이름을 입력해주세요.');
+    return;
+  }
+
+  if (formData.year < 1900 || formData.year > 2050) {
+    alert('1900년~2050년 범위 내에서 입력해주세요.');
+    return;
+  }
+
+  // URL 파라미터로 전달
+  const params = new URLSearchParams(formData);
+  window.location.href = 'manseryeok-result.html?' + params.toString();
+});
+</script>
+</body>
+</html>

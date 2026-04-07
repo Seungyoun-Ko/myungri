@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자미두수 명반 - 紫微斗數</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
+  --accent: #e94560; --gold: #f0c040; --text: #eee; --text-dim: #999;
+  --purple: #9d4edd; --blue: #3a86ff; --green: #06ffa5;
+}
+body {
+  font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; -webkit-user-select: none; user-select: none;
+}
+.header {
+  background: linear-gradient(135deg, var(--purple), var(--surface2));
+  padding: 20px; text-align: center; border-bottom: 2px solid var(--purple);
+}
+.header h1 { font-size: 1.8em; font-weight: 900; color: var(--gold); }
+.header h1 span { font-size: 0.5em; color: var(--text-dim); display: block; margin-top: 4px; font-weight: 300; }
+.nav {
+  display: flex; justify-content: center; gap: 8px; padding: 12px;
+  background: var(--surface); border-bottom: 1px solid #333; flex-wrap: wrap;
+}
+.nav a {
+  color: var(--text-dim); text-decoration: none; padding: 6px 14px;
+  border-radius: 4px; font-size: 0.85em; border: 1px solid #333; transition: all .2s;
+}
+.nav a:hover, .nav a.active { color: var(--purple); border-color: var(--purple); }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+/* 입력 섹션 */
+.input-box {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #333;
+}
+.input-box h3 { color: var(--gold); margin-bottom: 16px; text-align: center; }
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.form-field label {
+  display: block;
+  font-size: 0.8em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9em;
+}
+.form-field input:focus,
+.form-field select:focus {
+  border-color: var(--purple);
+  outline: none;
+}
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--purple);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover {
+  background: #8b3cc9;
+  transform: translateY(-1px);
+}
+
+/* 전통 명반 레이아웃 */
+.mingpan-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 2px solid var(--gold);
+}
+
+.mingpan-info {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(157,78,221,0.1);
+  border-radius: 8px;
+}
+
+.mingpan-info h3 {
+  font-size: 1.2em;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.mingpan-info p {
+  font-size: 0.9em;
+  color: var(--text-dim);
+  margin: 4px 0;
+}
+
+.mingpan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  background: #222;
+  border: 3px solid var(--gold);
+  aspect-ratio: 1/1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.palace {
+  background: var(--surface);
+  border: 1px solid #444;
+  padding: 8px;
+  position: relative;
+  overflow-y: auto;
+  min-height: 150px;
+}
+
+.palace.empty {
+  background: linear-gradient(135deg, rgba(26,26,46,0.5), rgba(15,52,96,0.3));
+  pointer-events: none;
+}
+
+.palace.ming {
+  border: 3px solid var(--gold);
+  background: linear-gradient(135deg, rgba(240,192,64,0.15), var(--surface));
+}
+
+.palace.shen {
+  border: 3px solid var(--blue);
+  background: linear-gradient(135deg, rgba(58,134,255,0.15), var(--surface));
+}
+
+.palace-header {
+  font-size: 0.75em;
+  font-weight: 700;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.palace-name {
+  color: var(--gold);
+  font-size: 0.95em;
+}
+
+.palace-jiji {
+  font-size: 0.85em;
+  color: var(--text-dim);
+}
+
+.palace-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.6em;
+  padding: 2px 5px;
+  border-radius: 8px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badge-ming {
+  background: rgba(240,192,64,0.3);
+  color: var(--gold);
+}
+
+.badge-shen {
+  background: rgba(58,134,255,0.3);
+  color: var(--blue);
+}
+
+.star-list {
+  font-size: 0.7em;
+  line-height: 1.5;
+}
+
+.star-item {
+  margin: 2px 0;
+  padding: 1px 0;
+}
+
+.star-main {
+  color: var(--purple);
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
+.star-aux {
+  color: var(--text);
+}
+
+.star-lucky {
+  color: var(--green);
+}
+
+.star-unlucky {
+  color: var(--accent);
+}
+
+.legend {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(157,78,221,0.05);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.legend-item {
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.result { display: none; }
+
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.75em;
+  color: var(--text-dim);
+}
+
+@media (max-width: 900px) {
+  .mingpan-grid {
+    gap: 1px;
+  }
+  .palace {
+    padding: 6px;
+    min-height: 120px;
+    font-size: 0.9em;
+  }
+  .palace-header {
+    font-size: 0.7em;
+  }
+  .star-list {
+    font-size: 0.65em;
+  }
+}
+
+@media (max-width: 600px) {
+  .palace {
+    padding: 4px;
+    min-height: 100px;
+    font-size: 0.85em;
+  }
+  .palace-header {
+    font-size: 0.65em;
+  }
+  .star-list {
+    font-size: 0.6em;
+  }
+}
+</style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" oncopy="return false;" oncut="return false;">
+
+<div class="header">
+  <h1>자미두수 명반<span>紫微斗數 - 전통 명반 분석</span></h1>
+</div>
+
+<div class="nav">
+  <a href="index.html">만세력</a>
+  <a href="unsebogi.html">운세보기</a>
+  <a href="gunghap.html">궁합</a>
+  <a href="daily.html">오늘의 운세</a>
+  <a href="jamidusu.html" class="active">자미두수</a>
+</div>
+
+<div class="container">
+  <div class="input-box">
+    <h3>생년월일시 입력</h3>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>출생년도 (양력)</label>
+        <input type="number" id="birth_year" min="1900" max="2100" value="1986">
+      </div>
+      <div class="form-field">
+        <label>출생월</label>
+        <select id="birth_month"></select>
+      </div>
+      <div class="form-field">
+        <label>출생일</label>
+        <select id="birth_day"></select>
+      </div>
+      <div class="form-field">
+        <label>출생시</label>
+        <select id="birth_hour"></select>
+      </div>
+      <div class="form-field">
+        <label>성별</label>
+        <select id="gender">
+          <option value="M">남성</option>
+          <option value="F">여성</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="calculateJamidusu()">자미두수 명반 보기</button>
+    <p style="font-size:0.75em;color:var(--text-dim);margin-top:8px;text-align:center">
+      ※ 자미두수는 음력 기준으로 계산됩니다. 양력 입력 시 자동 변환됩니다.
+    </p>
+  </div>
+
+  <div class="result" id="resultArea"></div>
+</div>
+
+<div class="footer">자미두수 명반 &copy; 2026 | 전통 명반 형식 | 참고용 분석 (오락 목적)</div>
+
+<script src="timezone-lunar.js"></script>
+<script src="jamidusu.js"></script>
+<script>
+// 초기화
+function init() {
+  const monthSel = document.getElementById('birth_month');
+  for (let i = 1; i <= 12; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i + '월';
+    if (i === 11) opt.selected = true;
+    monthSel.appendChild(opt);
+  }
+
+  const daySel = document.getElementById('birth_day');
+  for (let i = 1; i <= 31; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i + '일';
+    if (i === 20) opt.selected = true;
+    daySel.appendChild(opt);
+  }
+
+  const hourSel = document.getElementById('birth_hour');
+  for (let i = 0; i < 24; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i + '시';
+    if (i === 14) opt.selected = true;
+    hourSel.appendChild(opt);
+  }
+}
+
+init();
+
+function calculateJamidusu() {
+  const year = parseInt(document.getElementById('birth_year').value);
+  const month = parseInt(document.getElementById('birth_month').value);
+  const day = parseInt(document.getElementById('birth_day').value);
+  const hour = parseInt(document.getElementById('birth_hour').value);
+  const gender = document.getElementById('gender').value;
+
+  // 양력 -> 음력 변환
+  const lunar = solarToLunar(year, month, day);
+
+  // 자미두수 명반 생성
+  const chartData = generateJamidusuChart(lunar.year, lunar.month, lunar.day, hour, gender);
+
+  // 렌더링
+  renderTraditionalMingPan(chartData, year, month, day, lunar);
+}
+
+function renderTraditionalMingPan(chartData, solarYear, solarMonth, solarDay, lunar) {
+  const { chart, mingPalace, shenPalace, birthInfo } = chartData;
+
+  let html = '';
+
+  // 명반 정보
+  html += `<div class="mingpan-container">`;
+  html += `<div class="mingpan-info">`;
+  html += `<h3>자미두수 명반 (紫微斗數 命盤)</h3>`;
+  html += `<p><strong>양력:</strong> ${solarYear}년 ${solarMonth}월 ${solarDay}일 ${birthInfo.hour}시</p>`;
+  html += `<p><strong>음력:</strong> ${lunar.year}년 ${lunar.month}월 ${lunar.day}일${lunar.isLeapMonth ? ' (윤달)' : ''} ${birthInfo.hour}시</p>`;
+  html += `<p><strong>성별:</strong> ${birthInfo.gender === 'M' ? '남성 ♂' : '여성 ♀'}</p>`;
+  html += `</div>`;
+
+  // 전통 명반 그리드 (4x4, 중앙 비움)
+  html += `<div class="mingpan-grid">`;
+
+  // 지지 순서: 巳午未申 / 辰空空酉 / 卯空空戌 / 寅丑子亥
+  const layout = [
+    4, 5, 6, 7,    // 巳午未申 (row 0)
+    3, -1, -1, 8,  // 辰空空酉 (row 1)
+    2, -1, -1, 9,  // 卯空空戌 (row 2)
+    1, 0, 11, 10   // 寅丑子亥 (row 3)
+  ];
+
+  const jijiNames = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const jijiHanja = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+  layout.forEach((jijiIdx, gridIdx) => {
+    if (jijiIdx === -1) {
+      // 빈 칸 (중앙)
+      html += `<div class="palace empty"></div>`;
+    } else {
+      // 궁위 찾기 (jiji index로)
+      const palaceData = chart.find(p => p.position === jijiIdx);
+
+      if (palaceData) {
+        const isMing = palaceData.position === mingPalace;
+        const isShen = palaceData.position === shenPalace;
+
+        html += `<div class="palace ${isMing ? 'ming' : ''} ${isShen ? 'shen' : ''}">`;
+
+        // 궁위 헤더
+        html += `<div class="palace-header">`;
+        html += `<div>`;
+        html += `<div class="palace-name">${palaceData.palace.name}</div>`;
+        html += `<div class="palace-jiji">${jijiNames[jijiIdx]}(${jijiHanja[jijiIdx]})</div>`;
+        html += `</div>`;
+        html += `<div class="palace-badges">`;
+        if (isMing) html += `<span class="badge badge-ming">命</span>`;
+        if (isShen) html += `<span class="badge badge-shen">身</span>`;
+        html += `</div>`;
+        html += `</div>`;
+
+        // 별 목록
+        html += `<div class="star-list">`;
+
+        // 주성
+        if (palaceData.mainStars.length > 0) {
+          palaceData.mainStars.forEach(star => {
+            html += `<div class="star-item star-main">★ ${star.name}</div>`;
+          });
+        }
+
+        // 보조성
+        if (palaceData.auxStars.length > 0) {
+          palaceData.auxStars.forEach(star => {
+            const cls = star.type === 'lucky' ? 'star-lucky' : 'star-unlucky';
+            const symbol = star.type === 'lucky' ? '◈' : '◆';
+            html += `<div class="star-item ${cls}">${symbol} ${star.name}</div>`;
+          });
+        }
+
+        html += `</div>`;
+        html += `</div>`;
+      }
+    }
+  });
+
+  html += `</div>`; // mingpan-grid
+
+  // 범례
+  html += `<div class="legend">`;
+  html += `<div class="legend-item">`;
+  html += `<div class="legend-box" style="border:3px solid var(--gold)"></div>`;
+  html += `<span><strong>命宮 (명궁)</strong>: 본명, 성격과 운명</span>`;
+  html += `</div>`;
+  html += `<div class="legend-item">`;
+  html += `<div class="legend-box" style="border:3px solid var(--blue)"></div>`;
+  html += `<span><strong>身宮 (신궁)</strong>: 후천적 발전</span>`;
+  html += `</div>`;
+  html += `<div class="legend-item">`;
+  html += `<span style="color:var(--purple)">★ 주성 (主星)</span>: 14정성`;
+  html += `</div>`;
+  html += `<div class="legend-item">`;
+  html += `<span style="color:var(--green)">◈ 길성 (吉星)</span>: 보조 길성`;
+  html += `</div>`;
+  html += `<div class="legend-item">`;
+  html += `<span style="color:var(--accent)">◆ 살성 (殺星)</span>: 흉성`;
+  html += `</div>`;
+  html += `</div>`;
+
+  html += `</div>`; // mingpan-container
+
+  // 안내
+  html += `<div style="margin-top:20px;padding:16px;background:var(--surface);border-radius:12px;border:1px solid #333">`;
+  html += `<h4 style="color:var(--gold);margin-bottom:10px">📖 명반 보는 법</h4>`;
+  html += `<p style="font-size:0.9em;line-height:1.8;color:#ccc">`;
+  html += `이 명반은 전통 자미두수 형식으로 표현되었습니다. `;
+  html += `<strong>명궁(命宮)</strong>은 당신의 선천적 성격과 운명을 나타내며, <strong>신궁(身宮)</strong>은 후천적 노력과 발전 방향을 보여줍니다. `;
+  html += `각 궁에 배치된 <span style="color:var(--purple)">★ 주성</span>은 14정성으로 인생의 주요 방향을 결정하며, `;
+  html += `<span style="color:var(--green)">◈ 길성</span>과 <span style="color:var(--accent)">◆ 살성</span>은 길흉을 보조합니다. `;
+  html += `각 궁의 의미를 이해하고 별의 조합을 해석하여 자신의 운명을 통찰하시기 바랍니다.`;
+  html += `</p>`;
+  html += `</div>`;
+
+  const resultArea = document.getElementById('resultArea');
+  resultArea.innerHTML = html;
+  resultArea.style.display = 'block';
+  resultArea.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

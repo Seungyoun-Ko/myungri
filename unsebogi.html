@@ -85,11 +85,12 @@ body {
 <div class="header" style="position:relative;">
   <h1>운세 분석<span>사주팔자 기반 종합 운세</span></h1>
 </div>
-<div style="display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333">
+<div style="display:flex;justify-content:center;gap:8px;padding:12px;background:var(--surface);border-bottom:1px solid #333;flex-wrap:wrap">
   <a href="index.html" style="color:#999;text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">만세력</a>
   <a href="unsebogi.html" style="color:#f0c040;text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #f0c040">운세보기</a>
   <a href="gunghap.html" style="color:#999;text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">궁합</a>
   <a href="daily.html" style="color:#999;text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">오늘의 운세</a>
+  <a href="jamidusu.html" style="color:#999;text-decoration:none;padding:6px 14px;border-radius:4px;font-size:0.85em;border:1px solid #333">자미두수</a>
 </div>
 
 <div class="container" id="content">
@@ -100,6 +101,7 @@ body {
 
 <div class="footer">운세 분석 &copy; 2026 | 사주팔자 기반 참고용 운세 (오락 목적)</div>
 
+<script src="gapja-data.js"></script>
 <script>
 // ---- 기본 데이터 (만세력과 동일) ----
 const CHEONGAN = ['갑','을','병','정','무','기','경','신','임','계'];
@@ -143,6 +145,10 @@ if (isNaN(ds)) {
 
 function renderFortune() {
   const dayStem = ds;
+
+  // 60갑자 일주 데이터 가져오기
+  const dayGapjaIdx = calcGapjaIndex(ds, db);
+  const dayGapjaData = getGapjaData(dayGapjaIdx);
 
   // 오행 카운트
   const oheng = [0,0,0,0,0];
@@ -321,32 +327,40 @@ function renderFortune() {
   html += `${isStrong ? '<span class="highlight">신강(身強)</span>' : '<span style="color:var(--accent);">신약(身弱)</span>'}`;
   html += `</div>`;
 
-  // 1. 성격/기질
+  // 1. 성격/기질 (60갑자 일주 기반)
   html += `<div class="fortune-card personality">
-    <div class="card-header"><span class="card-icon">🧠</span><div><div class="card-title">성격과 기질</div><div class="card-subtitle">일간 ${CHEONGAN[dayStem]}(${CHEONGAN_HANJA[dayStem]}) ${dayYY}${OHENG[dayOheng]} 기반</div></div></div>
+    <div class="card-header"><span class="card-icon">🧠</span><div><div class="card-title">성격과 기질</div><div class="card-subtitle">일주 ${dayGapjaData.name}(${dayGapjaData.hanja}) · 강도 ${dayGapjaData.strength}점</div></div></div>
     <div class="card-body">
+      <p style="font-size:1.05em;margin-bottom:10px;"><span class="highlight">일주 특성:</span> ${dayGapjaData.personality}</p>
       <p>${pers.core}</p>
       <p><span class="highlight">장점:</span> ${pers.strength}</p>
       <p><span class="warn">주의점:</span> ${pers.weakness}</p>
+      <div class="score-bar" style="margin-top:12px;">
+        <span class="label">사주 강도</span>
+        <div class="bar"><div class="bar-fill" style="width:${dayGapjaData.strength}%; background:var(--gold)"></div></div>
+        <span class="val" style="color:var(--gold); font-weight:700;">${dayGapjaData.strength}점</span>
+      </div>
     </div>
   </div>`;
 
-  // 2. 직업/적성운
+  // 2. 직업/적성운 (60갑자 일주 기반)
   const yongshinOheng = OHENG[yongshin[0]];
   html += `<div class="fortune-card career">
     <div class="card-header"><span class="card-icon">💼</span><div><div class="card-title">직업과 적성</div><div class="card-subtitle">용신: ${OHENG_HANJA[yongshin[0]]} ${OHENG[yongshin[0]]}</div></div></div>
     <div class="card-body">
+      <p style="font-size:1.05em;margin-bottom:10px;"><span class="highlight">${dayGapjaData.name}(${dayGapjaData.hanja}) 일주:</span> ${dayGapjaData.career}</p>
       <p>일간의 오행과 사주 구성을 고려할 때, <span class="highlight">${careerByOheng[dayOheng]}</span>에 적성이 있습니다.</p>
       <p>용신(用神)인 <span class="highlight">${OHENG[yongshin[0]]}(${OHENG_HANJA[yongshin[0]]})</span> 기운을 활용하면 <span class="highlight">${careerByOheng[yongshin[0]]}</span>에서도 좋은 성과를 기대할 수 있습니다.</p>
       <p>${isStrong ? '신강한 사주이므로 독립적으로 사업을 운영하거나 리더 역할이 어울립니다.' : '신약한 사주이므로 안정적인 조직에서 전문성을 쌓는 것이 유리합니다.'}</p>
     </div>
   </div>`;
 
-  // 3. 재물운
+  // 3. 재물운 (60갑자 일주 기반)
   const jaeStar = oheng[(dayOheng + 2) % 5]; // 재성 오행 개수
   html += `<div class="fortune-card wealth">
     <div class="card-header"><span class="card-icon">💰</span><div><div class="card-title">재물운</div><div class="card-subtitle">재성(財星) 분석</div></div></div>
     <div class="card-body">
+      <p style="font-size:1.05em;margin-bottom:10px;"><span class="highlight">${dayGapjaData.name}(${dayGapjaData.hanja}) 일주:</span> ${dayGapjaData.wealth}</p>
       ${jaeStar >= 2
         ? '<p>사주에 <span class="highlight">재성이 충분하여</span> 재물 복이 있는 편입니다. 꾸준한 수입이 따르며, 자산 관리를 잘하면 안정적인 부를 쌓을 수 있습니다.</p>'
         : jaeStar === 1
@@ -357,19 +371,21 @@ function renderFortune() {
     </div>
   </div>`;
 
-  // 4. 연애/결혼운
+  // 4. 연애/결혼운 (60갑자 일주 기반)
   html += `<div class="fortune-card love">
     <div class="card-header"><span class="card-icon">❤️</span><div><div class="card-title">연애와 결혼</div><div class="card-subtitle">일간 기반 애정 분석</div></div></div>
     <div class="card-body">
+      <p style="font-size:1.05em;margin-bottom:10px;"><span class="highlight">${dayGapjaData.name}(${dayGapjaData.hanja}) 일주:</span> ${dayGapjaData.love}</p>
       <p>${loveByDayStem[dayStem]}</p>
       <p>궁합이 좋은 일간: <span class="highlight">${CHEONGAN[(dayStem + 5) % 10]}(${CHEONGAN_HANJA[(dayStem + 5) % 10]})</span> - 천간합(天干合)의 인연으로 서로를 완성시키는 관계입니다.</p>
     </div>
   </div>`;
 
-  // 5. 건강운
+  // 5. 건강운 (60갑자 일주 기반)
   html += `<div class="fortune-card health">
     <div class="card-header"><span class="card-icon">🏥</span><div><div class="card-title">건강운</div><div class="card-subtitle">오행 균형 기반</div></div></div>
     <div class="card-body">
+      <p style="font-size:1.05em;margin-bottom:10px;"><span class="highlight">${dayGapjaData.name}(${dayGapjaData.hanja}) 일주:</span> ${dayGapjaData.health}</p>
       <p><span class="warn">취약 장기 (${OHENG[minOheng]} 부족):</span> ${healthWeak.organ}</p>
       <p>주의 질환: ${healthWeak.risk}</p>
       <p><span class="highlight">건강 조언:</span> ${healthWeak.tip}</p>`;
