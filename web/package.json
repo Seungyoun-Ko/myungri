@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "guide": "node scripts/gen-guide.ts",
+    "build": "node scripts/gen-guide.ts && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run"
   },

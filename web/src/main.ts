@@ -138,3 +138,7 @@ document.querySelectorAll('[data-seal]').forEach((el) => (el.innerHTML = SEAL_SV
 setupTheme();
 window.addEventListener('hashchange', route);
 route();
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));
+}
