@@ -373,13 +373,13 @@ function fortunesOf(ec: any, genderCode: number, birthYear: number, dayStem: num
 }
 
 // ---------------------------------------------------------------- 절입일 (출생시간 모름)
-const JIE_KO: Record<string, string> = {
+export const JIE_KO: Record<string, string> = {
   立春: '입춘', 惊蛰: '경칩', 清明: '청명', 立夏: '입하', 芒种: '망종', 小暑: '소서',
   立秋: '입추', 白露: '백로', 寒露: '한로', 立冬: '입동', 大雪: '대설', 小寒: '소한',
 };
 
 /** UTC+8 절입 순간 → 한국 시계 시각. termClock = clock + 자오선 + 서머타임 − 30 을 거꾸로 풉니다. */
-function civilFromTermClock(t8: DateTime): DateTime {
+export function civilFromTermClock(t8: DateTime): DateTime {
   let guess = fromMinutes(toMinutes(t8) + 60);
   for (let i = 0; i < 3; i++) {
     guess = fromMinutes(toMinutes(t8) - meridianCorrection(guess) - dstCorrection(guess, 'first') + 30);
