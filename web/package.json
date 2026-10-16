@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "guide": "node scripts/gen-guide.ts",
-    "build": "node scripts/gen-guide.ts && tsc --noEmit && vite build",
+    "guide": "node --experimental-strip-types scripts/gen-guide.ts",
+    "build": "vitest run && node --experimental-strip-types scripts/gen-guide.ts && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run"
   },
@@ -18,5 +18,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

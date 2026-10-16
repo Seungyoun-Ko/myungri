@@ -38,13 +38,23 @@ Android 원본 코드 없이 기획서만으로 만들었기 때문에 아래는
 - 지장간: 申 = 戊壬庚
 - 통변 문장: 기획서 규칙에 맞춰 새로 쓴 문장 (앱 원문 아님)
 
-## 배포 (app.inseol.com)
+## 배포 (app.inseol.com, Cloudflare Pages)
 
 inseol.com은 티스토리 블로그가 쓰고 있어 웹앱은 서브도메인 `app.inseol.com`에 올립니다. 티스토리 DNS 레코드는 건드리지 않습니다.
 
-1. GitHub 저장소 Settings → Pages → Source: **GitHub Actions**
-2. Custom domain: `app.inseol.com` (`public/CNAME`에 들어 있음). 도메인 DNS에 `CNAME app → seungyoun-ko.github.io.` 한 줄 추가
-3. `main`에 합치면 `.github/workflows/deploy-web.yml`이 테스트 → 빌드 → 배포
+Cloudflare Pages 프로젝트 설정:
+
+| 항목 | 값 |
+| --- | --- |
+| Production branch | `main` |
+| Root directory | `web` |
+| Build command | `npm run build` (자동 검사 → 공부 글 생성 → 타입 검사 → 빌드) |
+| Build output directory | `dist` |
+
+- Node 버전은 `web/.node-version`(22)로 고정
+- 응답 헤더와 캐시 규칙: `public/_headers`
+- `main`이 아닌 브랜치에 올리면 Cloudflare가 미리보기 주소를 따로 만듦
+- Custom domain `app.inseol.com` 추가 후 DNS에 `CNAME app → <프로젝트>.pages.dev`
 
 ## AdSense
 
