@@ -4,7 +4,12 @@
 // - 원칙: 결과를 막지 않는 곳에만 둡니다. 입력 칸·명반 칸·탭 바로 옆에는 두지 않습니다.
 // - 광고는 화면에 처음 보일 때 한 번만 요청합니다. 탭을 바꿔도 다시 요청하지 않습니다.
 
-export const ADSENSE_CLIENT = ''; // 예: 'ca-pub-0000000000000000'
+export const ADSENSE_CLIENT = 'ca-pub-7405539243575749';
+
+// 애드센스 광고 단위 (같은 모양의 자리는 같은 단위를 함께 씁니다)
+const UNIT_HORIZONTAL = '9108277711'; // 인설웹앱>가로형
+const UNIT_SQUARE = '2542869365'; // 인설웹앱>정사각형
+const UNIT_IN_ARTICLE = '2548764913'; // 콘텐츠 내 광고
 
 export type AdShape = 'horizontal' | 'rectangle' | 'in-article';
 
@@ -20,14 +25,14 @@ export interface AdSlotDef {
 }
 
 export const AD_SLOTS = {
-  resultTop: { label: '사주 원국 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: '' },
-  sajuFlow: { label: '운 흐름(월운) 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: '' },
-  sajuTong: { label: '사주 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: '' },
-  jamiBottom: { label: '자미두수 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: '' },
-  combinedBottom: { label: '종합 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: '' },
-  calendar: { label: '달력 날짜 상세 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: '' },
-  guideMid: { label: '공부 글 본문 중간', unit: '콘텐츠 내 광고', shape: 'in-article', mobile: [328, 250], desktop: [700, 280], id: '' },
-  guideEnd: { label: '공부 글 끝', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: '' },
+  resultTop: { label: '사주 원국 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: UNIT_HORIZONTAL },
+  sajuFlow: { label: '운 흐름(월운) 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: UNIT_HORIZONTAL },
+  sajuTong: { label: '사주 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: UNIT_SQUARE },
+  jamiBottom: { label: '자미두수 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: UNIT_SQUARE },
+  combinedBottom: { label: '종합 통변 아래', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: UNIT_SQUARE },
+  calendar: { label: '달력 날짜 상세 아래', unit: '디스플레이 · 가로형', shape: 'horizontal', mobile: [320, 100], desktop: [728, 90], id: UNIT_HORIZONTAL },
+  guideMid: { label: '공부 글 본문 중간', unit: '콘텐츠 내 광고', shape: 'in-article', mobile: [328, 250], desktop: [700, 280], id: UNIT_IN_ARTICLE },
+  guideEnd: { label: '공부 글 끝', unit: '디스플레이 · 사각형', shape: 'rectangle', mobile: [300, 250], desktop: [336, 280], id: UNIT_SQUARE },
 } satisfies Record<string, AdSlotDef>;
 
 export type AdSlotName = keyof typeof AD_SLOTS;
@@ -65,7 +70,7 @@ export function adSlot(name: AdSlotName): string {
   return `<aside class="ad-slot" aria-label="광고">
     <div class="ad-label">광고</div>
     <div class="ad-box" style="${sizeVars(d)}">
-      <ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${d.id}" ${format} data-ad-pending></ins>
+      <ins class="adsbygoogle" style="display:block${d.shape === 'in-article' ? ';text-align:center' : ''}" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${d.id}" ${format} data-ad-pending></ins>
     </div>
   </aside>`;
 }

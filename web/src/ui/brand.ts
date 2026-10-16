@@ -7,4 +7,4 @@ export const SEAL_SVG = `<svg class="seal" viewBox="0 0 64 64" aria-hidden="true
 </svg>`;
 
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri';
-export const CONTACT_EMAIL = 'koksy@naver.com';
+export const CONTACT_EMAIL = 'chcgpapa@gmail.com';

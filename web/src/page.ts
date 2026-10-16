@@ -8,7 +8,7 @@ if (top) {
   top.outerHTML = `<header class="topbar">
     <a class="brand" href="/" aria-label="인설명리 처음으로">${SEAL_SVG}
       <span><span class="brand-title">인설명리</span><br><span class="brand-sub">사주팔자 &amp; 자미두수 명반</span></span></a>
-    <nav class="topnav" aria-label="주 메뉴"><a href="/#/">명반</a><a href="/#/calendar">달력</a><a href="/guide/">공부 글</a></nav>
+    <nav class="topnav" aria-label="주 메뉴"><a href="/#/">만세력 보기</a><a href="/#/calendar">달력</a><a href="/guide/">공부 글</a></nav>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="화면 테마 바꾸기">☾</button>
   </header>`;
 }
@@ -23,7 +23,7 @@ if (bottom) {
     <p>© 인설 (인생설계)</p>
   </footer>
   <nav class="bottomnav" aria-label="하단 메뉴">
-    <a href="/#/">명반</a><a href="/#/calendar">달력</a><a href="/guide/">공부 글</a>
+    <a href="/#/">만세력 보기</a><a href="/#/calendar">달력</a><a href="/guide/">공부 글</a>
   </nav>`;
 }
 
