@@ -38,15 +38,17 @@ Android 원본 코드 없이 기획서만으로 만들었기 때문에 아래는
 - 지장간: 申 = 戊壬庚
 - 통변 문장: 기획서 규칙에 맞춰 새로 쓴 문장 (앱 원문 아님)
 
-## 배포 (inseol.com)
+## 배포 (app.inseol.com)
+
+inseol.com은 티스토리 블로그가 쓰고 있어 웹앱은 서브도메인 `app.inseol.com`에 올립니다. 티스토리 DNS 레코드는 건드리지 않습니다.
 
 1. GitHub 저장소 Settings → Pages → Source: **GitHub Actions**
-2. Custom domain: `inseol.com` (`public/CNAME`에 들어 있음), 도메인 DNS에 GitHub Pages A/AAAA 레코드 또는 CNAME 설정
+2. Custom domain: `app.inseol.com` (`public/CNAME`에 들어 있음). 도메인 DNS에 `CNAME app → seungyoun-ko.github.io.` 한 줄 추가
 3. `main`에 합치면 `.github/workflows/deploy-web.yml`이 테스트 → 빌드 → 배포
 
 ## AdSense
 
-1. 사이트 공개 후 AdSense에 `inseol.com` 신청
+1. 블로그가 이미 inseol.com으로 승인됐고 같은 게시자 ID라면 루트의 ads.txt로 서브도메인도 인정됨. 다른 ID면 서브도메인에 `public/ads.txt`를 따로 두고 루트 ads.txt에 `subdomain=app.inseol.com` 추가
 2. 승인되면 `public/ads.txt`를 만들고 `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0` 한 줄을 넣기
 3. `index.html`의 AdSense 스크립트 주석을 풀고, `src/ads.ts`에 client ID와 광고 단위 ID 입력
 4. AdSense "개인정보 보호 및 메시지"에서 EEA·영국 동의 메시지 설정

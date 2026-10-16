@@ -42,7 +42,7 @@ const page = (path: string, title: string, desc: string, body: string) => `<!doc
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>${title} · 인설명리</title>
   <meta name="description" content="${desc}">
-  <link rel="canonical" href="https://inseol.com${path}">
+  <link rel="canonical" href="https://app.inseol.com${path}">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
