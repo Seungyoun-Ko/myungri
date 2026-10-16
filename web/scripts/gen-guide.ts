@@ -104,7 +104,15 @@ ${Object.entries(STAR_TEXT).map(([n, t]) => card(`${n} <span class="hanja">${STA
 };
 
 mkdirSync('guide', { recursive: true });
-for (const [file, [title, desc, body]] of Object.entries(pages)) writeFileSync(`guide/${file}`, page(`/guide/${file}`, title, desc, body));
+/** 카드 목록의 가운데에 중간 광고 자리를 넣습니다. */
+function withMidAd(body: string) {
+  const parts = body.split('\n    <section class="card term-card">');
+  if (parts.length < 4) return body;
+  const mid = Math.ceil((parts.length - 1) / 2);
+  return parts.map((p, i) => (i === 0 ? p : '\n    <section class="card term-card">' + p) + (i === mid ? '\n    <div data-ad="guideMid"></div>' : '')).join('');
+}
+for (const [file, [title, desc, body]] of Object.entries(pages))
+  writeFileSync(`guide/${file}`, page(`/guide/${file}`, title, desc, withMidAd(body) + '\n    <div data-ad="guideEnd"></div>'));
 
 const index = `    <h1>명리 공부 글</h1>
     <p>사주와 자미두수를 처음 공부하는 분을 위해 기본 개념을 쉬운 말로 정리했어요.</p>

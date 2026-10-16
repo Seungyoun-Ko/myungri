@@ -1,6 +1,7 @@
 // 정적 글 페이지(소개·정책·공부 글) 공통: 머리말·꼬리말·테마
 import './styles.css';
 import { SEAL_SVG } from './ui/brand';
+import { loadAdSense, mountStaticAds } from './ads';
 
 const top = document.getElementById('shell-top');
 if (top) {
@@ -41,3 +42,6 @@ btn?.addEventListener('click', () => {
   try { localStorage.setItem('inseol.theme', next); } catch { /* 무시 */ }
   apply(next);
 });
+
+loadAdSense();
+mountStaticAds();

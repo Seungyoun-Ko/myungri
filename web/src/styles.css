@@ -348,8 +348,19 @@ main { max-width: 1240px; margin: 0 auto; padding: 16px var(--gutter) 32px; }
 @media (min-width: 900px) { .toast { bottom: 24px; } }
 
 /* ---------- 광고 · 꼬리말 ---------- */
-.ad-slot { margin: 16px 0; min-height: 100px; }
-.ad-slot:empty { display: none; }
+.ad-slot { margin: 18px 0; }
+.ad-label { font-size: 0.7rem; color: var(--on-surface-variant); letter-spacing: 0.06em; margin-bottom: 4px; text-align: center; }
+.ad-box { min-height: var(--ad-h-m, 100px); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+@media (min-width: 768px) { .ad-box { min-height: var(--ad-h-d, 90px); } }
+.ad-box > ins { width: 100%; }
+.ad-box.preview {
+  flex-direction: column; gap: 2px; text-align: center; font-size: 0.82rem; color: var(--on-surface-variant);
+  border: 2px dashed var(--outline); border-radius: 10px; background: repeating-linear-gradient(45deg, transparent 0 10px, color-mix(in srgb, var(--outline-variant) 35%, transparent) 10px 20px);
+  margin-inline: auto; width: 100%; max-width: var(--ad-w-m, 100%);
+}
+@media (min-width: 768px) { .ad-box.preview { max-width: var(--ad-w-d, 100%); } }
+.ad-box.preview b { color: var(--on-surface); }
+.ad-box.preview code { font-size: 0.72rem; opacity: 0.8; }
 .app-banner { display: flex; align-items: center; gap: 12px; }
 .app-banner .text { flex: 1; font-size: 0.9rem; }
 footer.site { max-width: 1240px; margin: 0 auto; padding: 24px var(--gutter) 40px; font-size: 0.84rem; color: var(--on-surface-variant); }

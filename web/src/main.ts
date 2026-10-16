@@ -9,6 +9,7 @@ import { renderCalendar } from './ui/calendar-view';
 import { renderArchive } from './ui/archive-view';
 import { SEAL_SVG } from './ui/brand';
 import { $ } from './ui/dom';
+import { activateAds, adSlot, loadAdSense } from './ads';
 
 const LAST_INPUT = 'inseol.lastInput';
 let current: ResultState | null = null;
@@ -90,7 +91,10 @@ function route() {
   const app = $('#app');
   if (hash === '/calendar') {
     document.title = '만세력 달력 · 인설명리';
-    renderCalendar(app);
+    // 달력은 날짜를 누를 때마다 다시 그리므로 광고는 그 바깥에 둡니다.
+    app.innerHTML = `<div id="calendar-root"></div>${adSlot('calendar')}`;
+    renderCalendar($('#calendar-root'));
+    activateAds(app);
   } else if (hash === '/archive') {
     document.title = '보관함 · 인설명리';
     renderArchive(app, (entry) => {
@@ -136,6 +140,7 @@ function setupTheme() {
 
 document.querySelectorAll('[data-seal]').forEach((el) => (el.innerHTML = SEAL_SVG));
 setupTheme();
+loadAdSense();
 window.addEventListener('hashchange', route);
 route();
 

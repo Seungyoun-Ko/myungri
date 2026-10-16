@@ -5,7 +5,7 @@ import { daehanChart, yunyeonChart, type JamidusuChart, type OverlayChart } from
 import { combinedTongbyeon, jamidusuTongbyeon, sajuTongbyeon } from '../engine/tongbyeon';
 import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
-import { adSlot, fillAds } from '../ads';
+import { activateAds, adSlot } from '../ads';
 import { $, esc, pad2, toast } from './dom';
 import { flowView, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
@@ -79,68 +79,47 @@ function profileCard(st: ResultState) {
   </div>`;
 }
 
-function sajuSection(st: ResultState) {
-  const s = st.snapshot.saju;
-  const tabs = `<div class="segmented" role="tablist" data-tabs="saju">
-    ${[['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '통변']].map(([k, l]) => `<button type="button" role="tab" data-value="${k}" aria-selected="${st.sajuTab === k}">${l}</button>`).join('')}
-  </div>`;
-  let body = '';
-  if (st.sajuTab === 'wonguk') body = wongukCard(s) + adSlot('resultTop') + (s.incompleteBirthTime ? '' : summaryCard(s) + ratioCard(s, st.ratioMode));
-  if (st.sajuTab === 'flow') body = flowView(s, st.selectedBig);
-  if (st.sajuTab === 'tong') body = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong') + adSlot('resultBottom');
-  return `${tabs}<div class="stack" style="margin-top:14px">${body}</div>`;
-}
-
 function overlayOf(st: ResultState, chart: JamidusuChart): OverlayChart | undefined {
   if (st.jamiMode === 'daehan') return daehanChart(chart, st.daehanAge);
   if (st.jamiMode === 'yunyeon') return yunyeonChart(chart, st.yunyeonYear);
   return undefined;
 }
 
-function jamidusuSection(st: ResultState, wide: boolean) {
-  const chart = st.snapshot.chart;
-  if (!chart) return `<div class="card"><p class="notice">출생시간을 입력해야 명반을 완성 시킬 수 있습니다.</p></div>`;
-  const b = st.snapshot.birth;
-  const overlay = overlayOf(st, chart);
-  const tabs = `<div class="segmented" role="tablist" data-tabs="jami">
-    ${[['natal', '선천 명반'], ['daehan', '대한 명반'], ['yunyeon', '유년 명반']].map(([k, l]) => `<button type="button" role="tab" data-value="${k}" aria-selected="${st.jamiMode === k}">${l}</button>`).join('')}
-  </div>`;
-  let picker = '';
+const tabButtons = (group: string, items: [string, string][], current: string) =>
+  items.map(([k, l]) => `<button type="button" role="tab" data-value="${k}" aria-selected="${current === k}">${l}</button>`).join('');
+
+function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChart) {
   if (st.jamiMode === 'daehan') {
     const ranges = [...chart.palaces].sort((a, c) => a.daehan.start - c.daehan.start);
-    picker = `<div class="age-chips" style="margin-top:10px" aria-label="대한 선택">${ranges
+    return `<div class="age-chips" style="margin-top:10px" aria-label="대한 선택">${ranges
       .map((p) => `<button type="button" data-daehan="${p.daehan.start}" aria-pressed="${overlay?.range?.start === p.daehan.start}">${p.daehan.start}-${p.daehan.end}</button>`)
       .join('')}</div>`;
   }
   if (st.jamiMode === 'yunyeon') {
-    picker = `<div class="year-step" style="margin-top:10px">
+    return `<div class="year-step" style="margin-top:10px">
       <button type="button" class="icon-btn" data-year-step="-1" aria-label="이전 해">&lt;</button>
-      <input type="number" data-year-input min="1900" max="2100" value="${st.yunyeonYear}" aria-label="유년 연도">
+      <input type="number" id="yunyeon-year" data-year-input min="1900" max="2100" value="${st.yunyeonYear}" aria-label="유년 연도">
       <button type="button" class="icon-btn" data-year-step="1" aria-label="다음 해">&gt;</button>
     </div>`;
   }
-  const board = boardView(chart, {
-    name: displayName(b),
-    solarText: `양력 ${fmtSolar(b)}`,
-    lunarText: fmtLunar(b),
-    overlay,
-    selected: st.selectedPalace,
-  });
-  const detail = st.selectedPalace >= 0 && wide ? `<aside class="card">${palaceDetail(chart, st.selectedPalace, overlay)}</aside>` : '';
-  const tong = tongbyeonView(jamidusuTongbyeon(chart, overlay), st.jamiTong, 'data-jami-tong');
-  return `${tabs}${picker}
-    <div class="board-split" style="margin-top:12px"><div class="card" style="padding:10px">${board}</div>${detail}</div>
-    <div style="margin-top:14px">${tong}</div>`;
+  return '';
 }
 
-function combinedSection(st: ResultState) {
+function jamiBoard(st: ResultState, chart: JamidusuChart, wide: boolean, overlay?: OverlayChart) {
+  const b = st.snapshot.birth;
+  const board = boardView(chart, { name: displayName(b), solarText: `양력 ${fmtSolar(b)}`, lunarText: fmtLunar(b), overlay, selected: st.selectedPalace });
+  const detail = st.selectedPalace >= 0 && wide ? `<aside class="card">${palaceDetail(chart, st.selectedPalace, overlay)}</aside>` : '';
+  return `<div class="board-split" style="margin-top:12px"><div class="card" style="padding:10px">${board}</div>${detail}</div>`;
+}
+
+function combinedHtml(st: ResultState) {
   const { saju, chart } = st.snapshot;
   if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 통변을 볼 수 있어요.</p></div>`;
   const sections = combinedTongbyeon(saju, chart);
   return `<div class="card tongbyeon">
-    ${sections.map((s) => `<h2 style="margin-top:6px">${s.title}</h2>${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}`).join('<div style="height:14px"></div>')}
+    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}`).join('<div style="height:14px"></div>')}
     <p class="disclaimer">타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
-  </div>${adSlot('resultBottom')}`;
+  </div>`;
 }
 
 function appBanner() {
@@ -155,22 +134,79 @@ export interface ResultCallbacks {
   onRecalc: (st: ResultState) => void;
 }
 
+/**
+ * 결과 화면은 처음에 한 번 틀을 그리고, 이후에는 바뀐 부분(region)만 다시 그립니다.
+ * 탭은 숨김/보임만 바꾸므로 광고 자리는 다시 만들어지지 않아 광고를 다시 요청하지 않습니다.
+ */
 export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallbacks) {
   const wide = window.matchMedia('(min-width: 1100px)').matches;
-  const main = `<div class="segmented primary" role="tablist" data-tabs="main" style="margin-top:14px">
-    ${[['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 통변']].map(([k, l]) => `<button type="button" role="tab" data-value="${k}" aria-selected="${st.mainTab === k}">${l}</button>`).join('')}
-  </div>`;
-  const body = st.mainTab === 'saju' ? sajuSection(st) : st.mainTab === 'jamidusu' ? jamidusuSection(st, wide) : combinedSection(st);
-  root.innerHTML = `${profileCard(st)}${main}<div style="margin-top:14px">${body}</div>${appBanner()}`;
-  fillAds(root);
+  const s = st.snapshot.saju;
+  const chart = st.snapshot.chart;
 
-  const rerender = () => renderResult(root, st, cb);
-  const keepScroll = (fn: () => void) => {
-    const y = window.scrollY;
-    fn();
-    rerender();
-    window.scrollTo({ top: y });
+  root.innerHTML = `
+    <div data-region="profile"></div>
+    <div class="segmented primary" role="tablist" data-tabs="main" style="margin-top:14px">
+      ${tabButtons('main', [['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 통변']], st.mainTab)}
+    </div>
+    <section data-panel="saju" style="margin-top:14px">
+      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '통변']], st.sajuTab)}</div>
+      <div data-sub="wonguk" class="stack" style="margin-top:14px">
+        <div data-region="wonguk"></div>
+        ${adSlot('resultTop')}
+        <div data-region="summary"></div>
+        <div data-region="ratio"></div>
+      </div>
+      <div data-sub="flow" class="stack" style="margin-top:14px"><div data-region="flow" class="stack"></div>${adSlot('sajuFlow')}</div>
+      <div data-sub="tong" style="margin-top:14px"><div data-region="sajuTong"></div>${adSlot('sajuTong')}</div>
+    </section>
+    <section data-panel="jamidusu" style="margin-top:14px">
+      ${chart
+        ? `<div class="segmented" role="tablist" data-tabs="jami">${tabButtons('jami', [['natal', '선천 명반'], ['daehan', '대한 명반'], ['yunyeon', '유년 명반']], st.jamiMode)}</div>
+           <div data-region="picker"></div>
+           <div data-region="board"></div>
+           <div data-region="jamiTong" style="margin-top:14px"></div>
+           ${adSlot('jamiBottom')}`
+        : `<div class="card"><p class="notice">출생시간을 입력해야 명반을 완성 시킬 수 있습니다.</p></div>`}
+    </section>
+    <section data-panel="combined" style="margin-top:14px">
+      ${combinedHtml(st)}
+      ${chart && !s.incompleteBirthTime ? adSlot('combinedBottom') : ''}
+    </section>
+    ${appBanner()}`;
+
+  const region = (name: string) => root.querySelector<HTMLElement>(`[data-region="${name}"]`);
+  const paint = {
+    profile: () => (region('profile')!.innerHTML = profileCard(st)),
+    wonguk: () => (region('wonguk')!.innerHTML = wongukCard(s)),
+    summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
+    ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
+    flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig)),
+    sajuTong: () => (region('sajuTong')!.innerHTML = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
+    jami: () => {
+      if (!chart) return;
+      const overlay = overlayOf(st, chart);
+      region('picker')!.innerHTML = jamiPicker(st, chart, overlay);
+      region('board')!.innerHTML = jamiBoard(st, chart, wide, overlay);
+      region('jamiTong')!.innerHTML = tongbyeonView(jamidusuTongbyeon(chart, overlay), st.jamiTong, 'data-jami-tong');
+    },
+    board: () => {
+      if (chart) region('board')!.innerHTML = jamiBoard(st, chart, wide, overlayOf(st, chart));
+    },
   };
+
+  const syncTabs = () => {
+    root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== st.mainTab));
+    root.querySelectorAll<HTMLElement>('[data-sub]').forEach((p) => (p.hidden = p.dataset.sub !== st.sajuTab));
+    const sel = (group: string, v: string) =>
+      root.querySelectorAll<HTMLElement>(`[data-tabs="${group}"] button`).forEach((b) => b.setAttribute('aria-selected', String(b.dataset.value === v)));
+    sel('main', st.mainTab);
+    sel('saju', st.sajuTab);
+    sel('jami', st.jamiMode);
+    activateAds(root);
+  };
+
+  Object.values(paint).forEach((f) => f());
+  syncTabs();
 
   root.onclick = (e) => {
     const t = e.target as HTMLElement;
@@ -178,47 +214,58 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     if (tabBtn) {
       const group = tabBtn.parentElement!.dataset.tabs;
       const v = tabBtn.dataset.value!;
-      keepScroll(() => {
-        if (group === 'main') st.mainTab = v as ResultState['mainTab'];
-        if (group === 'saju') st.sajuTab = v as ResultState['sajuTab'];
-        if (group === 'jami') {
-          st.jamiMode = v as ChartMode;
-          const chart = st.snapshot.chart;
-          if (chart) st.selectedPalace = overlayOf(st, chart)?.mingBranch ?? chart.mingBranch;
-        }
-      });
+      if (group === 'main') st.mainTab = v as ResultState['mainTab'];
+      if (group === 'saju') st.sajuTab = v as ResultState['sajuTab'];
+      if (group === 'jami' && chart) {
+        st.jamiMode = v as ChartMode;
+        st.selectedPalace = overlayOf(st, chart)?.mingBranch ?? chart.mingBranch;
+        paint.jami();
+      }
+      syncTabs();
       return;
     }
     const ratio = t.closest<HTMLButtonElement>('[data-ratio-mode] button');
-    if (ratio) return keepScroll(() => (st.ratioMode = ratio.dataset.value as ResultState['ratioMode']));
+    if (ratio) {
+      st.ratioMode = ratio.dataset.value as ResultState['ratioMode'];
+      return paint.ratio();
+    }
     const big = t.closest<HTMLElement>('[data-big]');
-    if (big) return keepScroll(() => (st.selectedBig = Number(big.dataset.big)));
+    if (big) {
+      st.selectedBig = Number(big.dataset.big);
+      return paint.flow();
+    }
     const step = t.closest<HTMLElement>('[data-big-step]');
-    if (step) return keepScroll(() => (st.selectedBig = Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), st.snapshot.saju.bigFortunes.length - 1)));
+    if (step) {
+      st.selectedBig = Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), s.bigFortunes.length - 1);
+      return paint.flow();
+    }
     const stong = t.closest<HTMLElement>('[data-saju-tong]');
-    if (stong) return keepScroll(() => (st.sajuTong = stong.dataset.sajuTong!));
+    if (stong) {
+      st.sajuTong = stong.dataset.sajuTong!;
+      return paint.sajuTong();
+    }
     const jtong = t.closest<HTMLElement>('[data-jami-tong]');
-    if (jtong) return keepScroll(() => (st.jamiTong = jtong.dataset.jamiTong!));
+    if (jtong) {
+      st.jamiTong = jtong.dataset.jamiTong!;
+      return paint.jami();
+    }
     const dh = t.closest<HTMLElement>('[data-daehan]');
-    if (dh) {
-      return keepScroll(() => {
-        st.daehanAge = Number(dh.dataset.daehan);
-        st.selectedPalace = daehanChart(st.snapshot.chart!, st.daehanAge).mingBranch;
-      });
+    if (dh && chart) {
+      st.daehanAge = Number(dh.dataset.daehan);
+      st.selectedPalace = daehanChart(chart, st.daehanAge).mingBranch;
+      return paint.jami();
     }
     const ys = t.closest<HTMLElement>('[data-year-step]');
-    if (ys) {
-      return keepScroll(() => {
-        st.yunyeonYear += Number(ys.dataset.yearStep);
-        st.selectedPalace = yunyeonChart(st.snapshot.chart!, st.yunyeonYear).mingBranch;
-      });
+    if (ys && chart) {
+      st.yunyeonYear += Number(ys.dataset.yearStep);
+      st.selectedPalace = yunyeonChart(chart, st.yunyeonYear).mingBranch;
+      return paint.jami();
     }
     const pal = t.closest<HTMLElement>('[data-palace]');
-    if (pal) {
-      const b = Number(pal.dataset.palace);
-      if (wide) return keepScroll(() => (st.selectedPalace = b));
-      st.selectedPalace = b;
-      openSheet(palaceDetail(st.snapshot.chart!, b, overlayOf(st, st.snapshot.chart!)));
+    if (pal && chart) {
+      st.selectedPalace = Number(pal.dataset.palace);
+      if (wide) return paint.board();
+      openSheet(palaceDetail(chart, st.selectedPalace, overlayOf(st, chart)));
       return;
     }
     if (t.closest('[data-zoom]')) {
@@ -242,25 +289,24 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const saved = archive.save({
         name: displayName(st.snapshot.birth),
         input: st.snapshot.birth.input,
-        basis: st.snapshot.saju.basis,
+        basis: s.basis,
         snapshot: st.snapshot,
       });
       if (!saved) return toast('브라우저 저장 공간을 쓸 수 없어 저장하지 못했어요.');
       st.archiveId = saved.id;
-      keepScroll(() => undefined);
+      paint.profile();
       toast('보관함에 저장했어요. 이 브라우저에만 보관돼요.');
     }
   };
 
   root.onchange = (e) => {
     const inp = (e.target as HTMLElement).closest<HTMLInputElement>('[data-year-input]');
-    if (!inp) return;
+    if (!inp || !chart) return;
     const y = Number(inp.value);
     if (Number.isInteger(y) && y >= 1900 && y <= 2100) {
-      keepScroll(() => {
-        st.yunyeonYear = y;
-        st.selectedPalace = yunyeonChart(st.snapshot.chart!, y).mingBranch;
-      });
+      st.yunyeonYear = y;
+      st.selectedPalace = yunyeonChart(chart, y).mingBranch;
+      paint.jami();
     }
   };
 }
