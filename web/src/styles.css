@@ -418,3 +418,13 @@ main.article .btn { text-decoration: none; }
 
 /* 채울 광고가 없으면 자리와 "광고" 표시를 접습니다 */
 .ad-slot:has(ins[data-ad-status='unfilled']) { display: none; }
+
+/* 오늘의 일진 */
+.today-hero { display: flex; align-items: baseline; gap: 12px; }
+.today-hero .hanja { font-size: 3.4rem; font-weight: 900; line-height: 1; }
+.today-hero > span:last-child { font-size: 1.1rem; color: var(--on-surface-variant); font-weight: 700; }
+.table-scroll { overflow-x: auto; }
+.today-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.today-table th, .today-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; }
+.today-table th { font-size: 0.82rem; color: var(--on-surface-variant); white-space: nowrap; }
+.today-table td:first-child, .today-table td:nth-child(2) { white-space: nowrap; }

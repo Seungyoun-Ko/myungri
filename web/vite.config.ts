@@ -16,6 +16,7 @@ export default defineConfig({
         contact: resolve(__dirname, 'contact.html'),
         licenses: resolve(__dirname, 'licenses.html'),
         terms: resolve(__dirname, 'terms.html'),
+        today: resolve(__dirname, 'today.html'),
         ...guide,
       },
     },
