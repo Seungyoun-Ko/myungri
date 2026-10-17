@@ -442,3 +442,26 @@ main.article .btn { text-decoration: none; }
   border-radius: 999px; padding: 5px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap; margin-bottom: 6px;
 }
 .term-toggle[aria-pressed='true'] { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+
+/* 블로그 글 (티스토리에서 옮겨 온 글) */
+main.article.blog .crumbs a { color: var(--on-surface-variant); }
+main.article.blog .post-meta { color: var(--on-surface-variant); margin: -6px 0 18px; }
+.post h2 { font-size: 1.2rem; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--outline-variant); }
+.post h3 { font-size: 1.05rem; margin: 20px 0 6px; }
+.post ol { padding-left: 1.4em; display: grid; gap: 6px; }
+.post li + li { margin-top: 2px; }
+.post figure { margin: 22px 0; }
+.post figure img { display: block; width: 100%; height: auto; border-radius: 12px; background: var(--surface-variant); }
+.post blockquote { margin: 0 0 18px; padding: 14px 16px; border-left: 4px solid var(--primary); background: var(--surface-variant); border-radius: 0 12px 12px 0; font-size: 1.05rem; line-height: 1.75; }
+.post hr { border: 0; border-top: 1px solid var(--outline-variant); margin: 26px 0; }
+.post-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; margin: 12px 0; }
+.post-table th, .post-table td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; line-height: 1.6; }
+.post-table th { font-size: 0.85rem; color: var(--on-surface-variant); background: var(--surface-variant); white-space: nowrap; }
+.post details { border: 1px solid var(--outline-variant); border-radius: 12px; padding: 12px 14px; margin: 10px 0; background: var(--surface); }
+.post summary { cursor: pointer; font-weight: 700; line-height: 1.6; }
+.post details p { margin-top: 8px; }
+.post-tags { color: var(--on-surface-variant); margin: 22px 0 14px; word-break: keep-all; }
+.post-related ul, .post-list { padding-left: 1.2em; display: grid; gap: 6px; }
+.post-related h2 { font-size: 1.1rem; }
+main.article.blog .cta { margin-top: 18px; }
+.post-table td:first-child { white-space: nowrap; font-weight: 700; }

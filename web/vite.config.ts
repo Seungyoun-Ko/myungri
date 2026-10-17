@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs';
 
 const pagesIn = (dir: string) =>
   Object.fromEntries(readdirSync(resolve(import.meta.dirname, dir)).filter((f) => f.endsWith('.html')).map((f) => [`${dir}-${f.replace('.html', '')}`, resolve(import.meta.dirname, dir, f)]));
-const guide = { ...pagesIn('guide'), ...pagesIn('ilju') };
+const guide = { ...pagesIn('guide'), ...pagesIn('ilju'), ...pagesIn('blog') };
 
 export default defineConfig({
   build: {
