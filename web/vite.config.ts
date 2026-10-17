@@ -2,7 +2,9 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { readdirSync } from 'node:fs';
 
-const guide = Object.fromEntries(readdirSync(resolve(__dirname, 'guide')).filter((f) => f.endsWith('.html')).map((f) => [`guide-${f.replace('.html', '')}`, resolve(__dirname, 'guide', f)]));
+const pagesIn = (dir: string) =>
+  Object.fromEntries(readdirSync(resolve(__dirname, dir)).filter((f) => f.endsWith('.html')).map((f) => [`${dir}-${f.replace('.html', '')}`, resolve(__dirname, dir, f)]));
+const guide = { ...pagesIn('guide'), ...pagesIn('ilju') };
 
 export default defineConfig({
   build: {

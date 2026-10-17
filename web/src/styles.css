@@ -409,3 +409,12 @@ main.article .notice { margin: 12px 0; }
 .export-frame .board-center { font-size: 0.92rem; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .card-head h2 { margin: 0 !important; }
+
+/* 60일주 목록 */
+.ilju-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.ilju-grid .card { padding: 12px 14px; display: flex; gap: 8px; align-items: baseline; }
+.ilju-grid .card b { font-size: 1.25rem; }
+main.article .btn { text-decoration: none; }
+
+/* 채울 광고가 없으면 자리와 "광고" 표시를 접습니다 */
+.ad-slot:has(ins[data-ad-status='unfilled']) { display: none; }

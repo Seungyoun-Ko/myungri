@@ -4,6 +4,7 @@ import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, t
 import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
 import { esc, pad2 } from './dom';
+import { iljuSlug } from '../engine/ilju-data';
 
 const charCell = (hanja: string, korean: string, el: number, extra = '') =>
   `<div class="char bg-${el} el-${el} ${extra}"><span class="hanja">${hanja}</span><small>${korean}·${ELEMENTS_KO[el]}</small></div>`;
@@ -47,7 +48,9 @@ const elChip = (e: number, label: string) => `<span class="chip"><span class="mu
 
 export function summaryCard(s: SajuResult) {
   const day = s.pillars.find((p) => p.key === 'day')!;
-  const items: [string, string][] = [['일주', `<span class="hanja">${day.stem.hanja}${day.branch.hanja}</span> (${day.stem.korean}${day.branch.korean})`]];
+  const items: [string, string][] = [
+    ['일주', `<span class="hanja">${day.stem.hanja}${day.branch.hanja}</span> (${day.stem.korean}${day.branch.korean}) <a class="small" href="/ilju/${iljuSlug(day.stem.index, day.branch.index)}.html">풀이 보기</a>`],
+  ];
   if (s.strengthText) items.push(['강약', `${s.strengthText} <span class="muted small">(${s.strengthScore})</span>`]);
   if (s.geukgukLabel) items.push(['격국', s.geukgukLabel]);
   const combos = s.combinations.length ? s.combinations.map((c) => esc(c.text)).join('<br>') : '인접한 합충 없음';
