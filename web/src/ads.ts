@@ -98,12 +98,16 @@ export function mountStaticAds(root: ParentNode = document) {
   activateAds(root);
 }
 
-/** ADSENSE_CLIENT가 있을 때만 AdSense 스크립트를 한 번 불러옵니다. */
+/**
+ * ADSENSE_CLIENT가 있을 때만 AdSense 스크립트를 한 번 불러옵니다.
+ * 주소에 ?client= 를 붙이지 않아 inseol.com(티스토리)에 켜 둔 자동 광고가 웹앱에 끼어들지 않습니다.
+ * 직접 배치한 광고 자리는 각 <ins>의 data-ad-client로 그대로 나옵니다.
+ */
 export function loadAdSense() {
   if (!ADSENSE_CLIENT || adPreview() || document.querySelector('script[data-adsense]')) return;
   const s = document.createElement('script');
   s.async = true;
-  s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
   s.crossOrigin = 'anonymous';
   s.dataset.adsense = '';
   document.head.append(s);
