@@ -27,6 +27,8 @@ import {
   SIHWA_MEANING,
 } from './tongbyeon-data';
 import { BRANCH_TEXT, SPOUSE_PALACE } from './ilju-data';
+import { FORTUNE_TEN_GOD, yongsinSentence } from './fortune-tongbyeon';
+import { daehanChart } from './jamidusu';
 
 export interface TongbyeonSection {
   key: string;
@@ -376,50 +378,107 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
 }
 
 // ---------------------------------------------------------------- 종합
-const GROUP_TO_PALACE_FIELD: Record<TenGodGroup, string> = {
-  비겁: '나 자신',
-  식상: '마음·취미',
-  재성: '돈·재물',
-  관성: '일·직업',
-  인성: '부모·윗사람',
+/** 사주 십신 무리가 가리키는 명반 분야들 */
+const GROUP_TO_FIELDS: Record<TenGodGroup, string[]> = {
+  비겁: ['나 자신', '형제·동료', '친구·인맥'],
+  식상: ['자녀·아랫사람', '마음·취미', '바깥 활동·이동'],
+  재성: ['돈·재물', '집·부동산'],
+  관성: ['일·직업', '부모·윗사람'],
+  인성: ['부모·윗사람', '마음·취미', '집·부동산'],
+};
+/** 배우자를 뜻하는 별(남자는 재성, 여자는 관성)은 '배우자·연애' 분야도 가리킵니다. */
+const fieldMatches = (group: TenGodGroup, field: string, gender: 'M' | 'F') =>
+  GROUP_TO_FIELDS[group].includes(field) || (field === '배우자·연애' && group === (gender === 'M' ? '재성' : '관성'));
+
+function mingBrightness(chart: JamidusuChart): 'bright' | 'dim' | 'mid' {
+  const mains = chart.palaces[chart.mingBranch].stars.filter((x) => x.kind === 'main');
+  if (mains.some((x) => STRONG.has(x.brightness))) return 'bright';
+  if (mains.some((x) => WEAK.has(x.brightness))) return 'dim';
+  return 'mid';
+}
+
+const SELF_SYNTH: Record<string, string> = {
+  'strong/bright': '사주의 기운도 강하고 명궁의 별빛도 밝아, 자기 색이 뚜렷하고 어디서든 존재감이 드러나는 편이에요.',
+  'strong/dim': '사주의 기운은 강한데 명궁의 별빛은 은은한 편이라, 겉으로 드러내기보다 속으로 단단한 사람이에요.',
+  'strong/mid': '사주의 기운이 강해 스스로 밀고 나가는 힘이 있고, 명궁은 그 힘을 무난하게 받쳐 줘요.',
+  'weak/bright': '사주의 기운은 약한 편이지만 명궁의 별빛이 밝아, 사람들과 함께할 때 장점이 크게 살아나요.',
+  'weak/dim': '사주의 기운도 명궁의 별빛도 은은한 편이라, 서두르지 않고 경험을 쌓을수록 힘이 붙는 사람이에요.',
+  'weak/mid': '사주의 기운은 약한 편이라 도움을 받을 때 힘이 나고, 명궁은 그 흐름을 무난하게 받쳐 줘요.',
+  'mid/bright': '사주의 기운이 고르고 명궁의 별빛도 밝아, 균형 잡힌 모습 속에서 장점이 잘 드러나요.',
+  'mid/dim': '사주의 기운이 고르고 명궁의 별빛은 은은해, 조용히 자기 몫을 해내는 사람이에요.',
+  'mid/mid': '사주의 기운이 고르고 명궁도 무난해, 상황에 맞춰 균형을 잡는 힘이 있어요.',
 };
 
-export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart): TongbyeonSection[] {
+export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new Date(), gender: 'M' | 'F' = chart.gender): TongbyeonSection[] {
   const dm = r.dayMaster.index;
   const ming = mainStarsOf(chart, chart.mingBranch);
   const mingStars = joinNames(ming.names);
   const strengths = ming.names.map((n) => STAR_TEXT[n].strength).join(', ');
+  const sajuStrong = r.strengthText === '극강' || r.strengthText === '신강' ? 'strong' : r.strengthText === '중화' ? 'mid' : 'weak';
 
+  // 본모습
   const self = [
     `사주는 ${josa(DAY_MASTER_IMAGE[dm], '을', '를')} 닮았어요. ${firstSentence(DAY_MASTER_PERSONALITY[dm])} 자미두수 명궁의 ${josa(mingStars, '은', '는')} 여기에 ${josa(strengths, '을', '를')} 더해 줘요.`,
+    SELF_SYNTH[`${sajuStrong}/${mingBrightness(chart)}`],
   ];
 
-  const top = topGroup(r);
-  const sajuField = GROUP_TO_PALACE_FIELD[top];
+  // 힘이 나는 곳
+  const ranked = rankedGroups(r);
+  const top = ranked[0];
   const lu = chart.sihwa.find((s) => s.sihwa === '록')!;
+  const quan = chart.sihwa.find((s) => s.sihwa === '권')!;
   const luField = PALACE_FIELD[lu.palace];
+  const quanField = PALACE_FIELD[quan.palace];
   const power: string[] = [];
-  if (sajuField === luField) power.push(`두 풀이가 함께 가리키는 곳은 '${luField}'${hasBatchim(luField) ? '이에요' : '예요'}.`);
-  else power.push(`사주는 '${GROUP_FIELD[top]}' 쪽에서 힘이 나고, 명반은 '${luField}' 분야에 좋은 기운(화록)이 들어 있어요.`);
+  const shared = [luField, quanField].find((f) => fieldMatches(top, f, gender) || fieldMatches(ranked[1], f, gender));
+  if (shared) {
+    const group = fieldMatches(top, shared, gender) ? top : ranked[1];
+    power.push(`두 풀이가 함께 가리키는 곳은 '${shared}'${hasBatchim(shared) ? '이에요' : '예요'}. 사주의 ${group} 기운과 명반의 ${shared === luField ? '화록' : '화권'}이 같은 쪽을 향해요.`);
+  }
+  else power.push(`사주는 '${GROUP_FIELD[top]}' 쪽에서 힘이 나고, 명반은 '${luField}' 분야에 좋은 기운(화록), '${quanField}' 분야에 주도권(화권)이 있어요. 두 곳을 함께 살리면 좋아요.`);
   const career = mainStarsOf(chart, chart.palaces.find((p) => p.name === '관록궁')!.branch);
   power.push(`사주가 권하는 일: ${firstSentence(GROUP_APTITUDE[top])}`);
   power.push(`관록궁이 권하는 일: ${career.names.map((n) => firstSentence(STAR_TEXT[n].aptitude)).join(' ')}`);
 
+  // 지금 시기
+  const nowParas: string[] = [];
+  const big = r.bigFortunes[r.currentBigFortuneIndex];
+  const koreanAge = now.getFullYear() - chart.lunar.year + 1;
+  const dh = daehanChart(chart, koreanAge);
+  const dhField = PALACE_FIELD[chart.palaces[dh.mingBranch].name];
+  if (big) {
+    const bigGroup = tenGodGroup(big.stemTenGod);
+    nowParas.push(`지금은 ${big.startAge}세 ${big.ganzhi} 대운과 ${dh.range!.start}-${dh.range!.end}세 대한이 겹치는 시기예요.`);
+    nowParas.push(`사주로 보면 천간에 ${josa(big.stemTenGod, '이', '가')} 들어온 10년이에요. ${firstSentence(FORTUNE_TEN_GOD[big.stemTenGod])} 명반으로 보면 '${dhField}' 분야가 삶의 중심 주제가 되기 쉬워요.`);
+    if (fieldMatches(bigGroup, dhField, gender)) nowParas.push(`두 풀이가 모두 '${dhField}' 쪽을 가리키고 있어, 지금은 이 분야에 힘을 모으면 좋아요.`);
+    else nowParas.push(`사주는 '${GROUP_FIELD[bigGroup]}', 명반은 '${dhField}' 쪽을 비추고 있어요. 두 흐름을 함께 챙기면 시기를 잘 쓸 수 있어요.`);
+    const tone = yongsinSentence(r, big);
+    if (tone) nowParas.push(tone);
+  } else {
+    nowParas.push(`아직 첫 대운(${r.bigFortunes[0]?.startAge ?? '-'}세)이 시작되기 전이에요. 명반으로 보면 지금은 '${dhField}' 분야가 중심이 되는 ${dh.range!.start}-${dh.range!.end}세 대한이에요.`);
+  }
+  const dlu = dh.sihwa.find((x) => x.sihwa === '록')!;
+  const dji = dh.sihwa.find((x) => x.sihwa === '기')!;
+  nowParas.push(`이 대한의 좋은 기운(대록)은 '${PALACE_FIELD[dh.names[dlu.branch]]}' 분야에, 마음을 써야 할 기운(대기)은 '${PALACE_FIELD[dh.names[dji.branch]]}' 분야에 있어요.`);
+
+  // 재물
   const wealthPalace = mainStarsOf(chart, chart.palaces.find((p) => p.name === '재백궁')!.branch);
   const money = [sajuWealth(r)[0], ...wealthPalace.names.map((n) => STAR_TEXT[n].wealth)];
   const caution = guaranteeCaution(r);
   if (caution) money.push(caution);
 
-  const { least, ratios } = extremeElements(r);
+  // 채우면 좋은 점
+  const y = r.yongsin!;
   const ji = chart.sihwa.find((s) => s.sihwa === '기')!;
   const fill = [
-    `사주에는 ${ELEMENTS_KO[least]} 기운이 ${ratios[least] === 0 ? '없어요' : '부족해요'}. ${ELEMENT_LIFE[least]}`,
+    `사주에서 나에게 가장 필요한 기운은 ${josa(ELEMENTS_KO[y.yong], '이에요', '예요')}. ${ELEMENT_LIFE[y.yong]}`,
     `명반에서는 '${PALACE_FIELD[ji.palace]}' 분야에 마음을 써야 할 기운(화기)이 있어요. 이 분야는 욕심보다 꾸준함으로 다가가 보세요.`,
   ];
 
   return [
     { key: 'self', title: '본모습', paragraphs: self },
     { key: 'power', title: '힘이 나는 곳', paragraphs: power },
+    { key: 'now', title: '지금 시기', paragraphs: nowParas },
     { key: 'wealth', title: '재물', paragraphs: money },
     { key: 'fill', title: '채우면 좋은 점', paragraphs: fill },
   ];

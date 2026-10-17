@@ -75,7 +75,7 @@ function toneOf(r: SajuResult, element: number): { tone: Tone; label: string } {
   return { tone: 'neutral', label: '한신' };
 }
 
-function yongsinSentence(r: SajuResult, f: Fortune) {
+export function yongsinSentence(r: SajuResult, f: Fortune) {
   if (!r.yongsin) return null;
   const s = toneOf(r, f.stem.element);
   const b = toneOf(r, f.branch.element);
