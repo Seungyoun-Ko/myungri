@@ -11,6 +11,8 @@ import { flowView, monthIndexOf, ratioCard, summaryCard, tongbyeonView, wongukCa
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
 import { saveAsImage } from './share-image';
+import { renderTerms } from '../engine/terms';
+import { getTermMode, termToggleButton, toggleTermMode } from './term-mode';
 
 export interface ResultState {
   snapshot: Snapshot;
@@ -125,7 +127,8 @@ function combinedHtml(st: ResultState) {
   if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 통변을 볼 수 있어요.</p></div>`;
   const sections = combinedTongbyeon(saju, chart);
   return `<div class="card tongbyeon">
-    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}`).join('<div style="height:14px"></div>')}
+    <div class="tong-head" style="justify-content:flex-end">${termToggleButton()}</div>
+    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(renderTerms(p, getTermMode()))}</p>`).join('')}`).join('<div style="height:14px"></div>')}
     <p class="disclaimer">타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
   </div>`;
 }
@@ -177,7 +180,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
         : `<div class="card"><p class="notice">출생시간을 입력해야 명반을 완성 시킬 수 있습니다.</p></div>`}
     </section>
     <section data-panel="combined" style="margin-top:14px">
-      ${combinedHtml(st)}
+      <div data-region="combined"></div>
       ${chart && !s.incompleteBirthTime ? adSlot('combinedBottom') : ''}
     </section>
     ${appBanner()}`;
@@ -197,6 +200,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       region('board')!.innerHTML = jamiBoard(st, chart, wide, overlay);
       region('jamiTong')!.innerHTML = tongbyeonView(jamidusuTongbyeon(chart, overlay), st.jamiTong, 'data-jami-tong');
     },
+    combined: () => (region('combined')!.innerHTML = combinedHtml(st)),
     board: () => {
       if (chart) region('board')!.innerHTML = jamiBoard(st, chart, wide, overlayOf(st, chart));
     },
@@ -240,6 +244,14 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
         paint.jami();
       }
       syncTabs();
+      return;
+    }
+    if (t.closest('[data-term-toggle]')) {
+      toggleTermMode();
+      paint.sajuTong();
+      paint.flow();
+      paint.jami();
+      paint.combined();
       return;
     }
     const ratio = t.closest<HTMLButtonElement>('[data-ratio-mode] button');

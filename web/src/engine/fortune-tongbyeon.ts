@@ -1,16 +1,12 @@
 // 운 흐름 통변: 대운·세운·월운 풀이.
 // 운의 십신(천간 = 겉으로 드러나는 일, 지지 = 생활의 바탕), 용신과의 관계, 일간의 12운성,
 // 원국과의 합충을 조합합니다. 예측·보장이 아니라 흐름의 성격을 설명합니다.
-import { ELEMENTS_KO } from './constants';
-import { BRANCH_CHUNG, BRANCH_HAP, PILLAR_TITLES, STEM_HAP, pairKey, type Fortune, type PillarKey, type SajuResult } from './saju';
+import { BRANCH_CHUNG, BRANCH_HAP, STEM_HAP, pairKey, type Fortune, type PillarKey, type SajuResult } from './saju';
+import { CHUNG, HAP, T, V, charName, ganzhiName, josa, tenGod, term, yong } from './terms';
 
-const batchim = (w: string) => {
-  const c = w.charCodeAt(w.length - 1);
-  return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
-};
-/** 한자 글자 뒤 조사는 한글 읽기로 정합니다. 예: 庚(경) → 庚이, 子(자) → 子가 */
-const hj = (c: { hanja: string; korean: string }, a: string, b: string) => c.hanja + (batchim(c.korean) ? a : b);
-const elWord = (e: number, a: string, b: string) => `(${ELEMENTS_KO[e]})` + (batchim(ELEMENTS_KO[e]) ? a : b);
+const PILLAR_NAME: Record<PillarKey, string> = { hour: T('태어난 시', '시주'), day: T('태어난 날', '일주'), month: T('태어난 달', '월주'), year: T('태어난 해', '년주') };
+const OUTER = V('겉으로는', '천간에');
+const INNER = V('바탕에는', '지지에');
 
 /** 운에 들어온 천간 십신의 뜻 */
 export const FORTUNE_TEN_GOD: Record<string, string> = {
@@ -79,7 +75,7 @@ export function yongsinSentence(r: SajuResult, f: Fortune) {
   if (!r.yongsin) return null;
   const s = toneOf(r, f.stem.element);
   const b = toneOf(r, f.branch.element);
-  const who = `천간 ${f.stem.hanja}${elWord(f.stem.element, '은', '는')} ${s.label}, 지지 ${f.branch.hanja}${elWord(f.branch.element, '은', '는')} ${b.label}이에요.`;
+  const who = `${term.천간} ${josa(charName(f.stem), '은', '는')} ${yong(s.label)}, ${term.지지} ${josa(charName(f.branch), '은', '는')} ${yong(b.label)}이에요.`;
   const text: Record<string, string> = {
     'good/good': '나에게 필요한 기운이 위아래로 들어와 힘을 받기 좋은 흐름이에요.',
     'good/neutral': '필요한 기운이 겉으로 들어와 일을 풀어 가기 비교적 수월한 흐름이에요.',
@@ -99,33 +95,33 @@ function interactions(r: SajuResult, f: Fortune) {
   const out: string[] = [];
   const day = r.pillars.find((p) => p.key === 'day')!;
   if (STEM_HAP[pairKey(f.stem.index, day.stem.index)] !== undefined) {
-    out.push(`운의 천간 ${hj(f.stem, '이', '가')} 일간 ${hj(day.stem, '과', '와')} 합을 이뤄, 마음이 끌리는 일이나 사람을 만나기 쉬워요.`);
+    out.push(`이 운의 ${term.천간} ${josa(charName(f.stem), '이', '가')} ${term.일간} ${josa(charName(day.stem), '과', '와')} ${HAP}, 마음이 끌리는 일이나 사람을 만나기 쉬워요.`);
   }
   const chung = r.pillars.filter((p) => BRANCH_CHUNG.has(pairKey(f.branch.index, p.branch.index)));
   const hap = r.pillars.filter((p) => BRANCH_HAP[pairKey(f.branch.index, p.branch.index)] !== undefined);
   // 같은 글자가 여러 기둥에 있으면 한 문장으로 묶습니다.
   const where = (ps: typeof r.pillars) => {
-    const titles = ps.map((p) => PILLAR_TITLES[p.key]).join('·');
+    const names = ps.map((p) => PILLAR_NAME[p.key]).join('·');
     const areas = ps.map((p) => `'${PILLAR_AREA[p.key]}'`).join(', ');
-    const chars = [...new Set(ps.map((p) => p.branch.hanja))].join('·');
-    const last = ps[ps.length - 1].branch;
-    return { titles, areas, label: `${titles}의 ${chars}${batchim(last.korean) ? '과' : '와'}` };
+    const chars = [...new Map(ps.map((p) => [p.branch.index, p.branch])).values()].map((b) => charName(b)).join('·');
+    return { areas, label: `${names}의 ${josa(chars, '과', '와')}` };
   };
   if (chung.length) {
     const w = where(chung);
-    out.push(`운의 지지 ${hj(f.branch, '이', '가')} ${w.label} 충을 이뤄 ${w.areas} 쪽에 변화와 움직임이 생기기 쉬워요. 이사, 이동, 관계의 정리처럼 바뀌는 일이 있을 때 서두르지 말고 살펴보세요.`);
+    out.push(`이 운의 ${term.지지} ${josa(charName(f.branch), '이', '가')} ${w.label} ${CHUNG} ${w.areas} 쪽에 변화와 움직임이 생기기 쉬워요. 이사, 이동, 관계의 정리처럼 바뀌는 일이 있을 때 서두르지 말고 살펴보세요.`);
   }
   if (hap.length) {
     const w = where(hap);
-    out.push(`운의 지지 ${hj(f.branch, '이', '가')} ${w.label} 합을 이뤄 ${w.areas} 쪽에 새로운 인연이나 협력이 생기기 쉬워요.`);
+    out.push(`이 운의 ${term.지지} ${josa(charName(f.branch), '이', '가')} ${w.label} ${HAP} ${w.areas} 쪽에 새로운 인연이나 협력이 생기기 쉬워요.`);
   }
   return out;
 }
 
 function fortuneParagraphs(r: SajuResult, f: Fortune, lead: string) {
+  const ph = f.growthPhase;
   const paras = [
-    `${lead} 천간에 ${f.stemTenGod}, 지지에 ${f.branchTenGod}의 기운이 들어와요. ${FORTUNE_TEN_GOD[f.stemTenGod]}`,
-    `생활의 바탕에는 '${BASE_TEN_GOD[f.branchTenGod]}'의 기운이 깔려요. 일간의 기운으로 보면 ${PHASE_ENERGY[f.growthPhase]} ‘${f.growthPhase}’의 시기예요.`,
+    `${lead} ${OUTER} ${tenGod(f.stemTenGod)}, ${INNER} ${tenGod(f.branchTenGod)}의 기운이 들어와요. ${FORTUNE_TEN_GOD[f.stemTenGod]}`,
+    `생활의 바탕에는 '${BASE_TEN_GOD[f.branchTenGod]}'의 기운이 깔려요. ${V(`내 힘의 세기로 보면 ${PHASE_ENERGY[ph]} 시기(${ph})예요.`, `일간의 12운성으로 보면 ${PHASE_ENERGY[ph]} ‘${ph}’의 시기예요.`)}`,
   ];
   const y = yongsinSentence(r, f);
   if (y) paras.push(y);
@@ -141,26 +137,32 @@ export interface FortuneReading {
 export function bigFortuneReading(r: SajuResult, index: number): FortuneReading | null {
   const b = r.bigFortunes[index];
   if (!b) return null;
-  const lead = `${b.startAge}~${b.startAge + 9}세(${b.startYear}~${b.endYear}년) ${b.ganzhi} 대운은 10년 동안`;
-  return { title: `${b.startAge}세 대운 ${b.ganzhi} 풀이`, paragraphs: fortuneParagraphs(r, b, lead) };
+  const gz = ganzhiName(b.stem, b.branch);
+  const lead = `${b.startAge}~${b.startAge + 9}세(${b.startYear}~${b.endYear}년) ${gz} ${term.대운} 동안에는`;
+  return { title: `${b.startAge}세 ${term.대운} ${gz} 풀이`, paragraphs: fortuneParagraphs(r, b, lead) };
 }
 
 export function yearFortuneReading(r: SajuResult, bigIndex: number, year: number): FortuneReading | null {
   const y = r.daewunYearFortunes[bigIndex]?.find((x) => x.year === year);
   if (!y) return null;
-  const paras = fortuneParagraphs(r, y, `${year}년 ${y.ganzhi} 세운은 한 해 동안`);
+  const gz = ganzhiName(y.stem, y.branch);
+  const paras = fortuneParagraphs(r, y, `${year}년 ${gz} ${term.세운}에는`);
   const big = r.bigFortunes[bigIndex];
-  if (big && big.branch.index === y.branch.index) paras.push(`대운과 세운의 지지가 ${y.branch.hanja}${batchim(y.branch.korean) ? '으로' : '로'} 같아, 그 기운이 한층 또렷하게 느껴지는 해예요.`);
-  else if (big && BRANCH_CHUNG.has(pairKey(big.branch.index, y.branch.index))) paras.push(`대운 ${hj(big.branch, '과', '와')} 세운 ${hj(y.branch, '이', '가')} 충을 이뤄, 큰 흐름 안에서 방향을 한 번 점검하게 되는 해예요.`);
-  return { title: `${year}년 ${y.ganzhi} 세운 풀이`, paragraphs: paras };
+  if (big && big.branch.index === y.branch.index) {
+    paras.push(`${term.대운}과 ${term.세운}의 ${V('바탕 기운이', '지지가')} ${josa(charName(y.branch), '으로', '로')} 같아, 그 기운이 한층 또렷하게 느껴지는 해예요.`);
+  } else if (big && BRANCH_CHUNG.has(pairKey(big.branch.index, y.branch.index))) {
+    paras.push(`${term.대운}의 ${josa(charName(big.branch), '과', '와')} ${term.세운}의 ${josa(charName(y.branch), '이', '가')} ${CHUNG}, 큰 흐름 안에서 방향을 한 번 점검하게 되는 해예요.`);
+  }
+  return { title: `${year}년 ${term.세운} ${gz} 풀이`, paragraphs: paras };
 }
 
 export function monthFortuneReading(r: SajuResult, month: number): FortuneReading | null {
   const m = r.monthFortunes.find((x) => x.month === month);
   if (!m) return null;
-  const paras = [`${month}월(절기 기준) ${m.ganzhi}에는 천간에 ${m.stemTenGod}, 지지에 ${m.branchTenGod}의 기운이 들어와요. ${FORTUNE_TEN_GOD[m.stemTenGod].split('. ')[0]}.`];
+  const gz = ganzhiName(m.stem, m.branch);
+  const paras = [`${month}월(절기 기준) ${gz}에는 ${OUTER} ${tenGod(m.stemTenGod)}, ${INNER} ${tenGod(m.branchTenGod)}의 기운이 들어와요. ${FORTUNE_TEN_GOD[m.stemTenGod].split('. ')[0]}.`];
   const y = yongsinSentence(r, m);
   if (y) paras.push(y);
   paras.push(...interactions(r, m).slice(0, 2));
-  return { title: `${month}월 ${m.ganzhi} 월운 풀이`, paragraphs: paras };
+  return { title: `${month}월 ${term.월운} ${gz} 풀이`, paragraphs: paras };
 }

@@ -29,6 +29,10 @@ import {
 import { BRANCH_TEXT, SPOUSE_PALACE } from './ilju-data';
 import { FORTUNE_TEN_GOD, yongsinSentence } from './fortune-tongbyeon';
 import { daehanChart } from './jamidusu';
+import { BRANCHES_KO } from './constants';
+import { BRIGHT_PLAIN, CHUNG, HAP, T, V, charName, elementName, ganzhiName, group, josa, palace, phase, plainJosa, sihwa, tenGod, term, yong } from './terms';
+
+export { josa };
 
 export interface TongbyeonSection {
   key: string;
@@ -45,17 +49,6 @@ export const SAJU_TABS = [
   ['health', '건강'],
 ] as const;
 
-// ---------------------------------------------------------------- 한국어 조사
-const hasBatchim = (word: string) => {
-  const c = word.charCodeAt(word.length - 1);
-  if (c < 0xac00 || c > 0xd7a3) return false;
-  return (c - 0xac00) % 28 !== 0;
-};
-/** 끝이 괄호면 괄호 안 마지막 글자로 조사를 고릅니다. 예: '태양(함)' → '태양(함)은' */
-export const josa = (word: string, withB: string, withoutB: string) => {
-  const base = word.endsWith(')') ? word.slice(0, -1) : word;
-  return word + (hasBatchim(base) ? withB : withoutB);
-};
 const firstSentence = (text: string) => {
   const m = text.match(/^.*?[.!?요](\s|$)/);
   return (m ? m[0] : text).trim();
@@ -120,7 +113,7 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
   if (r.incompleteBirthTime || !r.elementRatios) {
     const notice = '출생시간을 입력하면 이 부분을 자세히 볼 수 있어요.';
     return SAJU_TABS.map(([key, title]) => {
-      if (key === 'general') return { key, title, paragraphs: [`${josa(r.dayMaster.hanja + ' 일간', '은', '는')} ${josa(image, '을', '를')} 닮았어요.`, notice] };
+      if (key === 'general') return { key, title, paragraphs: [`${term.일간} ${josa(charName(r.dayMaster), '은', '는')} ${josa(image, '을', '를')} 닮았어요.`, notice] };
       if (key === 'personality') return { key, title, paragraphs: [personality] };
       return { key, title, paragraphs: [notice] };
     });
@@ -136,7 +129,6 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
   const spouseGroup: TenGodGroup = gender === 'M' ? '재성' : '관성';
   const spouse = g[spouseGroup];
   const peach = r.pillars.some((p) => [0, 3, 6, 9].includes(p.branch.index));
-  const lackText = ratios[least] === 0 ? `${ELEMENTS_KO[least]} 기운이 없어요.` : `${ELEMENTS_KO[least]} 기운이 가장 적어요.`;
   const geuk = (r.geukgukLabel ?? '').split(' ')[0];
   const y = r.yongsin!;
   const me = r.dayMaster.element;
@@ -146,51 +138,52 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
   const general = [
     `사주는 ${josa(image, '을', '를')} 닮았어요.`,
     STRENGTH_SENTENCE[r.strengthText!],
-    `${ELEMENTS_KO[most]} 기운이 가장 많아요. ${ELEMENT_MANY[most]} ${lackText} ${ELEMENT_FEW[least]}`,
+    `${josa(elementName(most), '이', '가')} 가장 많아요. ${ELEMENT_MANY[most].replace(/^\S+ 기운이 많아 /, '그래서 ')} 반대로 ${josa(elementName(least), '이', '가')} ${ratios[least] === 0 ? '없어요' : '가장 적어요'}. ${ELEMENT_FEW[least].replace(/^\S+ 기운이 부족해 /, '')}`,
   ];
-  if (GEUKGUK_TEXT[geuk]) general.push(GEUKGUK_TEXT[geuk]);
+  if (GEUKGUK_TEXT[geuk]) general.push(GEUKGUK_TEXT[geuk].replace(`${geuk}이에요`, josa(T('사주', geuk), '이에요', '예요')));
   general.push(
-    `나에게 가장 필요한 기운(용신)은 ${ELEMENTS_KO[y.yong]}, 그 기운을 돕는 희신은 ${josa(ELEMENTS_KO[y.hee], '이에요', '예요')}. 반대로 ${ELEMENTS_KO[y.gi]} 기운은 부담이 되기 쉬워요.`,
-    `용신을 채우는 생활: ${ELEMENT_LIFE[y.yong]}`,
+    `${josa(yong('용신'), '은', '는')} ${elementName(y.yong)}이고, ${josa(yong('희신'), '은', '는')} ${josa(elementName(y.hee), '이에요', '예요')}. 반대로 ${josa(elementName(y.gi), '은', '는')} 부담이 되기 쉬워요.`,
+    `${josa(yong('용신'), '을', '를')} 채우는 생활: ${ELEMENT_LIFE[y.yong]}`,
   );
-  general.push(...combinationLines(r.combinations));
+  general.push(...combinationLines(r));
 
   // 성격
   const dayBranch = dayPillar.branch.index;
-  const phase = UNSEONG.find(([n]) => n === dayPillar.growthPhase);
+  const ph = UNSEONG.find(([n]) => n === dayPillar.growthPhase);
+  const animal = BRANCH_TEXT[dayBranch][0];
   const personalityParas = [
     DAY_MASTER_PERSONALITY[dm],
-    `태어난 날의 지지 ${dayPillar.branch.hanja}(${BRANCH_TEXT[dayBranch][0]}) 위에 서 있어서, ${BRANCH_TEXT[dayBranch][3]}`,
+    `${V(`태어난 날 아래에 ${BRANCHES_KO[dayBranch]}${['목', '화', '토', '금', '수'][dayPillar.branch.element]}(${animal}) 기운이 있어서`, `일지 ${dayPillar.branch.hanja}(${animal}) 위에 서 있어서`)}, ${BRANCH_TEXT[dayBranch][3]}`,
     GROUP_PERSONALITY[top],
   ];
-  if (phase) personalityParas.push(`일간이 일지에서 ‘${phase[0]}’의 자리에 있어요. ${phase[1]}`);
+  if (ph) personalityParas.push(`${V('내 힘의 세기로 보면', '일간의 12운성은')} ${josa(phase(ph[0]), '이에요', '예요')}. ${ph[1]}`);
 
   // 적성
   const aptitude = [GROUP_APTITUDE[top]];
-  if (g[second] >= 15 && g[top] - g[second] <= 10) aptitude.push(`${second} 쪽 재능도 함께 있어서, ${firstSentence(GROUP_APTITUDE[second])}`);
-  if (GEUKGUK_STRENGTH[geuk]) aptitude.push(`${geuk}의 강점인 ${josa(GEUKGUK_STRENGTH[geuk], '을', '를')} 살릴 수 있는 일을 고르면 오래 즐겁게 할 수 있어요.`);
+  if (g[second] >= 15 && g[top] - g[second] <= 10) aptitude.push(`${group(second)}의 힘도 함께 있어서, ${firstSentence(GROUP_APTITUDE[second])}`);
+  if (GEUKGUK_STRENGTH[geuk]) aptitude.push(`${T('이 사주', geuk)}의 강점인 ${josa(GEUKGUK_STRENGTH[geuk], '을', '를')} 살릴 수 있는 일을 고르면 오래 즐겁게 할 수 있어요.`);
 
   // 연애
-  const love = [`태어난 날의 지지는 배우자 자리예요. ${SPOUSE_PALACE[dayBranchTg]}`];
+  const love = [`${V('태어난 날의 아래 글자는 배우자 자리라고 불러요.', '일지는 배우자 자리예요.')} ${SPOUSE_PALACE[dayBranchTg]}`];
   const spouseWord = gender === 'M' ? '아내·연인을 뜻하는 별' : '남편·연인을 뜻하는 별';
   if (spouse >= 25) love.push(`${spouseWord}이 넉넉해서 인연이 잘 찾아오는 편이에요. 오히려 한 사람에게 마음을 모으는 것이 중요해요.`);
   else if (spouse < 8) love.push(`${spouseWord}이 적은 편이라 인연이 늦게 오거나 천천히 깊어질 수 있어요. 서두르지 않아도 괜찮아요.`);
   else love.push(`${spouseWord}이 알맞게 있어서 자연스럽게 인연을 만들어 가요.`);
   const dayCombos = r.combinations.filter((c) => c.positions.includes('day') && c.kind !== '천간합');
-  if (dayCombos.some((c) => c.kind === '지지육합')) love.push('배우자 자리가 옆 기둥과 합을 이뤄 정이 깊고, 한번 맺은 인연을 오래 이어 가는 편이에요.');
-  if (dayCombos.some((c) => c.kind === '지지육충')) love.push('배우자 자리가 옆 기둥과 충을 이뤄 관계에 변화가 생기기 쉬워요. 서로의 거리와 생활 방식을 미리 맞춰 두면 좋아요.');
+  if (dayCombos.some((c) => c.kind === '지지육합')) love.push(`배우자 자리가 옆 기둥과 ${HAP} 정이 깊고, 한번 맺은 인연을 오래 이어 가는 편이에요.`);
+  if (dayCombos.some((c) => c.kind === '지지육충')) love.push(`배우자 자리가 옆 기둥과 ${CHUNG} 관계에 변화가 생기기 쉬워요. 서로의 거리와 생활 방식을 미리 맞춰 두면 좋아요.`);
   if (peach) love.push('사람을 끄는 매력(도화)이 있어 이성에게 인기가 있는 편이에요.');
 
   // 재물
   const wealth = sajuWealth(r);
-  if (wealthEl === y.yong || wealthEl === y.hee) wealth.push(`재물의 기운(${ELEMENTS_KO[wealthEl]})이 나에게 필요한 기운이라, 돈을 버는 활동 자체가 힘이 되는 사주예요. 적극적으로 기회를 찾아도 좋아요.`);
-  else if (wealthEl === y.gi || wealthEl === y.gu) wealth.push(`재물의 기운(${ELEMENTS_KO[wealthEl]})이 부담이 되는 쪽이라, 돈을 먼저 쫓기보다 실력과 신용을 쌓으면 재물이 따라오기 쉬워요.`);
+  if (wealthEl === y.yong || wealthEl === y.hee) wealth.push(`재물을 뜻하는 ${josa(elementName(wealthEl), '이', '가')} 나에게 필요한 기운이라, 돈을 버는 활동 자체가 힘이 되는 사주예요. 적극적으로 기회를 찾아도 좋아요.`);
+  else if (wealthEl === y.gi || wealthEl === y.gu) wealth.push(`재물을 뜻하는 ${josa(elementName(wealthEl), '이', '가')} 부담이 되는 쪽이라, 돈을 먼저 쫓기보다 실력과 신용을 쌓으면 재물이 따라오기 쉬워요.`);
   const caution = guaranteeCaution(r);
   if (caution) wealth.push(caution);
 
   // 건강
-  const health = [`${ELEMENTS_KO[least]} 기운이 약한 편이라 ${ORGANS[least]} 쪽을 미리 챙겨 주면 좋아요. ${ELEMENT_LIFE[least]}`];
-  if (ratios[most] >= 35) health.push(`${ELEMENTS_KO[most]} 기운이 지나치게 많아요. 넘치는 기운도 균형을 깨기 쉬우니 ${ORGANS[most]} 쪽이 무리하지 않게 살펴 주세요.`);
+  const health = [`${josa(elementName(least), '이', '가')} 약한 편이라 ${ORGANS[least]} 쪽을 미리 챙겨 주면 좋아요. ${ELEMENT_LIFE[least]}`];
+  if (ratios[most] >= 35) health.push(`${josa(elementName(most), '이', '가')} 지나치게 많아요. 넘치는 기운도 균형을 깨기 쉬우니 ${ORGANS[most]} 쪽이 무리하지 않게 살펴 주세요.`);
   health.push(HEALTH_DISCLAIMER);
 
   return [
@@ -203,13 +196,25 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
   ];
 }
 
+const PILLAR_WORD: Record<PillarKey, string> = { hour: '시', day: '날', month: '달', year: '해' };
+const ELEMENT_WORD = ['나무', '불', '흙', '쇠', '물'];
+
 /** 원국 합충의 뜻 */
-function combinationLines(combos: Combination[]): string[] {
-  return combos.map((c) => {
-    const pair = PILLAR_PAIR_TEXT[c.positions.join('-') as `${PillarKey}-${PillarKey}`] ?? '';
-    if (c.kind === '지지육충') return `${c.text}: ${pair} 사이에 부딪침과 움직임이 있어요. 변화가 잦은 대신 정체되지 않는 힘도 돼요.`;
-    const el = c.element !== undefined ? ELEMENTS_KO[c.element] : '';
-    return `${c.text}: ${josa(pair, '이', '가')} 서로 끌어당겨 협력하는 모습이에요. 합으로 ${el} 기운이 더해져요.`;
+function combinationLines(r: SajuResult): string[] {
+  const byKey = Object.fromEntries(r.pillars.map((p) => [p.key, p])) as Record<PillarKey, (typeof r.pillars)[number]>;
+  return r.combinations.map((c) => {
+    const [a, b] = c.positions;
+    const pair = PILLAR_PAIR_TEXT[`${a}-${b}`] ?? '';
+    const isStem = c.kind === '천간합';
+    const chars = [a, b].map((k) => (isStem ? byKey[k].stem : byKey[k].branch));
+    const names = chars.map((x) => x.korean + ['목', '화', '토', '금', '수'][x.element]);
+    const plainSubject = plainJosa(`태어난 ${plainJosa(PILLAR_WORD[a], '과', '와')} ${PILLAR_WORD[b]}의 ${isStem ? '겉 기운' : '바탕 기운'}인 ${plainJosa(names[0], '과', '와')} ${names[1]}`, '이', '가');
+    const termSubject = c.text.split(' → ')[0];
+    if (c.kind === '지지육충') {
+      return `${V(`${plainSubject} 서로 부딪쳐(충)`, `${termSubject}:`)} ${pair} 사이에 부딪침과 움직임이 있어요. 변화가 잦은 대신 정체되지 않는 힘도 돼요.`;
+    }
+    const el = c.element ?? 0;
+    return `${V(`${plainSubject} 서로 끌어당겨(합) ${ELEMENT_WORD[el]} 기운(${['목', '화', '토', '금', '수'][el]})이 더해져요.`, `${c.text}:`)} ${josa(pair, '이', '가')} 서로 돕는 모습이에요.`;
   });
 }
 
@@ -243,15 +248,21 @@ const pairKeyOf = (names: string[]) => [...names].sort().join('·');
 const STRONG = new Set(['묘', '왕']);
 const WEAK = new Set(['불', '함']);
 
+/** 궁 이름 (쉬운 말: '일·직업을 보는 자리(관록궁)') */
+const pal = (name: PalaceName | string) => palace(name, PALACE_FIELD[name]);
+
 /** 주성 소개(두 별이면 함께 있는 모습 먼저) */
-function starLines(stars: StarsInPalace, field: keyof (typeof STAR_TEXT)[string], palaceLabel: string) {
+function starLines(stars: StarsInPalace, field: keyof (typeof STAR_TEXT)[string], palaceName: PalaceName) {
   const lines: string[] = [];
-  if (stars.borrowed) lines.push(`${palaceLabel}은 주성이 비어 있어 맞은편 궁의 ${joinNames(stars.names)} 기운을 빌려 봐요.`);
-  else lines.push(`${palaceLabel}에는 ${josa(joinNames(stars.names), '이', '가')} 있어요.`);
+  const label = pal(palaceName);
+  if (stars.borrowed) lines.push(`${josa(label, '은', '는')} ${josa(term.주성, '이', '가')} 비어 있어 맞은편 자리의 ${joinNames(stars.names)} 기운을 빌려 봐요.`);
+  else lines.push(`${label}에는 ${josa(joinNames(stars.names), '이', '가')} 있어요.`);
   if (stars.names.length === 2 && PAIR_TEXT[pairKeyOf(stars.names)]) lines.push(PAIR_TEXT[pairKeyOf(stars.names)]);
   for (const n of stars.names) lines.push(STAR_TEXT[n][field]);
   return lines;
 }
+
+const brightLabel = (name: string, b: string) => V(`${name}(${BRIGHT_PLAIN[b]})`, `${name}(${b})`);
 
 /** 밝기, 보좌·살성, 사화로 그 궁의 풀이를 보탭니다. */
 function palaceDetailLines(chart: JamidusuChart, branch: number, stars: StarsInPalace, overlay?: OverlayChart) {
@@ -259,49 +270,52 @@ function palaceDetailLines(chart: JamidusuChart, branch: number, stars: StarsInP
   const out: string[] = [];
   if (!stars.borrowed) {
     const mains = p.stars.filter((x) => x.kind === 'main');
-    const strong = mains.filter((x) => STRONG.has(x.brightness)).map((x) => `${x.name}(${x.brightness})`);
-    const weak = mains.filter((x) => WEAK.has(x.brightness)).map((x) => `${x.name}(${x.brightness})`);
-    if (strong.length) out.push(`${josa(joinNames(strong), '은', '는')} 빛이 밝은 자리에 있어 장점이 잘 드러나요.`);
-    if (weak.length) out.push(`${josa(joinNames(weak), '은', '는')} 빛이 약한 자리라 장점이 늦게 드러날 수 있어요. 서두르기보다 경험을 쌓을수록 힘이 붙어요.`);
+    const strong = mains.filter((x) => STRONG.has(x.brightness));
+    const weak = mains.filter((x) => WEAK.has(x.brightness));
+    if (strong.length) out.push(`${josa(strong.map((x) => brightLabel(x.name, x.brightness)).join('·'), '은', '는')} 별빛이 밝은 자리에 있어 장점이 잘 드러나요.`);
+    if (weak.length) out.push(`${josa(weak.map((x) => brightLabel(x.name, x.brightness)).join('·'), '은', '는')} 별빛이 약한 자리라 장점이 늦게 드러날 수 있어요. 서두르기보다 경험을 쌓을수록 힘이 붙어요.`);
   }
   const good = p.stars.filter((x) => x.kind === 'aux' && AUX_MEANING[x.name]);
   const sal = p.stars.filter((x) => x.kind === 'sal' && SAL_MEANING[x.name]);
   if (good.length) out.push(`돕는 별 ${josa(good.map((x) => `${x.name}(${AUX_MEANING[x.name]})`).join(', '), '이', '가')} 함께 있어 힘을 보태요.`);
-  if (sal.length) out.push(`${sal.map((x) => `${x.name}(${SAL_MEANING[x.name]})`).join(', ')}의 기운도 함께 있어요. 부딪치는 일이 있을 때 한 박자 쉬어 가면 오히려 추진력이 돼요.`);
+  if (sal.length) out.push(`부딪치는 별 ${sal.map((x) => `${x.name}(${SAL_MEANING[x.name]})`).join(', ')}의 기운도 함께 있어요. 부딪치는 일이 있을 때 한 박자 쉬어 가면 오히려 추진력이 돼요.`);
   const hw = [
-    ...p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => ({ star: x.name, sihwa: x.sihwa!, label: '화' + x.sihwa })),
-    ...(overlay?.sihwa.filter((x) => x.branch === branch) ?? []).map((x) => ({ star: x.star, sihwa: x.sihwa, label: x.label })),
+    ...p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => ({ star: x.name, kind: x.sihwa!, prefix: '화' })),
+    ...(overlay?.sihwa.filter((x) => x.branch === branch) ?? []).map((x) => ({ star: x.star, kind: x.sihwa, prefix: x.label[0] })),
   ];
   for (const h of hw) {
+    const mark = josa(sihwa(h.kind, h.prefix), '이', '가');
     out.push(
-      h.sihwa === '기'
-        ? `${h.star}에 ${h.label}가 붙어 이 분야는 ${SIHWA_MEANING[h.sihwa]}이 있는 곳이에요. 욕심보다 꾸준함으로 다가가 보세요.`
-        : `${h.star}에 ${h.label}이 붙어 이 분야에 ${SIHWA_MEANING[h.sihwa]}이 깃들어 있어요.`,
+      h.kind === '기'
+        ? `${h.star}에 ${mark} 붙어 있어요. 이 분야는 욕심보다 꾸준함으로 다가가 보세요.`
+        : `${h.star}에 ${mark} 붙어 이 분야에 ${SIHWA_MEANING[h.kind]}이 깃들어 있어요.`,
     );
   }
   return out;
 }
 
 /** 이어진 자리(맞은편과 삼합 자리)까지 함께 본 힘 */
-function connectedLine(chart: JamidusuChart, branch: number, names: PalaceName[], label: string) {
+function connectedLine(chart: JamidusuChart, branch: number, names: PalaceName[], palaceName: PalaceName) {
   const related = [(branch + 6) % 12, (branch + 4) % 12, (branch + 8) % 12];
   const all = [branch, ...related].map((b) => chart.palaces[b]);
   const good = all.flatMap((p) => p.stars.filter((x) => x.kind === 'aux' && AUX_MEANING[x.name])).length + all.flatMap((p) => p.stars.filter((x) => x.sihwa && x.sihwa !== '기')).length;
   const bad = all.flatMap((p) => p.stars.filter((x) => x.kind === 'sal')).length + all.flatMap((p) => p.stars.filter((x) => x.sihwa === '기')).length;
-  const relNames = related.map((b) => names[b].replace('궁', '')).join('·');
-  if (good >= bad + 2) return `${label}과 이어진 ${relNames} 자리까지 함께 보면 돕는 기운이 넉넉해서, 주변의 도움을 받아 일을 키우기 좋아요.`;
-  if (bad >= good + 2) return `${label}과 이어진 ${relNames} 자리까지 함께 보면 부딪치는 기운이 많은 편이라, 혼자 버티기보다 믿을 만한 사람과 나누면 좋아요.`;
-  return `${label}과 이어진 ${relNames} 자리까지 함께 보면 돕는 기운과 부딪치는 기운이 고르게 섞여 있어요.`;
+  const rel = V(related.map((b) => `'${PALACE_FIELD[names[b]]}'`).join(', '), related.map((b) => names[b].replace('궁', '')).join('·'));
+  const lead = `${josa(pal(palaceName), '과', '와')} 이어진 ${rel} 자리까지 함께 보면`;
+  if (good >= bad + 2) return `${lead} 돕는 기운이 넉넉해서, 주변의 도움을 받아 일을 키우기 좋아요.`;
+  if (bad >= good + 2) return `${lead} 부딪치는 기운이 많은 편이라, 혼자 버티기보다 믿을 만한 사람과 나누면 좋아요.`;
+  return `${lead} 돕는 기운과 부딪치는 기운이 고르게 섞여 있어요.`;
 }
 
 const branchOfName = (names: PalaceName[], name: PalaceName) => names.indexOf(name);
 
 export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart): TongbyeonSection[] {
   const names: PalaceName[] = overlay ? overlay.names : chart.palaces.map((p) => p.name);
+  const prefix = overlay ? overlay.sihwa[0].label[0] : '화';
   const hwSource = overlay ? overlay.sihwa : chart.sihwa.map((s) => ({ ...s, label: '화' + s.sihwa }));
-  const fieldOf = (sihwa: string) => {
-    const h = hwSource.find((s) => s.sihwa === sihwa)!;
-    return { label: h.label, star: h.star, field: PALACE_FIELD[names[h.branch]] };
+  const fieldOf = (kind: string) => {
+    const h = hwSource.find((s) => s.sihwa === kind)!;
+    return { mark: sihwa(kind, prefix), field: PALACE_FIELD[names[h.branch]] };
   };
 
   const sections: TongbyeonSection[] = SAJU_TABS.map(([key, title]) => {
@@ -309,13 +323,12 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
     // 성격 탭은 늘 선천 명궁 기준
     const branch = key === 'personality' ? chart.mingBranch : branchOfName(names, palaceName);
     const stars = mainStarsOf(chart, branch);
-    const label = palaceName;
 
     if (key === 'general') {
       const paras: string[] = [];
       if (overlay) {
         const natalName = chart.palaces[overlay.mingBranch].name;
-        const lead = overlay.kind === 'daehan' ? `${overlay.range!.start}-${overlay.range!.end}세 대한 동안은` : `${overlay.year}년에는`;
+        const lead = overlay.kind === 'daehan' ? `${overlay.range!.start}-${overlay.range!.end}세 ${term.대한} 동안은` : `${overlay.year}년에는`;
         paras.push(`${lead} '${PALACE_FIELD[natalName]}' 분야가 삶의 중심 주제가 되기 쉬워요.`);
         for (const n of stars.names) paras.push(STAR_TEXT[n].flow);
       } else {
@@ -324,27 +337,27 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
         for (const n of stars.names) paras.push(`${josa(n, '은', '는')} ${josa(STAR_TEXT[n].image, '이에요', '예요')}. ${josa(STAR_TEXT[n].strength, '이', '가')} 있어요.`);
         paras.push(...palaceDetailLines(chart, branch, stars));
         const shen = chart.palaces[chart.shenBranch];
-        if (!shen.isMing) paras.push(`몸과 후반생을 보는 신궁은 ${shen.name}에 있어요. 나이가 들수록 '${PALACE_FIELD[shen.name]}' 분야에 마음과 힘을 쏟게 되기 쉬워요.`);
-        else paras.push('신궁이 명궁과 같은 자리에 있어, 타고난 성향이 평생 한결같이 이어지는 편이에요.');
+        if (!shen.isMing) paras.push(`${josa(term.신궁, '은', '는')} ${pal(shen.name)}에 있어요. 나이가 들수록 '${PALACE_FIELD[shen.name]}' 분야에 마음과 힘을 쏟게 되기 쉬워요.`);
+        else paras.push(`${josa(term.신궁, '이', '가')} ${josa(pal('명궁'), '과', '와')} 같은 자리에 있어, 타고난 성향이 평생 한결같이 이어지는 편이에요.`);
       }
       const lu = fieldOf('록');
       const quan = fieldOf('권');
       const ke = fieldOf('과');
       const ji = fieldOf('기');
-      paras.push(`좋은 기운(${lu.label})은 '${lu.field}' 분야에 들어 있어요. 이 분야에서 기회와 도움을 얻기 쉬워요.`);
-      paras.push(`힘과 주도권(${quan.label})은 '${quan.field}' 분야에, 명예와 좋은 평판(${ke.label})은 '${ke.field}' 분야에 있어요.`);
-      paras.push(`마음을 써야 할 기운(${ji.label})은 '${ji.field}' 분야에 있어요. 서두르지 말고 한 번 더 살펴보세요.`);
+      paras.push(`${josa(lu.mark, '은', '는')} '${lu.field}' 분야에 들어 있어요. 이 분야에서 기회와 도움을 얻기 쉬워요.`);
+      paras.push(`${josa(quan.mark, '은', '는')} '${quan.field}' 분야에, ${josa(ke.mark, '은', '는')} '${ke.field}' 분야에 있어요.`);
+      paras.push(`${josa(ji.mark, '은', '는')} '${ji.field}' 분야에 있어요. 서두르지 말고 한 번 더 살펴보세요.`);
       return { key, title, paragraphs: paras };
     }
 
     const field = ({ personality: 'personality', aptitude: 'aptitude', love: 'love', wealth: 'wealth', health: 'health' } as const)[key];
-    const paras = starLines(stars, field, label);
+    const paras = starLines(stars, field, palaceName);
     // 성격 탭은 총론과 같은 명궁이라 밝기·보좌성 설명을 되풀이하지 않습니다.
     if (key !== 'personality') paras.push(...palaceDetailLines(chart, branch, stars, overlay));
-    if (key === 'aptitude' || key === 'wealth') paras.push(connectedLine(chart, branch, names, label));
+    if (key === 'aptitude' || key === 'wealth') paras.push(connectedLine(chart, branch, names, palaceName));
     if (overlay && key !== 'personality') {
-      const lead = overlay.kind === 'daehan' ? '이 대한 동안' : '올해';
-      paras.push(`${lead} ${palaceName} 자리는 원래 명반의 ${chart.palaces[branch].name}이에요.`);
+      const lead = overlay.kind === 'daehan' ? `이 ${term.대한} 동안` : '올해';
+      paras.push(`${lead} ${josa(pal(palaceName), '은', '는')} 원래 명반의 ${josa(pal(chart.palaces[branch].name), '이에요', '예요')}.`);
       for (const n of stars.names) paras.push(STAR_TEXT[n].flow);
     }
     if (key === 'health') paras.push(HEALTH_DISCLAIMER);
@@ -357,7 +370,7 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
     const st = mainStarsOf(chart, b);
     const p = chart.palaces[b];
     const tone = st.borrowed
-      ? '주성이 비어 맞은편 기운을 빌려 보는 자리예요'
+      ? `${josa(term.주성, '이', '가')} 비어 맞은편 기운을 빌려 보는 자리예요`
       : p.stars.some((x) => x.kind === 'main' && WEAK.has(x.brightness))
         ? '별빛이 약한 편이라 천천히 다져 가면 좋은 자리예요'
         : p.stars.some((x) => x.kind === 'main' && STRONG.has(x.brightness))
@@ -368,10 +381,10 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
     const sal = p.stars.filter((x) => x.kind === 'sal').map((x) => x.name);
     if (good.length) extras.push(`돕는 별(${good.join('·')})`);
     if (sal.length) extras.push(`부딪치는 별(${sal.join('·')})`);
-    const hw = p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => `화${x.sihwa}`);
-    if (hw.length) extras.push(hw.join('·'));
+    const hw = p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => sihwa(x.sihwa!));
+    if (hw.length) extras.push(hw.join(', '));
     const strengths = st.names.map((n) => STAR_TEXT[n].strength).join(', ');
-    return `${pn}(${PALACE_FIELD[pn]}): ${joinNames(st.names)} — ${josa(strengths, '이', '가')} 이 분야에 드러나요. ${tone}.${extras.length ? ` 함께 있는 것: ${extras.join(', ')}.` : ''}`;
+    return `${pal(pn)}: ${joinNames(st.names)} — ${josa(strengths, '이', '가')} 이 분야에 드러나요. ${tone}.${extras.length ? ` 함께 있는 것: ${extras.join(', ')}.` : ''}`;
   });
   sections.push({ key: 'others', title: '그 밖의 궁', paragraphs: others });
   return sections;
@@ -397,16 +410,17 @@ function mingBrightness(chart: JamidusuChart): 'bright' | 'dim' | 'mid' {
   return 'mid';
 }
 
+const MING = T('나 자신을 보는 자리', '명궁');
 const SELF_SYNTH: Record<string, string> = {
-  'strong/bright': '사주의 기운도 강하고 명궁의 별빛도 밝아, 자기 색이 뚜렷하고 어디서든 존재감이 드러나는 편이에요.',
-  'strong/dim': '사주의 기운은 강한데 명궁의 별빛은 은은한 편이라, 겉으로 드러내기보다 속으로 단단한 사람이에요.',
-  'strong/mid': '사주의 기운이 강해 스스로 밀고 나가는 힘이 있고, 명궁은 그 힘을 무난하게 받쳐 줘요.',
-  'weak/bright': '사주의 기운은 약한 편이지만 명궁의 별빛이 밝아, 사람들과 함께할 때 장점이 크게 살아나요.',
-  'weak/dim': '사주의 기운도 명궁의 별빛도 은은한 편이라, 서두르지 않고 경험을 쌓을수록 힘이 붙는 사람이에요.',
-  'weak/mid': '사주의 기운은 약한 편이라 도움을 받을 때 힘이 나고, 명궁은 그 흐름을 무난하게 받쳐 줘요.',
-  'mid/bright': '사주의 기운이 고르고 명궁의 별빛도 밝아, 균형 잡힌 모습 속에서 장점이 잘 드러나요.',
-  'mid/dim': '사주의 기운이 고르고 명궁의 별빛은 은은해, 조용히 자기 몫을 해내는 사람이에요.',
-  'mid/mid': '사주의 기운이 고르고 명궁도 무난해, 상황에 맞춰 균형을 잡는 힘이 있어요.',
+  'strong/bright': `사주의 기운도 강하고 ${MING}의 별빛도 밝아, 자기 색이 뚜렷하고 어디서든 존재감이 드러나는 편이에요.`,
+  'strong/dim': `사주의 기운은 강한데 ${MING}의 별빛은 은은한 편이라, 겉으로 드러내기보다 속으로 단단한 사람이에요.`,
+  'strong/mid': `사주의 기운이 강해 스스로 밀고 나가는 힘이 있고, ${josa(MING, '은', '는')} 그 힘을 무난하게 받쳐 줘요.`,
+  'weak/bright': `사주의 기운은 약한 편이지만 ${MING}의 별빛이 밝아, 사람들과 함께할 때 장점이 크게 살아나요.`,
+  'weak/dim': `사주의 기운도 ${MING}의 별빛도 은은한 편이라, 서두르지 않고 경험을 쌓을수록 힘이 붙는 사람이에요.`,
+  'weak/mid': `사주의 기운은 약한 편이라 도움을 받을 때 힘이 나고, ${josa(MING, '은', '는')} 그 흐름을 무난하게 받쳐 줘요.`,
+  'mid/bright': `사주의 기운이 고르고 ${MING}의 별빛도 밝아, 균형 잡힌 모습 속에서 장점이 잘 드러나요.`,
+  'mid/dim': `사주의 기운이 고르고 ${MING}의 별빛은 은은해, 조용히 자기 몫을 해내는 사람이에요.`,
+  'mid/mid': `사주의 기운이 고르고 ${josa(MING, '도', '도')} 무난해, 상황에 맞춰 균형을 잡는 힘이 있어요.`,
 };
 
 export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new Date(), gender: 'M' | 'F' = chart.gender): TongbyeonSection[] {
@@ -418,7 +432,7 @@ export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new
 
   // 본모습
   const self = [
-    `사주는 ${josa(DAY_MASTER_IMAGE[dm], '을', '를')} 닮았어요. ${firstSentence(DAY_MASTER_PERSONALITY[dm])} 자미두수 명궁의 ${josa(mingStars, '은', '는')} 여기에 ${josa(strengths, '을', '를')} 더해 줘요.`,
+    `사주는 ${josa(DAY_MASTER_IMAGE[dm], '을', '를')} 닮았어요. ${firstSentence(DAY_MASTER_PERSONALITY[dm])} 자미두수에서 ${MING}의 ${josa(mingStars, '은', '는')} 여기에 ${josa(strengths, '을', '를')} 더해 줘요.`,
     SELF_SYNTH[`${sajuStrong}/${mingBrightness(chart)}`],
   ];
 
@@ -432,13 +446,14 @@ export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new
   const power: string[] = [];
   const shared = [luField, quanField].find((f) => fieldMatches(top, f, gender) || fieldMatches(ranked[1], f, gender));
   if (shared) {
-    const group = fieldMatches(top, shared, gender) ? top : ranked[1];
-    power.push(`두 풀이가 함께 가리키는 곳은 '${shared}'${hasBatchim(shared) ? '이에요' : '예요'}. 사주의 ${group} 기운과 명반의 ${shared === luField ? '화록' : '화권'}이 같은 쪽을 향해요.`);
+    const g = fieldMatches(top, shared, gender) ? top : ranked[1];
+    power.push(`두 풀이가 함께 가리키는 곳은 ${josa(`'${shared}'`, '이에요', '예요')}. 사주의 ${josa(group(g), '과', '와')} 명반의 ${josa(sihwa(shared === luField ? '록' : '권'), '이', '가')} 같은 쪽을 향해요.`);
+  } else {
+    power.push(`사주는 '${GROUP_FIELD[top]}' 쪽에서 힘이 나고, 명반은 '${luField}' 분야에 ${sihwa('록')}, '${quanField}' 분야에 ${josa(sihwa('권'), '이', '가')} 있어요. 두 곳을 함께 살리면 좋아요.`);
   }
-  else power.push(`사주는 '${GROUP_FIELD[top]}' 쪽에서 힘이 나고, 명반은 '${luField}' 분야에 좋은 기운(화록), '${quanField}' 분야에 주도권(화권)이 있어요. 두 곳을 함께 살리면 좋아요.`);
   const career = mainStarsOf(chart, chart.palaces.find((p) => p.name === '관록궁')!.branch);
   power.push(`사주가 권하는 일: ${firstSentence(GROUP_APTITUDE[top])}`);
-  power.push(`관록궁이 권하는 일: ${career.names.map((n) => firstSentence(STAR_TEXT[n].aptitude)).join(' ')}`);
+  power.push(`${josa(pal('관록궁'), '이', '가')} 권하는 일: ${career.names.map((n) => firstSentence(STAR_TEXT[n].aptitude)).join(' ')}`);
 
   // 지금 시기
   const nowParas: string[] = [];
@@ -448,18 +463,18 @@ export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new
   const dhField = PALACE_FIELD[chart.palaces[dh.mingBranch].name];
   if (big) {
     const bigGroup = tenGodGroup(big.stemTenGod);
-    nowParas.push(`지금은 ${big.startAge}세 ${big.ganzhi} 대운과 ${dh.range!.start}-${dh.range!.end}세 대한이 겹치는 시기예요.`);
-    nowParas.push(`사주로 보면 천간에 ${josa(big.stemTenGod, '이', '가')} 들어온 10년이에요. ${firstSentence(FORTUNE_TEN_GOD[big.stemTenGod])} 명반으로 보면 '${dhField}' 분야가 삶의 중심 주제가 되기 쉬워요.`);
+    nowParas.push(`지금은 ${big.startAge}세 ${ganzhiName(big.stem, big.branch)} ${josa(term.대운, '과', '와')} ${dh.range!.start}-${dh.range!.end}세 ${josa(term.대한, '이', '가')} 겹치는 시기예요.`);
+    nowParas.push(`사주로 보면 ${V('겉으로', '천간에')} ${josa(tenGod(big.stemTenGod), '이', '가')} 들어온 10년이에요. ${firstSentence(FORTUNE_TEN_GOD[big.stemTenGod])} 명반으로 보면 '${dhField}' 분야가 삶의 중심 주제가 되기 쉬워요.`);
     if (fieldMatches(bigGroup, dhField, gender)) nowParas.push(`두 풀이가 모두 '${dhField}' 쪽을 가리키고 있어, 지금은 이 분야에 힘을 모으면 좋아요.`);
     else nowParas.push(`사주는 '${GROUP_FIELD[bigGroup]}', 명반은 '${dhField}' 쪽을 비추고 있어요. 두 흐름을 함께 챙기면 시기를 잘 쓸 수 있어요.`);
     const tone = yongsinSentence(r, big);
     if (tone) nowParas.push(tone);
   } else {
-    nowParas.push(`아직 첫 대운(${r.bigFortunes[0]?.startAge ?? '-'}세)이 시작되기 전이에요. 명반으로 보면 지금은 '${dhField}' 분야가 중심이 되는 ${dh.range!.start}-${dh.range!.end}세 대한이에요.`);
+    nowParas.push(`아직 첫 ${josa(term.대운, '이', '가')} 시작되는 ${r.bigFortunes[0]?.startAge ?? '-'}세 전이에요. 명반으로 보면 지금은 '${dhField}' 분야가 중심이 되는 ${dh.range!.start}-${dh.range!.end}세 ${josa(term.대한, '이에요', '예요')}.`);
   }
   const dlu = dh.sihwa.find((x) => x.sihwa === '록')!;
   const dji = dh.sihwa.find((x) => x.sihwa === '기')!;
-  nowParas.push(`이 대한의 좋은 기운(대록)은 '${PALACE_FIELD[dh.names[dlu.branch]]}' 분야에, 마음을 써야 할 기운(대기)은 '${PALACE_FIELD[dh.names[dji.branch]]}' 분야에 있어요.`);
+  nowParas.push(`${josa(sihwa('록', '대'), '은', '는')} '${PALACE_FIELD[dh.names[dlu.branch]]}' 분야에, ${josa(sihwa('기', '대'), '은', '는')} '${PALACE_FIELD[dh.names[dji.branch]]}' 분야에 있어요.`);
 
   // 재물
   const wealthPalace = mainStarsOf(chart, chart.palaces.find((p) => p.name === '재백궁')!.branch);
@@ -471,8 +486,8 @@ export function combinedTongbyeon(r: SajuResult, chart: JamidusuChart, now = new
   const y = r.yongsin!;
   const ji = chart.sihwa.find((s) => s.sihwa === '기')!;
   const fill = [
-    `사주에서 나에게 가장 필요한 기운은 ${josa(ELEMENTS_KO[y.yong], '이에요', '예요')}. ${ELEMENT_LIFE[y.yong]}`,
-    `명반에서는 '${PALACE_FIELD[ji.palace]}' 분야에 마음을 써야 할 기운(화기)이 있어요. 이 분야는 욕심보다 꾸준함으로 다가가 보세요.`,
+    `사주에서 ${josa(yong('용신'), '은', '는')} ${josa(elementName(y.yong), '이에요', '예요')}. ${ELEMENT_LIFE[y.yong]}`,
+    `명반에서는 '${PALACE_FIELD[ji.palace]}' 분야에 ${josa(sihwa('기'), '이', '가')} 있어요. 이 분야는 욕심보다 꾸준함으로 다가가 보세요.`,
   ];
 
   return [

@@ -3,6 +3,8 @@ import { ELEMENTS_HANJA, ELEMENTS_KO, mod, STEM_ELEMENT } from '../engine/consta
 import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, type TenGod, PILLAR_TITLES } from '../engine/saju';
 import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
+import { renderTerms } from '../engine/terms';
+import { getTermMode, termToggleButton } from './term-mode';
 import { bigFortuneReading, monthFortuneReading, type FortuneReading, yearFortuneReading } from '../engine/fortune-tongbyeon';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
@@ -94,7 +96,8 @@ const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string) => 
 
 function readingBox(rd: FortuneReading | null) {
   if (!rd) return '';
-  return `<div class="reading tongbyeon"><h3>${rd.title}</h3>${rd.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`;
+  const m = getTermMode();
+  return `<div class="reading tongbyeon"><h3>${esc(renderTerms(rd.title, m))}</h3>${rd.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>`;
 }
 
 export function flowView(s: SajuResult, selectedBig: number, selectedYear: number, selectedMonth: number, now = new Date()) {
@@ -114,7 +117,8 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
   return `<div class="card">
       <div class="flow-nav">
         <h2 style="margin:0">대운 <span class="small muted">${s.bigFortuneForward ? '순행' : '역행'}</span></h2>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
+          ${termToggleButton()}
           <button type="button" class="icon-btn" data-big-step="1" aria-label="다음 운" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
           <button type="button" class="icon-btn" data-big-step="-1" aria-label="이전 운" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>
         </div>
@@ -152,9 +156,13 @@ function monthIndexOf(d: Date) {
 
 export function tongbyeonView(sections: TongbyeonSection[], selected: string, attr: string) {
   const cur = sections.find((s) => s.key === selected) ?? sections[0];
+  const m = getTermMode();
   return `<div class="card">
-    <div class="tabs-under" role="tablist">${sections.map((s) => `<button type="button" role="tab" ${attr}="${s.key}" aria-selected="${s.key === cur.key}">${s.title}</button>`).join('')}</div>
-    <div class="tongbyeon" style="margin-top:14px" role="tabpanel">${cur.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
+    <div class="tong-head">
+      <div class="tabs-under" role="tablist">${sections.map((s) => `<button type="button" role="tab" ${attr}="${s.key}" aria-selected="${s.key === cur.key}">${s.title}</button>`).join('')}</div>
+      ${termToggleButton()}
+    </div>
+    <div class="tongbyeon" style="margin-top:14px" role="tabpanel">${cur.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>
     <p class="disclaimer">${DISCLAIMER}</p>
   </div>`;
 }

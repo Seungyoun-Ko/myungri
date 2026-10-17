@@ -433,3 +433,12 @@ main.article .btn { text-decoration: none; }
 .reading { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--outline-variant); }
 .reading h3 { color: var(--primary) !important; font-size: 1rem; margin-bottom: 6px; }
 .reading p { font-size: 1rem; }
+
+/* 통변 보기 방식 전환 */
+.tong-head { display: flex; align-items: flex-end; gap: 8px; }
+.tong-head .tabs-under { flex: 1; min-width: 0; }
+.term-toggle {
+  flex: none; border: 1px solid var(--outline-variant); background: var(--surface); color: var(--on-surface-variant);
+  border-radius: 999px; padding: 5px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap; margin-bottom: 6px;
+}
+.term-toggle[aria-pressed='true'] { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
