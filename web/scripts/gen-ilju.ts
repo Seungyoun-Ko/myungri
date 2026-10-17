@@ -1,5 +1,5 @@
 // 60일주 페이지(ilju/*.html)와 사이트맵을 만듭니다. 실행: npm run pages
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { BRANCHES_HANJA, BRANCHES_KO, BRANCH_ELEMENT, ELEMENTS_HANJA, ELEMENTS_KO, HIDDEN_STEMS, STEMS_HANJA, STEMS_KO, STEM_ELEMENT } from '../src/engine/constants.ts';
 import { DAY_MASTER_IMAGE, DAY_MASTER_PERSONALITY, GROUP_APTITUDE, SIPSIN, UNSEONG } from '../src/engine/tongbyeon-data.ts';
 import { BRANCH_TEXT, NAYIN_NAMES, SPOUSE_PALACE, STEM_BRANCH_RELATION, iljuSlug } from '../src/engine/ilju-data.ts';
@@ -39,6 +39,15 @@ const ALL: Ilju[] = Array.from({ length: 60 }, (_, i) => ({
   hanja: STEMS_HANJA[i % 10] + BRANCHES_HANJA[i % 12],
   slug: iljuSlug(i % 10, i % 12),
 }));
+
+// 블로그(content/blog)에 같은 일주의 자세한 글이 있으면 연결합니다.
+const BLOG_POST: Record<string, number> = {};
+if (existsSync('content/blog')) {
+  for (const f of readdirSync('content/blog').filter((x) => x.endsWith('.json'))) {
+    const post = JSON.parse(readFileSync(`content/blog/${f}`, 'utf8')) as { id: number; ilju?: { slug: string } };
+    if (post.ilju) BLOG_POST[post.ilju.slug] = post.id;
+  }
+}
 
 const STEM_NAME = ['갑목', '을목', '병화', '정화', '무토', '기토', '경금', '신금', '임수', '계수'];
 const BRANCH_NAME = (b: number) => `${BRANCHES_KO[b]}${ELEMENTS_KO[BRANCH_ELEMENT[b]]}`;
@@ -143,7 +152,7 @@ function page(j: Ilju) {
         ${hidden}
     </ul>
 
-    <p class="notice">일주는 사주 여덟 글자 가운데 한 기둥이에요. 같은 ${j.ko}일주라도 태어난 달과 시간, 대운에 따라 풀이가 달라져요.</p>
+${BLOG_POST[j.slug] ? `    <p class="notice"><b>더 자세히 읽기</b> · <a href="/${BLOG_POST[j.slug]}">${j.ko}일주 성격·직업·연애 자세한 풀이</a></p>\n` : ''}    <p class="notice">일주는 사주 여덟 글자 가운데 한 기둥이에요. 같은 ${j.ko}일주라도 태어난 달과 시간, 대운에 따라 풀이가 달라져요.</p>
     <div class="card" style="margin-top:16px"><p><b>내 사주 전체가 궁금하다면</b> 생년월일시를 넣고 원국, 대운, 자미두수 명반까지 무료로 확인해 보세요.</p><p style="margin-top:10px"><a class="btn" href="/">만세력 보기</a></p></div>
 
     <h2>같은 ${STEMS_HANJA[stem]} 일간의 다른 일주</h2>

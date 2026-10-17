@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vitest run && npm run pages && tsc --noEmit && vite build",
+    "build": "vitest run && npm run pages && tsc --noEmit && vite build && node --experimental-strip-types scripts/flatten-blog.ts",
     "preview": "vite preview",
     "test": "vitest run",
-    "pages": "node --experimental-strip-types scripts/gen-guide.ts && node --experimental-strip-types scripts/gen-ilju.ts"
+    "pages": "node --experimental-strip-types scripts/gen-guide.ts && node --experimental-strip-types scripts/gen-ilju.ts && node --experimental-strip-types scripts/gen-blog.ts"
   },
   "dependencies": {
     "html-to-image": "^1.11.11",

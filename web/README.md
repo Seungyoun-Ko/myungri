@@ -98,3 +98,29 @@ Cloudflare Pages 프로젝트 설정:
 2. 승인되면 `public/ads.txt`를 만들고 `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0` 한 줄을 넣기
 3. `index.html`의 AdSense 스크립트 주석을 풀고, `src/ads.ts`에 client ID와 광고 단위 ID 입력
 4. AdSense "개인정보 보호 및 메시지"에서 EEA·영국 동의 메시지 설정
+
+## 블로그 이전 (티스토리 inseol.com → 이 사이트)
+
+티스토리 블로그 "인생설계"의 글을 같은 주소(`inseol.com/196` 등)로 옮겨 오는 중입니다.
+
+- 원고: `content/blog/{글번호}.json` (제목·설명·태그·카테고리·날짜·본문 HTML·이미지 정보·편집 기록 `changes`)
+- 이미지: `public/blog-img/{글번호}-{순서}.webp` (티스토리 이미지 주소는 2주마다 바뀌는 임시 주소라 내려받아 둠)
+- 페이지 생성: `scripts/gen-blog.ts` → `blog/{글번호}.html`, `blog/index.html`
+- 빌드 뒤 `scripts/flatten-blog.ts`가 `dist/blog/{글번호}.html`을 `dist/{글번호}.html`로 옮겨 `/196` 주소로 열리게 함
+- 앱의 60일주 페이지(`/ilju/...`)는 같은 일주의 블로그 글로 연결됨
+
+**지금은 검색 비노출 상태입니다.** `gen-blog.ts`의 `LIVE = false`라서 글마다 `noindex`가 붙습니다. 티스토리 원본과 중복으로 잡히지 않게 하려는 것입니다.
+
+### inseol.com 주소를 이 사이트로 바꿀 때 할 일
+
+1. 남은 카테고리 글도 모두 옮기기 (안 옮긴 글은 주소 전환 후 404가 됨)
+2. `gen-blog.ts`에서 `LIVE = true`로 바꾸고, 사이트맵에 블로그 글 주소 추가
+3. 티스토리 스킨에 있던 확인 코드를 새 사이트 `<head>`에 그대로 넣기
+   - 네이버: `<meta name="naver-site-verification" content="e09c176a2600e06d734d80bb465ad1eeea65e62c">`
+   - Bing: `<meta name="msvalidate.01" content="B996E832FF07058AEDB2EE767D004A6C">`
+   - 구글 애널리틱스: `G-GY2XKRL933`
+4. `ads.txt`를 사이트 맨 위(`/ads.txt`)에 두기 (지금은 티스토리가 제공 중)
+5. 티스토리의 특수 주소 처리: `/category/...`, `/tag/...`, `/m/{번호}`(모바일 주소) → 새 주소로 넘기는 `_redirects`
+6. 블로그의 계산 도구 4개(`/pages/...`): 오늘의 운세, 일주 궁합 테스트, 띠별 운세, 만세력 계산기 → 앱으로 연결하거나 옮기기
+7. Cloudflare Pages에 `inseol.com` 사용자 지정 도메인 추가 → 카페24 DNS 변경
+8. 전환이 끝나면 티스토리 글은 비공개로 돌리기 (중복 방지)
