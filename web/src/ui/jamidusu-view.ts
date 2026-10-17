@@ -101,7 +101,7 @@ export function boardView(chart: JamidusuChart, o: BoardOptions) {
       </div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.</p><button type="button" class="icon-btn" data-zoom>크게 보기</button></div>`;
+  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.</p><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="icon-btn" data-zoom>크게 보기</button><button type="button" class="icon-btn" data-save-image="board">이미지로 저장</button></span></div>`;
 }
 
 export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayChart) {

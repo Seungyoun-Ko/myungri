@@ -148,7 +148,7 @@ export function wongukCard(s: SajuResult) {
   const note = s.incompleteBirthTime
     ? `<p class="notice" style="margin-top:12px">출생시간을 몰라 시주 없이 보여 드려요. 일주는 그날 정오 기준의 참고값이고, 강약·용신·대운은 제공하지 않아요.</p>`
     : '';
-  return `<div class="card"><h2>원국</h2>${wongukTable(s)}${boundaryTable(s)}${note}</div>`;
+  return `<div class="card"><div class="card-head"><h2>원국</h2><button type="button" class="icon-btn" data-save-image="wonguk" data-no-export>이미지로 저장</button></div>${wongukTable(s)}${boundaryTable(s)}${note}</div>`;
 }
 
 export { PILLAR_TITLES };

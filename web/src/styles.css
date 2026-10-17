@@ -395,3 +395,17 @@ main.article .notice { margin: 12px 0; }
 .guide-grid a:hover .card { border-color: var(--primary); }
 .term-card { margin-top: 12px; }
 .term-card h2 { margin-top: 0 !important; display: flex; align-items: baseline; gap: 8px; }
+
+/* 이미지 저장용 틀 (화면 밖에 잠깐 그렸다가 지움) */
+.export-frame { position: fixed; left: -12000px; top: 0; background: var(--background); color: var(--on-surface); padding: 24px; display: grid; gap: 14px; font-family: var(--sans); }
+.export-frame .export-head { display: flex; align-items: center; gap: 10px; }
+.export-frame .export-head .seal { width: 40px; height: 40px; }
+.export-frame .export-head b { display: block; font-size: 1.1rem; }
+.export-frame .export-head span { font-size: 0.85rem; color: var(--on-surface-variant); }
+.export-frame .export-foot { font-size: 0.78rem; color: var(--on-surface-variant); text-align: center; }
+.export-frame .card + .card { margin-top: 0; }
+.export-frame .board-wrap { width: 100%; }
+.export-frame .palace { font-size: 0.8rem; }
+.export-frame .board-center { font-size: 0.92rem; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.card-head h2 { margin: 0 !important; }

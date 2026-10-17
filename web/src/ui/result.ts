@@ -10,6 +10,7 @@ import { $, esc, pad2, toast } from './dom';
 import { flowView, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
+import { saveAsImage } from './share-image';
 
 export interface ResultState {
   snapshot: Snapshot;
@@ -67,7 +68,7 @@ function profileCard(st: ResultState) {
         <div class="meta">양력 ${fmtSolar(birth)} · ${fmtLunar(birth)}</div>
         <div class="meta">${city.name}${birth.input.useLongitude ? ' · 경도 보정' : ''}${corr ? ` · ${corr}` : ''}</div>
       </div>
-      <div class="result-actions">
+      <div class="result-actions" data-no-export>
         <button type="button" class="icon-btn" data-action="edit" aria-label="편집">편집</button>
         <a class="icon-btn" href="#/archive" aria-label="보관함" style="text-decoration:none;color:inherit">보관함</a>
         <button type="button" class="icon-btn" data-action="save" aria-label="저장">${st.archiveId ? '저장됨' : '저장'}</button>
@@ -266,6 +267,17 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       st.selectedPalace = Number(pal.dataset.palace);
       if (wide) return paint.board();
       openSheet(palaceDetail(chart, st.selectedPalace, overlayOf(st, chart)));
+      return;
+    }
+    const save = t.closest<HTMLElement>('[data-save-image]');
+    if (save) {
+      const b = st.snapshot.birth;
+      const base = `${displayName(b)}_${b.solar.year}${pad2(b.solar.month)}${pad2(b.solar.day)}`.replace(/[\\/:*?"<>|\s]+/g, '_');
+      if (save.dataset.saveImage === 'wonguk') {
+        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_사주원국.png`, width: 640, caption: '사주팔자 원국' });
+      } else {
+        void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_자미두수명반.png`, width: 820, caption: '자미두수 명반' });
+      }
       return;
     }
     if (t.closest('[data-zoom]')) {
