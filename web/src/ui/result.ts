@@ -7,7 +7,7 @@ import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
 import { activateAds, adSlot } from '../ads';
 import { $, esc, pad2, toast } from './dom';
-import { flowView, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
+import { flowView, monthIndexOf, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
 import { saveAsImage } from './share-image';
@@ -19,6 +19,8 @@ export interface ResultState {
   sajuTab: 'wonguk' | 'flow' | 'tong';
   ratioMode: 'base' | 'transform';
   selectedBig: number;
+  selectedYear: number;
+  selectedMonth: number;
   sajuTong: string;
   jamiMode: ChartMode;
   daehanAge: number;
@@ -29,13 +31,18 @@ export interface ResultState {
 
 export function initialResultState(snapshot: Snapshot, archiveId: string | null = null, now = new Date()): ResultState {
   const koreanAge = now.getFullYear() - (snapshot.chart?.lunar.year ?? snapshot.birth.solar.year) + 1;
+  const bigIndex = Math.max(0, snapshot.saju.currentBigFortuneIndex);
+  const years = snapshot.saju.daewunYearFortunes[bigIndex] ?? [];
+  const startYear = years.some((y) => y.year === now.getFullYear()) ? now.getFullYear() : (years[0]?.year ?? now.getFullYear());
   return {
     snapshot,
     archiveId,
     mainTab: 'saju',
     sajuTab: 'wonguk',
     ratioMode: 'base',
-    selectedBig: Math.max(0, snapshot.saju.currentBigFortuneIndex),
+    selectedBig: bigIndex,
+    selectedYear: startYear,
+    selectedMonth: monthIndexOf(now),
     sajuTong: 'general',
     jamiMode: 'natal',
     daehanAge: Math.max(koreanAge, snapshot.chart?.guk.number ?? 2),
@@ -181,7 +188,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     wonguk: () => (region('wonguk')!.innerHTML = wongukCard(s)),
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
-    flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig)),
+    flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
     sajuTong: () => (region('sajuTong')!.innerHTML = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
@@ -193,6 +200,16 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     board: () => {
       if (chart) region('board')!.innerHTML = jamiBoard(st, chart, wide, overlayOf(st, chart));
     },
+  };
+
+  /** 대운을 바꾸면 세운 선택도 그 대운 안의 해로 맞춥니다(올해가 있으면 올해, 없으면 첫해). */
+  const selectBig = (i: number) => {
+    st.selectedBig = i;
+    const years = s.daewunYearFortunes[i] ?? [];
+    if (!years.some((y) => y.year === st.selectedYear)) {
+      const thisYear = new Date().getFullYear();
+      st.selectedYear = years.some((y) => y.year === thisYear) ? thisYear : (years[0]?.year ?? thisYear);
+    }
   };
 
   const syncTabs = () => {
@@ -232,12 +249,22 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     }
     const big = t.closest<HTMLElement>('[data-big]');
     if (big) {
-      st.selectedBig = Number(big.dataset.big);
+      selectBig(Number(big.dataset.big));
+      return paint.flow();
+    }
+    const yr = t.closest<HTMLElement>('[data-year]');
+    if (yr) {
+      st.selectedYear = Number(yr.dataset.year);
+      return paint.flow();
+    }
+    const mo = t.closest<HTMLElement>('[data-month]');
+    if (mo) {
+      st.selectedMonth = Number(mo.dataset.month);
       return paint.flow();
     }
     const step = t.closest<HTMLElement>('[data-big-step]');
     if (step) {
-      st.selectedBig = Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), s.bigFortunes.length - 1);
+      selectBig(Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), s.bigFortunes.length - 1));
       return paint.flow();
     }
     const stong = t.closest<HTMLElement>('[data-saju-tong]');

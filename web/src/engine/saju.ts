@@ -221,10 +221,10 @@ function slotsOf(pillars: Pillar[]): Slot[] {
   return out;
 }
 
-const STEM_HAP: Record<string, Element> = { '0-5': 2, '1-6': 3, '2-7': 4, '3-8': 0, '4-9': 1 };
-const BRANCH_HAP: Record<string, Element> = { '0-1': 2, '2-11': 0, '3-10': 1, '4-9': 3, '5-8': 4, '6-7': 1 };
-const BRANCH_CHUNG = new Set(['0-6', '1-7', '2-8', '3-9', '4-10', '5-11']);
-const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`);
+export const STEM_HAP: Record<string, Element> = { '0-5': 2, '1-6': 3, '2-7': 4, '3-8': 0, '4-9': 1 };
+export const BRANCH_HAP: Record<string, Element> = { '0-1': 2, '2-11': 0, '3-10': 1, '4-9': 3, '5-8': 4, '6-7': 1 };
+export const BRANCH_CHUNG = new Set(['0-6', '1-7', '2-8', '3-9', '4-10', '5-11']);
+export const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
 /** 인접한 기둥끼리만: 시-일, 일-월, 월-년 */
 export function findCombinations(pillars: Pillar[]): Combination[] {

@@ -428,3 +428,8 @@ main.article .btn { text-decoration: none; }
 .today-table th, .today-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; }
 .today-table th { font-size: 0.82rem; color: var(--on-surface-variant); white-space: nowrap; }
 .today-table td:first-child, .today-table td:nth-child(2) { white-space: nowrap; }
+
+/* 운 흐름 풀이 */
+.reading { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--outline-variant); }
+.reading h3 { color: var(--primary) !important; font-size: 1rem; margin-bottom: 6px; }
+.reading p { font-size: 1rem; }

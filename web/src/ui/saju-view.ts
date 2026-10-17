@@ -3,6 +3,7 @@ import { ELEMENTS_HANJA, ELEMENTS_KO, mod, STEM_ELEMENT } from '../engine/consta
 import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, type TenGod, PILLAR_TITLES } from '../engine/saju';
 import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
+import { bigFortuneReading, monthFortuneReading, type FortuneReading, yearFortuneReading } from '../engine/fortune-tongbyeon';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
 
@@ -91,7 +92,12 @@ const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string) => 
     <div class="tg">${f.stemTenGod}<br>${f.branchTenGod}</div>
   </button>`;
 
-export function flowView(s: SajuResult, selectedBig: number, now = new Date()) {
+function readingBox(rd: FortuneReading | null) {
+  if (!rd) return '';
+  return `<div class="reading tongbyeon"><h3>${rd.title}</h3>${rd.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`;
+}
+
+export function flowView(s: SajuResult, selectedBig: number, selectedYear: number, selectedMonth: number, now = new Date()) {
   if (!s.bigFortunes.length) return `<div class="card"><p class="notice">출생시간을 입력해야 대운과 세운을 볼 수 있어요.</p></div>`;
   const thisYear = now.getFullYear();
   const thisMonthIdx = monthIndexOf(now);
@@ -99,10 +105,10 @@ export function flowView(s: SajuResult, selectedBig: number, now = new Date()) {
     .map((b, i) => fortuneCell(b, `${b.startAge}세`, i === s.currentBigFortuneIndex, `data-big="${i}" aria-pressed="${i === selectedBig}" aria-label="${b.startAge}세 대운 ${b.ganzhi}"`))
     .join('');
   const years = (s.daewunYearFortunes[selectedBig] ?? [])
-    .map((y) => fortuneCell(y, `${y.year}`, y.year === thisYear, `aria-label="${y.year}년 ${y.ganzhi}"`))
+    .map((y) => fortuneCell(y, `${y.year}`, y.year === thisYear, `data-year="${y.year}" aria-pressed="${y.year === selectedYear}" aria-label="${y.year}년 ${y.ganzhi}"`))
     .join('');
   const months = s.monthFortunes
-    .map((m) => fortuneCell(m, `${m.month}월`, m.month === thisMonthIdx, `aria-label="${m.month}월 ${m.ganzhi}"`))
+    .map((m) => fortuneCell(m, `${m.month}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${m.month}월 ${m.ganzhi}"`))
     .join('');
   const sel = s.bigFortunes[selectedBig];
   return `<div class="card">
@@ -114,16 +120,22 @@ export function flowView(s: SajuResult, selectedBig: number, now = new Date()) {
         </div>
       </div>
       <div class="flow">${big}</div>
+      ${readingBox(bigFortuneReading(s, selectedBig))}
     </div>
     <div class="card">
-      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년</span></h2>
+      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년 · 해를 누르면 풀이가 바뀌어요</span></h2>
       <div class="flow">${years}</div>
+      ${readingBox(yearFortuneReading(s, selectedBig, selectedYear))}
     </div>
     <div class="card">
       <h2>월운 <span class="small muted">${thisYear}년 · 절기 기준</span></h2>
       <div class="flow months">${months}</div>
+      ${readingBox(monthFortuneReading(s, selectedMonth))}
+      <p class="disclaimer">${DISCLAIMER}</p>
     </div>`;
 }
+
+export { monthIndexOf };
 
 /** 오늘이 몇 번째 절기월(인월=1)인지 대략 계산 */
 function monthIndexOf(d: Date) {
