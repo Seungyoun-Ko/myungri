@@ -7,9 +7,12 @@ import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
 import { activateAds, adSlot } from '../ads';
 import { $, esc, pad2, toast } from './dom';
-import { flowView, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
+import { flowView, monthIndexOf, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
+import { saveAsImage } from './share-image';
+import { renderTerms } from '../engine/terms';
+import { getTermMode, termToggleButton, toggleTermMode } from './term-mode';
 
 export interface ResultState {
   snapshot: Snapshot;
@@ -18,6 +21,8 @@ export interface ResultState {
   sajuTab: 'wonguk' | 'flow' | 'tong';
   ratioMode: 'base' | 'transform';
   selectedBig: number;
+  selectedYear: number;
+  selectedMonth: number;
   sajuTong: string;
   jamiMode: ChartMode;
   daehanAge: number;
@@ -28,13 +33,18 @@ export interface ResultState {
 
 export function initialResultState(snapshot: Snapshot, archiveId: string | null = null, now = new Date()): ResultState {
   const koreanAge = now.getFullYear() - (snapshot.chart?.lunar.year ?? snapshot.birth.solar.year) + 1;
+  const bigIndex = Math.max(0, snapshot.saju.currentBigFortuneIndex);
+  const years = snapshot.saju.daewunYearFortunes[bigIndex] ?? [];
+  const startYear = years.some((y) => y.year === now.getFullYear()) ? now.getFullYear() : (years[0]?.year ?? now.getFullYear());
   return {
     snapshot,
     archiveId,
     mainTab: 'saju',
     sajuTab: 'wonguk',
     ratioMode: 'base',
-    selectedBig: Math.max(0, snapshot.saju.currentBigFortuneIndex),
+    selectedBig: bigIndex,
+    selectedYear: startYear,
+    selectedMonth: monthIndexOf(now),
     sajuTong: 'general',
     jamiMode: 'natal',
     daehanAge: Math.max(koreanAge, snapshot.chart?.guk.number ?? 2),
@@ -67,7 +77,7 @@ function profileCard(st: ResultState) {
         <div class="meta">양력 ${fmtSolar(birth)} · ${fmtLunar(birth)}</div>
         <div class="meta">${city.name}${birth.input.useLongitude ? ' · 경도 보정' : ''}${corr ? ` · ${corr}` : ''}</div>
       </div>
-      <div class="result-actions">
+      <div class="result-actions" data-no-export>
         <button type="button" class="icon-btn" data-action="edit" aria-label="편집">편집</button>
         <a class="icon-btn" href="#/archive" aria-label="보관함" style="text-decoration:none;color:inherit">보관함</a>
         <button type="button" class="icon-btn" data-action="save" aria-label="저장">${st.archiveId ? '저장됨' : '저장'}</button>
@@ -117,7 +127,8 @@ function combinedHtml(st: ResultState) {
   if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 통변을 볼 수 있어요.</p></div>`;
   const sections = combinedTongbyeon(saju, chart);
   return `<div class="card tongbyeon">
-    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}`).join('<div style="height:14px"></div>')}
+    <div class="tong-head" style="justify-content:flex-end">${termToggleButton()}</div>
+    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(renderTerms(p, getTermMode()))}</p>`).join('')}`).join('<div style="height:14px"></div>')}
     <p class="disclaimer">타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
   </div>`;
 }
@@ -169,7 +180,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
         : `<div class="card"><p class="notice">출생시간을 입력해야 명반을 완성 시킬 수 있습니다.</p></div>`}
     </section>
     <section data-panel="combined" style="margin-top:14px">
-      ${combinedHtml(st)}
+      <div data-region="combined"></div>
       ${chart && !s.incompleteBirthTime ? adSlot('combinedBottom') : ''}
     </section>
     ${appBanner()}`;
@@ -180,7 +191,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     wonguk: () => (region('wonguk')!.innerHTML = wongukCard(s)),
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
-    flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig)),
+    flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
     sajuTong: () => (region('sajuTong')!.innerHTML = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
@@ -189,9 +200,20 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       region('board')!.innerHTML = jamiBoard(st, chart, wide, overlay);
       region('jamiTong')!.innerHTML = tongbyeonView(jamidusuTongbyeon(chart, overlay), st.jamiTong, 'data-jami-tong');
     },
+    combined: () => (region('combined')!.innerHTML = combinedHtml(st)),
     board: () => {
       if (chart) region('board')!.innerHTML = jamiBoard(st, chart, wide, overlayOf(st, chart));
     },
+  };
+
+  /** 대운을 바꾸면 세운 선택도 그 대운 안의 해로 맞춥니다(올해가 있으면 올해, 없으면 첫해). */
+  const selectBig = (i: number) => {
+    st.selectedBig = i;
+    const years = s.daewunYearFortunes[i] ?? [];
+    if (!years.some((y) => y.year === st.selectedYear)) {
+      const thisYear = new Date().getFullYear();
+      st.selectedYear = years.some((y) => y.year === thisYear) ? thisYear : (years[0]?.year ?? thisYear);
+    }
   };
 
   const syncTabs = () => {
@@ -224,6 +246,14 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       syncTabs();
       return;
     }
+    if (t.closest('[data-term-toggle]')) {
+      toggleTermMode();
+      paint.sajuTong();
+      paint.flow();
+      paint.jami();
+      paint.combined();
+      return;
+    }
     const ratio = t.closest<HTMLButtonElement>('[data-ratio-mode] button');
     if (ratio) {
       st.ratioMode = ratio.dataset.value as ResultState['ratioMode'];
@@ -231,12 +261,22 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     }
     const big = t.closest<HTMLElement>('[data-big]');
     if (big) {
-      st.selectedBig = Number(big.dataset.big);
+      selectBig(Number(big.dataset.big));
+      return paint.flow();
+    }
+    const yr = t.closest<HTMLElement>('[data-year]');
+    if (yr) {
+      st.selectedYear = Number(yr.dataset.year);
+      return paint.flow();
+    }
+    const mo = t.closest<HTMLElement>('[data-month]');
+    if (mo) {
+      st.selectedMonth = Number(mo.dataset.month);
       return paint.flow();
     }
     const step = t.closest<HTMLElement>('[data-big-step]');
     if (step) {
-      st.selectedBig = Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), s.bigFortunes.length - 1);
+      selectBig(Math.min(Math.max(0, st.selectedBig + Number(step.dataset.bigStep)), s.bigFortunes.length - 1));
       return paint.flow();
     }
     const stong = t.closest<HTMLElement>('[data-saju-tong]');
@@ -266,6 +306,17 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       st.selectedPalace = Number(pal.dataset.palace);
       if (wide) return paint.board();
       openSheet(palaceDetail(chart, st.selectedPalace, overlayOf(st, chart)));
+      return;
+    }
+    const save = t.closest<HTMLElement>('[data-save-image]');
+    if (save) {
+      const b = st.snapshot.birth;
+      const base = `${displayName(b)}_${b.solar.year}${pad2(b.solar.month)}${pad2(b.solar.day)}`.replace(/[\\/:*?"<>|\s]+/g, '_');
+      if (save.dataset.saveImage === 'wonguk') {
+        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_사주원국.png`, width: 640, caption: '사주팔자 원국' });
+      } else {
+        void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_자미두수명반.png`, width: 820, caption: '자미두수 명반' });
+      }
       return;
     }
     if (t.closest('[data-zoom]')) {

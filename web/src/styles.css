@@ -395,3 +395,50 @@ main.article .notice { margin: 12px 0; }
 .guide-grid a:hover .card { border-color: var(--primary); }
 .term-card { margin-top: 12px; }
 .term-card h2 { margin-top: 0 !important; display: flex; align-items: baseline; gap: 8px; }
+
+/* 이미지 저장용 틀 (화면 밖에 잠깐 그렸다가 지움) */
+.export-frame { position: fixed; left: -12000px; top: 0; background: var(--background); color: var(--on-surface); padding: 24px; display: grid; gap: 14px; font-family: var(--sans); }
+.export-frame .export-head { display: flex; align-items: center; gap: 10px; }
+.export-frame .export-head .seal { width: 40px; height: 40px; }
+.export-frame .export-head b { display: block; font-size: 1.1rem; }
+.export-frame .export-head span { font-size: 0.85rem; color: var(--on-surface-variant); }
+.export-frame .export-foot { font-size: 0.78rem; color: var(--on-surface-variant); text-align: center; }
+.export-frame .card + .card { margin-top: 0; }
+.export-frame .board-wrap { width: 100%; }
+.export-frame .palace { font-size: 0.8rem; }
+.export-frame .board-center { font-size: 0.92rem; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.card-head h2 { margin: 0 !important; }
+
+/* 60일주 목록 */
+.ilju-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.ilju-grid .card { padding: 12px 14px; display: flex; gap: 8px; align-items: baseline; }
+.ilju-grid .card b { font-size: 1.25rem; }
+main.article .btn { text-decoration: none; }
+
+/* 채울 광고가 없으면 자리와 "광고" 표시를 접습니다 */
+.ad-slot:has(ins[data-ad-status='unfilled']) { display: none; }
+
+/* 오늘의 일진 */
+.today-hero { display: flex; align-items: baseline; gap: 12px; }
+.today-hero .hanja { font-size: 3.4rem; font-weight: 900; line-height: 1; }
+.today-hero > span:last-child { font-size: 1.1rem; color: var(--on-surface-variant); font-weight: 700; }
+.table-scroll { overflow-x: auto; }
+.today-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.today-table th, .today-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; }
+.today-table th { font-size: 0.82rem; color: var(--on-surface-variant); white-space: nowrap; }
+.today-table td:first-child, .today-table td:nth-child(2) { white-space: nowrap; }
+
+/* 운 흐름 풀이 */
+.reading { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--outline-variant); }
+.reading h3 { color: var(--primary) !important; font-size: 1rem; margin-bottom: 6px; }
+.reading p { font-size: 1rem; }
+
+/* 통변 보기 방식 전환 */
+.tong-head { display: flex; align-items: flex-end; gap: 8px; }
+.tong-head .tabs-under { flex: 1; min-width: 0; }
+.term-toggle {
+  flex: none; border: 1px solid var(--outline-variant); background: var(--surface); color: var(--on-surface-variant);
+  border-radius: 999px; padding: 5px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap; margin-bottom: 6px;
+}
+.term-toggle[aria-pressed='true'] { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }

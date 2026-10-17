@@ -1,0 +1,22 @@
+{
+  "_설명": "Android 앱 화면에서 옮겨 적은 값입니다. 아는 항목만 채우면 되고, 비워 둔 항목은 검사하지 않습니다. 형식은 web/README.md의 '앱 결과 대조'를 보세요.",
+  "cases": [
+    {
+      "name": "기획서 기준 사례 1986-11-20 05:10 남 서울",
+      "input": { "gender": "M", "calendar": "solar", "year": 1986, "month": 11, "day": 20, "hour": 5, "minute": 10, "cityId": "seoul" },
+      "saju": {
+        "pillars": { "day": "戊辰" }
+      },
+      "jamidusu": {
+        "ming": "酉",
+        "shen": "丑",
+        "guk": "화6국",
+        "palaces": {
+          "酉": { "name": "명궁", "main": ["태양 함", "천량 득"] },
+          "丑": { "name": "관록궁", "main": [] }
+        },
+        "sihwa": { "록": "천동", "기": "염정" }
+      }
+    }
+  ]
+}

@@ -16,7 +16,7 @@ const bottom = document.getElementById('shell-bottom');
 if (bottom) {
   bottom.outerHTML = `<footer class="site">
     <nav aria-label="사이트 정보">
-      <a href="/about.html">인설명리 소개</a><a href="/guide/">명리 공부 글</a><a href="/privacy.html">개인정보처리방침</a>
+      <a href="/about.html">인설명리 소개</a><a href="/guide/">명리 공부 글</a><a href="/today.html">오늘의 일진</a><a href="/ilju/">60일주 풀이</a><a href="/terms.html">이용약관</a><a href="/privacy.html">개인정보처리방침</a>
       <a href="/contact.html">문의</a><a href="/licenses.html">오픈소스 라이선스</a>
     </nav>
     <p>타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>

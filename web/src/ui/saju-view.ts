@@ -3,7 +3,11 @@ import { ELEMENTS_HANJA, ELEMENTS_KO, mod, STEM_ELEMENT } from '../engine/consta
 import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, type TenGod, PILLAR_TITLES } from '../engine/saju';
 import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
+import { renderTerms } from '../engine/terms';
+import { getTermMode, termToggleButton } from './term-mode';
+import { bigFortuneReading, monthFortuneReading, type FortuneReading, yearFortuneReading } from '../engine/fortune-tongbyeon';
 import { esc, pad2 } from './dom';
+import { iljuSlug } from '../engine/ilju-data';
 
 const charCell = (hanja: string, korean: string, el: number, extra = '') =>
   `<div class="char bg-${el} el-${el} ${extra}"><span class="hanja">${hanja}</span><small>${korean}·${ELEMENTS_KO[el]}</small></div>`;
@@ -47,7 +51,9 @@ const elChip = (e: number, label: string) => `<span class="chip"><span class="mu
 
 export function summaryCard(s: SajuResult) {
   const day = s.pillars.find((p) => p.key === 'day')!;
-  const items: [string, string][] = [['일주', `<span class="hanja">${day.stem.hanja}${day.branch.hanja}</span> (${day.stem.korean}${day.branch.korean})`]];
+  const items: [string, string][] = [
+    ['일주', `<span class="hanja">${day.stem.hanja}${day.branch.hanja}</span> (${day.stem.korean}${day.branch.korean}) <a class="small" href="/ilju/${iljuSlug(day.stem.index, day.branch.index)}.html">풀이 보기</a>`],
+  ];
   if (s.strengthText) items.push(['강약', `${s.strengthText} <span class="muted small">(${s.strengthScore})</span>`]);
   if (s.geukgukLabel) items.push(['격국', s.geukgukLabel]);
   const combos = s.combinations.length ? s.combinations.map((c) => esc(c.text)).join('<br>') : '인접한 합충 없음';
@@ -88,7 +94,13 @@ const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string) => 
     <div class="tg">${f.stemTenGod}<br>${f.branchTenGod}</div>
   </button>`;
 
-export function flowView(s: SajuResult, selectedBig: number, now = new Date()) {
+function readingBox(rd: FortuneReading | null) {
+  if (!rd) return '';
+  const m = getTermMode();
+  return `<div class="reading tongbyeon"><h3>${esc(renderTerms(rd.title, m))}</h3>${rd.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>`;
+}
+
+export function flowView(s: SajuResult, selectedBig: number, selectedYear: number, selectedMonth: number, now = new Date()) {
   if (!s.bigFortunes.length) return `<div class="card"><p class="notice">출생시간을 입력해야 대운과 세운을 볼 수 있어요.</p></div>`;
   const thisYear = now.getFullYear();
   const thisMonthIdx = monthIndexOf(now);
@@ -96,31 +108,38 @@ export function flowView(s: SajuResult, selectedBig: number, now = new Date()) {
     .map((b, i) => fortuneCell(b, `${b.startAge}세`, i === s.currentBigFortuneIndex, `data-big="${i}" aria-pressed="${i === selectedBig}" aria-label="${b.startAge}세 대운 ${b.ganzhi}"`))
     .join('');
   const years = (s.daewunYearFortunes[selectedBig] ?? [])
-    .map((y) => fortuneCell(y, `${y.year}`, y.year === thisYear, `aria-label="${y.year}년 ${y.ganzhi}"`))
+    .map((y) => fortuneCell(y, `${y.year}`, y.year === thisYear, `data-year="${y.year}" aria-pressed="${y.year === selectedYear}" aria-label="${y.year}년 ${y.ganzhi}"`))
     .join('');
   const months = s.monthFortunes
-    .map((m) => fortuneCell(m, `${m.month}월`, m.month === thisMonthIdx, `aria-label="${m.month}월 ${m.ganzhi}"`))
+    .map((m) => fortuneCell(m, `${m.month}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${m.month}월 ${m.ganzhi}"`))
     .join('');
   const sel = s.bigFortunes[selectedBig];
   return `<div class="card">
       <div class="flow-nav">
         <h2 style="margin:0">대운 <span class="small muted">${s.bigFortuneForward ? '순행' : '역행'}</span></h2>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
+          ${termToggleButton()}
           <button type="button" class="icon-btn" data-big-step="1" aria-label="다음 운" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
           <button type="button" class="icon-btn" data-big-step="-1" aria-label="이전 운" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>
         </div>
       </div>
       <div class="flow">${big}</div>
+      ${readingBox(bigFortuneReading(s, selectedBig))}
     </div>
     <div class="card">
-      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년</span></h2>
+      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년 · 해를 누르면 풀이가 바뀌어요</span></h2>
       <div class="flow">${years}</div>
+      ${readingBox(yearFortuneReading(s, selectedBig, selectedYear))}
     </div>
     <div class="card">
       <h2>월운 <span class="small muted">${thisYear}년 · 절기 기준</span></h2>
       <div class="flow months">${months}</div>
+      ${readingBox(monthFortuneReading(s, selectedMonth))}
+      <p class="disclaimer">${DISCLAIMER}</p>
     </div>`;
 }
+
+export { monthIndexOf };
 
 /** 오늘이 몇 번째 절기월(인월=1)인지 대략 계산 */
 function monthIndexOf(d: Date) {
@@ -137,9 +156,13 @@ function monthIndexOf(d: Date) {
 
 export function tongbyeonView(sections: TongbyeonSection[], selected: string, attr: string) {
   const cur = sections.find((s) => s.key === selected) ?? sections[0];
+  const m = getTermMode();
   return `<div class="card">
-    <div class="tabs-under" role="tablist">${sections.map((s) => `<button type="button" role="tab" ${attr}="${s.key}" aria-selected="${s.key === cur.key}">${s.title}</button>`).join('')}</div>
-    <div class="tongbyeon" style="margin-top:14px" role="tabpanel">${cur.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
+    <div class="tong-head">
+      <div class="tabs-under" role="tablist">${sections.map((s) => `<button type="button" role="tab" ${attr}="${s.key}" aria-selected="${s.key === cur.key}">${s.title}</button>`).join('')}</div>
+      ${termToggleButton()}
+    </div>
+    <div class="tongbyeon" style="margin-top:14px" role="tabpanel">${cur.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>
     <p class="disclaimer">${DISCLAIMER}</p>
   </div>`;
 }
@@ -148,7 +171,7 @@ export function wongukCard(s: SajuResult) {
   const note = s.incompleteBirthTime
     ? `<p class="notice" style="margin-top:12px">출생시간을 몰라 시주 없이 보여 드려요. 일주는 그날 정오 기준의 참고값이고, 강약·용신·대운은 제공하지 않아요.</p>`
     : '';
-  return `<div class="card"><h2>원국</h2>${wongukTable(s)}${boundaryTable(s)}${note}</div>`;
+  return `<div class="card"><div class="card-head"><h2>원국</h2><button type="button" class="icon-btn" data-save-image="wonguk" data-no-export>이미지로 저장</button></div>${wongukTable(s)}${boundaryTable(s)}${note}</div>`;
 }
 
 export { PILLAR_TITLES };

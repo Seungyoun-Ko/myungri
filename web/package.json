@@ -5,16 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "guide": "node --experimental-strip-types scripts/gen-guide.ts",
-    "build": "vitest run && node --experimental-strip-types scripts/gen-guide.ts && tsc --noEmit && vite build",
+    "build": "vitest run && npm run pages && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pages": "node --experimental-strip-types scripts/gen-guide.ts && node --experimental-strip-types scripts/gen-ilju.ts"
   },
   "dependencies": {
+    "html-to-image": "^1.11.11",
     "korean-lunar-calendar": "^0.4.0",
     "lunar-javascript": "^1.7.7"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
