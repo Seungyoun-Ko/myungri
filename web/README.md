@@ -38,6 +38,33 @@ Android 원본 코드 없이 기획서만으로 만들었기 때문에 아래는
 - 지장간: 申 = 戊壬庚
 - 통변 문장: 기획서 규칙에 맞춰 새로 쓴 문장 (앱 원문 아님)
 
+## 앱 결과 대조
+
+`tests/app-cases.json`에 Android 앱 화면의 값을 옮겨 적으면 `npm test`가 웹 결과와 비교합니다. 아는 항목만 채우면 되고 비운 항목은 검사하지 않습니다.
+
+```json
+{
+  "name": "설명",
+  "input": { "gender": "F", "calendar": "solar", "year": 1990, "month": 3, "day": 5, "hour": 14, "minute": 20, "cityId": "seoul" },
+  "saju": {
+    "pillars": { "hour": "丁未", "day": "...", "month": "...", "year": "..." },
+    "strength": "신약",
+    "yongsin": { "yong": "화", "hee": "목", "gi": "수", "gu": "금" },
+    "geukguk": "편재격",
+    "daeun": { "startAge": 6, "list": ["庚子", "辛丑"] },
+    "elementRatios": [27.3, 9.1, 36.4, 0, 27.3]
+  },
+  "jamidusu": {
+    "ming": "酉", "shen": "丑", "guk": "화6국",
+    "palaces": { "酉": { "name": "명궁", "main": ["태양 함", "천량 득"] } },
+    "sihwa": { "록": "천동", "권": "천기", "과": "문창", "기": "염정" }
+  }
+}
+```
+
+- 달력: `solar` / `lunar` / `lunarLeap`, 성별: `M` / `F`, 출생시간 모름: `"timeUnknown": true`
+- 다른 값이 있으면 어느 항목이 어떻게 다른지 나옵니다. 예: `酉 주성과 밝기: expected ['천량 득', '태양 함'] to deeply equal ['천량 득', '태양 평']`
+
 ## 배포 (app.inseol.com, Cloudflare Pages)
 
 inseol.com은 티스토리 블로그가 쓰고 있어 웹앱은 서브도메인 `app.inseol.com`에 올립니다. 티스토리 DNS 레코드는 건드리지 않습니다.
