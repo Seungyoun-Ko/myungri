@@ -21,6 +21,10 @@ import {
   STAR_TEXT,
   STRENGTH_SENTENCE,
   UNSEONG,
+  AUX_MEANING,
+  PAIR_TEXT,
+  SAL_MEANING,
+  SIHWA_MEANING,
 } from './tongbyeon-data';
 import { BRANCH_TEXT, SPOUSE_PALACE } from './ilju-data';
 
@@ -45,7 +49,11 @@ const hasBatchim = (word: string) => {
   if (c < 0xac00 || c > 0xd7a3) return false;
   return (c - 0xac00) % 28 !== 0;
 };
-export const josa = (word: string, withB: string, withoutB: string) => word + (hasBatchim(word) ? withB : withoutB);
+/** 끝이 괄호면 괄호 안 마지막 글자로 조사를 고릅니다. 예: '태양(함)' → '태양(함)은' */
+export const josa = (word: string, withB: string, withoutB: string) => {
+  const base = word.endsWith(')') ? word.slice(0, -1) : word;
+  return word + (hasBatchim(base) ? withB : withoutB);
+};
 const firstSentence = (text: string) => {
   const m = text.match(/^.*?[.!?요](\s|$)/);
   return (m ? m[0] : text).trim();
@@ -212,6 +220,7 @@ const TAB_PALACE: Record<string, PalaceName> = {
   wealth: '재백궁',
   health: '질액궁',
 };
+const OTHER_PALACES: PalaceName[] = ['형제궁', '자녀궁', '천이궁', '노복궁', '전택궁', '복덕궁', '부모궁'];
 
 interface StarsInPalace {
   names: string[];
@@ -228,25 +237,72 @@ export function mainStarsOf(chart: JamidusuChart, branch: number): StarsInPalace
   return { names: opp.stars.filter((s) => s.kind === 'main').map((s) => s.name), borrowed: true, palace: p };
 }
 
+const pairKeyOf = (names: string[]) => [...names].sort().join('·');
+const STRONG = new Set(['묘', '왕']);
+const WEAK = new Set(['불', '함']);
+
+/** 주성 소개(두 별이면 함께 있는 모습 먼저) */
 function starLines(stars: StarsInPalace, field: keyof (typeof STAR_TEXT)[string], palaceLabel: string) {
   const lines: string[] = [];
   if (stars.borrowed) lines.push(`${palaceLabel}은 주성이 비어 있어 맞은편 궁의 ${joinNames(stars.names)} 기운을 빌려 봐요.`);
   else lines.push(`${palaceLabel}에는 ${josa(joinNames(stars.names), '이', '가')} 있어요.`);
+  if (stars.names.length === 2 && PAIR_TEXT[pairKeyOf(stars.names)]) lines.push(PAIR_TEXT[pairKeyOf(stars.names)]);
   for (const n of stars.names) lines.push(STAR_TEXT[n][field]);
   return lines;
+}
+
+/** 밝기, 보좌·살성, 사화로 그 궁의 풀이를 보탭니다. */
+function palaceDetailLines(chart: JamidusuChart, branch: number, stars: StarsInPalace, overlay?: OverlayChart) {
+  const p = chart.palaces[branch];
+  const out: string[] = [];
+  if (!stars.borrowed) {
+    const mains = p.stars.filter((x) => x.kind === 'main');
+    const strong = mains.filter((x) => STRONG.has(x.brightness)).map((x) => `${x.name}(${x.brightness})`);
+    const weak = mains.filter((x) => WEAK.has(x.brightness)).map((x) => `${x.name}(${x.brightness})`);
+    if (strong.length) out.push(`${josa(joinNames(strong), '은', '는')} 빛이 밝은 자리에 있어 장점이 잘 드러나요.`);
+    if (weak.length) out.push(`${josa(joinNames(weak), '은', '는')} 빛이 약한 자리라 장점이 늦게 드러날 수 있어요. 서두르기보다 경험을 쌓을수록 힘이 붙어요.`);
+  }
+  const good = p.stars.filter((x) => x.kind === 'aux' && AUX_MEANING[x.name]);
+  const sal = p.stars.filter((x) => x.kind === 'sal' && SAL_MEANING[x.name]);
+  if (good.length) out.push(`돕는 별 ${josa(good.map((x) => `${x.name}(${AUX_MEANING[x.name]})`).join(', '), '이', '가')} 함께 있어 힘을 보태요.`);
+  if (sal.length) out.push(`${sal.map((x) => `${x.name}(${SAL_MEANING[x.name]})`).join(', ')}의 기운도 함께 있어요. 부딪치는 일이 있을 때 한 박자 쉬어 가면 오히려 추진력이 돼요.`);
+  const hw = [
+    ...p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => ({ star: x.name, sihwa: x.sihwa!, label: '화' + x.sihwa })),
+    ...(overlay?.sihwa.filter((x) => x.branch === branch) ?? []).map((x) => ({ star: x.star, sihwa: x.sihwa, label: x.label })),
+  ];
+  for (const h of hw) {
+    out.push(
+      h.sihwa === '기'
+        ? `${h.star}에 ${h.label}가 붙어 이 분야는 ${SIHWA_MEANING[h.sihwa]}이 있는 곳이에요. 욕심보다 꾸준함으로 다가가 보세요.`
+        : `${h.star}에 ${h.label}이 붙어 이 분야에 ${SIHWA_MEANING[h.sihwa]}이 깃들어 있어요.`,
+    );
+  }
+  return out;
+}
+
+/** 이어진 자리(맞은편과 삼합 자리)까지 함께 본 힘 */
+function connectedLine(chart: JamidusuChart, branch: number, names: PalaceName[], label: string) {
+  const related = [(branch + 6) % 12, (branch + 4) % 12, (branch + 8) % 12];
+  const all = [branch, ...related].map((b) => chart.palaces[b]);
+  const good = all.flatMap((p) => p.stars.filter((x) => x.kind === 'aux' && AUX_MEANING[x.name])).length + all.flatMap((p) => p.stars.filter((x) => x.sihwa && x.sihwa !== '기')).length;
+  const bad = all.flatMap((p) => p.stars.filter((x) => x.kind === 'sal')).length + all.flatMap((p) => p.stars.filter((x) => x.sihwa === '기')).length;
+  const relNames = related.map((b) => names[b].replace('궁', '')).join('·');
+  if (good >= bad + 2) return `${label}과 이어진 ${relNames} 자리까지 함께 보면 돕는 기운이 넉넉해서, 주변의 도움을 받아 일을 키우기 좋아요.`;
+  if (bad >= good + 2) return `${label}과 이어진 ${relNames} 자리까지 함께 보면 부딪치는 기운이 많은 편이라, 혼자 버티기보다 믿을 만한 사람과 나누면 좋아요.`;
+  return `${label}과 이어진 ${relNames} 자리까지 함께 보면 돕는 기운과 부딪치는 기운이 고르게 섞여 있어요.`;
 }
 
 const branchOfName = (names: PalaceName[], name: PalaceName) => names.indexOf(name);
 
 export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart): TongbyeonSection[] {
   const names: PalaceName[] = overlay ? overlay.names : chart.palaces.map((p) => p.name);
-  const luSource = overlay ? overlay.sihwa : chart.sihwa.map((s) => ({ ...s, label: '화' + s.sihwa }));
-  const lu = luSource.find((s) => s.sihwa === '록')!;
-  const ji = luSource.find((s) => s.sihwa === '기')!;
-  const luField = PALACE_FIELD[names[lu.branch]];
-  const jiField = PALACE_FIELD[names[ji.branch]];
+  const hwSource = overlay ? overlay.sihwa : chart.sihwa.map((s) => ({ ...s, label: '화' + s.sihwa }));
+  const fieldOf = (sihwa: string) => {
+    const h = hwSource.find((s) => s.sihwa === sihwa)!;
+    return { label: h.label, star: h.star, field: PALACE_FIELD[names[h.branch]] };
+  };
 
-  return SAJU_TABS.map(([key, title]) => {
+  const sections: TongbyeonSection[] = SAJU_TABS.map(([key, title]) => {
     const palaceName = TAB_PALACE[key];
     // 성격 탭은 늘 선천 명궁 기준
     const branch = key === 'personality' ? chart.mingBranch : branchOfName(names, palaceName);
@@ -262,15 +318,28 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
         for (const n of stars.names) paras.push(STAR_TEXT[n].flow);
       } else {
         paras.push(...starLines(stars, 'image', '명궁').slice(0, 1));
+        if (stars.names.length === 2 && PAIR_TEXT[pairKeyOf(stars.names)]) paras.push(PAIR_TEXT[pairKeyOf(stars.names)]);
         for (const n of stars.names) paras.push(`${josa(n, '은', '는')} ${josa(STAR_TEXT[n].image, '이에요', '예요')}. ${josa(STAR_TEXT[n].strength, '이', '가')} 있어요.`);
+        paras.push(...palaceDetailLines(chart, branch, stars));
+        const shen = chart.palaces[chart.shenBranch];
+        if (!shen.isMing) paras.push(`몸과 후반생을 보는 신궁은 ${shen.name}에 있어요. 나이가 들수록 '${PALACE_FIELD[shen.name]}' 분야에 마음과 힘을 쏟게 되기 쉬워요.`);
+        else paras.push('신궁이 명궁과 같은 자리에 있어, 타고난 성향이 평생 한결같이 이어지는 편이에요.');
       }
-      paras.push(`좋은 기운(${lu.label})은 '${luField}' 분야에 들어 있어요. 이 분야에서 기회와 도움을 얻기 쉬워요.`);
-      paras.push(`마음을 써야 할 기운(${ji.label})은 '${jiField}' 분야에 있어요. 서두르지 말고 한 번 더 살펴보세요.`);
+      const lu = fieldOf('록');
+      const quan = fieldOf('권');
+      const ke = fieldOf('과');
+      const ji = fieldOf('기');
+      paras.push(`좋은 기운(${lu.label})은 '${lu.field}' 분야에 들어 있어요. 이 분야에서 기회와 도움을 얻기 쉬워요.`);
+      paras.push(`힘과 주도권(${quan.label})은 '${quan.field}' 분야에, 명예와 좋은 평판(${ke.label})은 '${ke.field}' 분야에 있어요.`);
+      paras.push(`마음을 써야 할 기운(${ji.label})은 '${ji.field}' 분야에 있어요. 서두르지 말고 한 번 더 살펴보세요.`);
       return { key, title, paragraphs: paras };
     }
 
     const field = ({ personality: 'personality', aptitude: 'aptitude', love: 'love', wealth: 'wealth', health: 'health' } as const)[key];
     const paras = starLines(stars, field, label);
+    // 성격 탭은 총론과 같은 명궁이라 밝기·보좌성 설명을 되풀이하지 않습니다.
+    if (key !== 'personality') paras.push(...palaceDetailLines(chart, branch, stars, overlay));
+    if (key === 'aptitude' || key === 'wealth') paras.push(connectedLine(chart, branch, names, label));
     if (overlay && key !== 'personality') {
       const lead = overlay.kind === 'daehan' ? '이 대한 동안' : '올해';
       paras.push(`${lead} ${palaceName} 자리는 원래 명반의 ${chart.palaces[branch].name}이에요.`);
@@ -279,6 +348,31 @@ export function jamidusuTongbyeon(chart: JamidusuChart, overlay?: OverlayChart):
     if (key === 'health') paras.push(HEALTH_DISCLAIMER);
     return { key, title, paragraphs: paras };
   });
+
+  // 그 밖의 궁
+  const others = OTHER_PALACES.map((pn) => {
+    const b = branchOfName(names, pn);
+    const st = mainStarsOf(chart, b);
+    const p = chart.palaces[b];
+    const tone = st.borrowed
+      ? '주성이 비어 맞은편 기운을 빌려 보는 자리예요'
+      : p.stars.some((x) => x.kind === 'main' && WEAK.has(x.brightness))
+        ? '별빛이 약한 편이라 천천히 다져 가면 좋은 자리예요'
+        : p.stars.some((x) => x.kind === 'main' && STRONG.has(x.brightness))
+          ? '별빛이 밝아 장점이 잘 드러나는 자리예요'
+          : '무난한 자리예요';
+    const extras: string[] = [];
+    const good = p.stars.filter((x) => x.kind === 'aux' && AUX_MEANING[x.name]).map((x) => x.name);
+    const sal = p.stars.filter((x) => x.kind === 'sal').map((x) => x.name);
+    if (good.length) extras.push(`돕는 별(${good.join('·')})`);
+    if (sal.length) extras.push(`부딪치는 별(${sal.join('·')})`);
+    const hw = p.stars.filter((x) => x.sihwa && x.kind !== 'minor').map((x) => `화${x.sihwa}`);
+    if (hw.length) extras.push(hw.join('·'));
+    const strengths = st.names.map((n) => STAR_TEXT[n].strength).join(', ');
+    return `${pn}(${PALACE_FIELD[pn]}): ${joinNames(st.names)} — ${josa(strengths, '이', '가')} 이 분야에 드러나요. ${tone}.${extras.length ? ` 함께 있는 것: ${extras.join(', ')}.` : ''}`;
+  });
+  sections.push({ key: 'others', title: '그 밖의 궁', paragraphs: others });
+  return sections;
 }
 
 // ---------------------------------------------------------------- 종합

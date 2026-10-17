@@ -48,3 +48,14 @@ it('출생시간 모름이면 기존처럼 간단한 안내', () => {
   const s = computeSaju(normalizeBirth({ gender: 'M', calendar: 'solar', year: 1986, month: 11, day: 20, timeUnknown: true }));
   expect(sajuTongbyeon(s, 'M')[2].paragraphs[0]).toContain('출생시간을 입력하면');
 });
+
+it('자미두수: 두 주성 조합, 밝기, 보좌·살성, 사화 전부, 그 밖의 궁', () => {
+  const t = jamidusuTongbyeon(chart);
+  const all = t.flatMap((s) => s.paragraphs).join(' ');
+  expect(t.map((s) => s.title)).toContain('그 밖의 궁');
+  expect(all).toContain('베푸는 마음과 어른스러움이 함께'); // 태양·천량 조합
+  expect(all).toContain('태양(함)은 빛이 약한 자리');
+  expect(all).toContain('돕는 별 좌보(곁에서 돕는 사람), 우필(뜻밖의 도움)이');
+  expect(all).toContain('힘과 주도권(화권)');
+  expect(t.find((s) => s.key === 'others')!.paragraphs).toHaveLength(7);
+});
