@@ -1,6 +1,6 @@
 // 통변 조립 (기획서 6장). 계산 결과로만 문장을 만들고, 계산은 바꾸지 않습니다.
 import { ELEMENTS_KO } from './constants';
-import type { SajuResult, TenGodGroup } from './saju';
+import type { Combination, PillarKey, SajuResult, TenGodGroup } from './saju';
 import { TEN_GOD_GROUPS, tenGodGroup, TEN_GODS } from './saju';
 import type { JamidusuChart, OverlayChart, Palace, PalaceName } from './jamidusu';
 import {
@@ -10,14 +10,19 @@ import {
   ELEMENT_FEW,
   ELEMENT_LIFE,
   ELEMENT_MANY,
+  GEUKGUK_STRENGTH,
+  GEUKGUK_TEXT,
   GROUP_APTITUDE,
   GROUP_FIELD,
-  GROUP_LOVE,
+  GROUP_PERSONALITY,
+  PILLAR_PAIR_TEXT,
   HEALTH_DISCLAIMER,
   PALACE_FIELD,
   STAR_TEXT,
   STRENGTH_SENTENCE,
+  UNSEONG,
 } from './tongbyeon-data';
+import { BRANCH_TEXT, SPOUSE_PALACE } from './ilju-data';
 
 export interface TongbyeonSection {
   key: string;
@@ -68,9 +73,20 @@ function extremeElements(r: SajuResult) {
   return { most, least, ratios };
 }
 
+/** 가장 많은 십신 무리. 같으면 월지(격국)의 무리를 우선합니다. */
 export function topGroup(r: SajuResult): TenGodGroup {
+  return rankedGroups(r)[0];
+}
+
+function rankedGroups(r: SajuResult): TenGodGroup[] {
   const g = groupRatios(r);
-  return TEN_GOD_GROUPS.reduce((a, b) => (g[b] > g[a] ? b : a));
+  const month = r.pillars.find((p) => p.key === 'month');
+  const monthGroup = month ? tenGodGroup(month.branchTenGod as (typeof TEN_GODS)[number]) : null;
+  return [...TEN_GOD_GROUPS].sort((a, b) => {
+    const diff = g[b] - g[a];
+    if (Math.abs(diff) > 0.05) return diff;
+    return (b === monthGroup ? 1 : 0) - (a === monthGroup ? 1 : 0);
+  });
 }
 
 function sajuWealth(r: SajuResult) {
@@ -102,44 +118,89 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
 
   const { most, least, ratios } = extremeElements(r);
   const g = groupRatios(r);
-  const top = topGroup(r);
-  const dayBranchGroup = tenGodGroup(r.pillars.find((p) => p.key === 'day')!.branchTenGod as (typeof TEN_GODS)[number]);
+  const ranked = rankedGroups(r);
+  const top = ranked[0];
+  const second = ranked[1];
+  const dayPillar = r.pillars.find((p) => p.key === 'day')!;
+  const dayBranchTg = dayPillar.branchTenGod as (typeof TEN_GODS)[number];
   const spouseGroup: TenGodGroup = gender === 'M' ? '재성' : '관성';
   const spouse = g[spouseGroup];
   const peach = r.pillars.some((p) => [0, 3, 6, 9].includes(p.branch.index));
   const lackText = ratios[least] === 0 ? `${ELEMENTS_KO[least]} 기운이 없어요.` : `${ELEMENTS_KO[least]} 기운이 가장 적어요.`;
+  const geuk = (r.geukgukLabel ?? '').split(' ')[0];
+  const y = r.yongsin!;
+  const me = r.dayMaster.element;
+  const wealthEl = (me + 2) % 5;
 
+  // 총론
   const general = [
     `사주는 ${josa(image, '을', '를')} 닮았어요.`,
     STRENGTH_SENTENCE[r.strengthText!],
-    `${ELEMENTS_KO[most]} 기운이 가장 많아요. ${ELEMENT_MANY[most]}`,
-    `${lackText} ${ELEMENT_FEW[least]}`,
-    `부족한 기운을 채우는 생활: ${ELEMENT_LIFE[least]}`,
+    `${ELEMENTS_KO[most]} 기운이 가장 많아요. ${ELEMENT_MANY[most]} ${lackText} ${ELEMENT_FEW[least]}`,
   ];
+  if (GEUKGUK_TEXT[geuk]) general.push(GEUKGUK_TEXT[geuk]);
+  general.push(
+    `나에게 가장 필요한 기운(용신)은 ${ELEMENTS_KO[y.yong]}, 그 기운을 돕는 희신은 ${josa(ELEMENTS_KO[y.hee], '이에요', '예요')}. 반대로 ${ELEMENTS_KO[y.gi]} 기운은 부담이 되기 쉬워요.`,
+    `용신을 채우는 생활: ${ELEMENT_LIFE[y.yong]}`,
+  );
+  general.push(...combinationLines(r.combinations));
 
-  const love = [GROUP_LOVE[dayBranchGroup]];
+  // 성격
+  const dayBranch = dayPillar.branch.index;
+  const phase = UNSEONG.find(([n]) => n === dayPillar.growthPhase);
+  const personalityParas = [
+    DAY_MASTER_PERSONALITY[dm],
+    `태어난 날의 지지 ${dayPillar.branch.hanja}(${BRANCH_TEXT[dayBranch][0]}) 위에 서 있어서, ${BRANCH_TEXT[dayBranch][3]}`,
+    GROUP_PERSONALITY[top],
+  ];
+  if (phase) personalityParas.push(`일간이 일지에서 ‘${phase[0]}’의 자리에 있어요. ${phase[1]}`);
+
+  // 적성
+  const aptitude = [GROUP_APTITUDE[top]];
+  if (g[second] >= 15 && g[top] - g[second] <= 10) aptitude.push(`${second} 쪽 재능도 함께 있어서, ${firstSentence(GROUP_APTITUDE[second])}`);
+  if (GEUKGUK_STRENGTH[geuk]) aptitude.push(`${geuk}의 강점인 ${josa(GEUKGUK_STRENGTH[geuk], '을', '를')} 살릴 수 있는 일을 고르면 오래 즐겁게 할 수 있어요.`);
+
+  // 연애
+  const love = [`태어난 날의 지지는 배우자 자리예요. ${SPOUSE_PALACE[dayBranchTg]}`];
   const spouseWord = gender === 'M' ? '아내·연인을 뜻하는 별' : '남편·연인을 뜻하는 별';
   if (spouse >= 25) love.push(`${spouseWord}이 넉넉해서 인연이 잘 찾아오는 편이에요. 오히려 한 사람에게 마음을 모으는 것이 중요해요.`);
   else if (spouse < 8) love.push(`${spouseWord}이 적은 편이라 인연이 늦게 오거나 천천히 깊어질 수 있어요. 서두르지 않아도 괜찮아요.`);
   else love.push(`${spouseWord}이 알맞게 있어서 자연스럽게 인연을 만들어 가요.`);
+  const dayCombos = r.combinations.filter((c) => c.positions.includes('day') && c.kind !== '천간합');
+  if (dayCombos.some((c) => c.kind === '지지육합')) love.push('배우자 자리가 옆 기둥과 합을 이뤄 정이 깊고, 한번 맺은 인연을 오래 이어 가는 편이에요.');
+  if (dayCombos.some((c) => c.kind === '지지육충')) love.push('배우자 자리가 옆 기둥과 충을 이뤄 관계에 변화가 생기기 쉬워요. 서로의 거리와 생활 방식을 미리 맞춰 두면 좋아요.');
   if (peach) love.push('사람을 끄는 매력(도화)이 있어 이성에게 인기가 있는 편이에요.');
 
+  // 재물
   const wealth = sajuWealth(r);
+  if (wealthEl === y.yong || wealthEl === y.hee) wealth.push(`재물의 기운(${ELEMENTS_KO[wealthEl]})이 나에게 필요한 기운이라, 돈을 버는 활동 자체가 힘이 되는 사주예요. 적극적으로 기회를 찾아도 좋아요.`);
+  else if (wealthEl === y.gi || wealthEl === y.gu) wealth.push(`재물의 기운(${ELEMENTS_KO[wealthEl]})이 부담이 되는 쪽이라, 돈을 먼저 쫓기보다 실력과 신용을 쌓으면 재물이 따라오기 쉬워요.`);
   const caution = guaranteeCaution(r);
   if (caution) wealth.push(caution);
 
+  // 건강
+  const health = [`${ELEMENTS_KO[least]} 기운이 약한 편이라 ${ORGANS[least]} 쪽을 미리 챙겨 주면 좋아요. ${ELEMENT_LIFE[least]}`];
+  if (ratios[most] >= 35) health.push(`${ELEMENTS_KO[most]} 기운이 지나치게 많아요. 넘치는 기운도 균형을 깨기 쉬우니 ${ORGANS[most]} 쪽이 무리하지 않게 살펴 주세요.`);
+  health.push(HEALTH_DISCLAIMER);
+
   return [
     { key: 'general', title: '총론', paragraphs: general },
-    { key: 'personality', title: '성격', paragraphs: [personality] },
-    { key: 'aptitude', title: '적성', paragraphs: [GROUP_APTITUDE[top]] },
+    { key: 'personality', title: '성격', paragraphs: personalityParas },
+    { key: 'aptitude', title: '적성', paragraphs: aptitude },
     { key: 'love', title: '연애', paragraphs: love },
     { key: 'wealth', title: '재물', paragraphs: wealth },
-    {
-      key: 'health',
-      title: '건강',
-      paragraphs: [`${ELEMENTS_KO[least]} 기운이 약한 편이라 ${ORGANS[least]} 쪽을 미리 챙겨 주면 좋아요. ${ELEMENT_LIFE[least]}`, HEALTH_DISCLAIMER],
-    },
+    { key: 'health', title: '건강', paragraphs: health },
   ];
+}
+
+/** 원국 합충의 뜻 */
+function combinationLines(combos: Combination[]): string[] {
+  return combos.map((c) => {
+    const pair = PILLAR_PAIR_TEXT[c.positions.join('-') as `${PillarKey}-${PillarKey}`] ?? '';
+    if (c.kind === '지지육충') return `${c.text}: ${pair} 사이에 부딪침과 움직임이 있어요. 변화가 잦은 대신 정체되지 않는 힘도 돼요.`;
+    const el = c.element !== undefined ? ELEMENTS_KO[c.element] : '';
+    return `${c.text}: ${josa(pair, '이', '가')} 서로 끌어당겨 협력하는 모습이에요. 합으로 ${el} 기운이 더해져요.`;
+  });
 }
 
 // ---------------------------------------------------------------- 자미두수
