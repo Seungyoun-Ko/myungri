@@ -81,3 +81,13 @@ it('종합 통변: 지금 시기, 용신 기반 채우기', () => {
   expect(n).toContain('36세 계묘 10년 운(대운)과 36-45세 10년 흐름(대한)이 겹치는');
   expect(c.find((s) => s.key === 'fill')!.paragraphs[0]).toContain('가장 필요한 기운(용신)은 불 기운(화)이에요');
 });
+
+it('사주 성격·적성·연애·재물·건강 탭도 총론처럼 자세함 (기준 사례 각 5문단 이상)', () => {
+  const t = text(sajuTongbyeon(saju, 'M'));
+  for (const key of ['personality', 'aptitude', 'love', 'wealth', 'health']) expect(t.find((s) => s.key === key)!.paragraphs.length, key).toBeGreaterThanOrEqual(5);
+  const w = t.find((s) => s.key === 'wealth')!.paragraphs.join(' ');
+  expect(w).toContain('활동적인 재물의 기운이 더 커서');
+  expect(w).toContain('36세에 시작하는 10년 운(대운)에는 재물(재성)이 들어와');
+  expect(t.find((s) => s.key === 'love')!.paragraphs.join(' ')).toContain('일터나 모임처럼');
+  expect(t.find((s) => s.key === 'health')!.paragraphs.join(' ')).toContain('겨울에 태어나');
+});

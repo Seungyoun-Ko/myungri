@@ -14,7 +14,20 @@ import {
   GEUKGUK_TEXT,
   GROUP_APTITUDE,
   GROUP_FIELD,
+  GROUP_LOVE,
   GROUP_PERSONALITY,
+  YINYANG_TEXT,
+  STRENGTH_PERSONALITY,
+  WORK_STYLE,
+  ELEMENT_JOBS,
+  SPOUSE_STAR_PILLAR,
+  LOVE_STRENGTH,
+  WEALTH_STYLE,
+  WEALTH_BALANCE,
+  WEALTH_LEAK,
+  ELEMENT_BODY,
+  HEALTH_STRENGTH,
+  SEASON_HEALTH,
   PILLAR_PAIR_TEXT,
   HEALTH_DISCLAIMER,
   PALACE_FIELD,
@@ -105,6 +118,19 @@ function sajuWealth(r: SajuResult) {
 const guaranteeCaution = (r: SajuResult) =>
   groupRatios(r)['비겁'] >= 30 ? '내 편이 많은 만큼 돈을 나눌 일도 생겨요. 보증이나 동업은 꼭 문서로 정리하고 신중하게 결정하세요.' : null;
 
+const strengthBucket = (r: SajuResult) => (r.strengthText === '극강' || r.strengthText === '신강' ? 'strong' : r.strengthText === '중화' ? 'mid' : 'weak');
+
+/** 지금 대운부터 앞으로, 천간이나 지지에 그 무리가 들어오는 대운의 시작 나이 (최대 3개) */
+function upcomingAges(r: SajuResult, g: TenGodGroup): number[] {
+  const from = Math.max(0, r.currentBigFortuneIndex);
+  return r.bigFortunes
+    .slice(from)
+    .filter((b) => tenGodGroup(b.stemTenGod) === g || tenGodGroup(b.branchTenGod) === g)
+    .slice(0, 3)
+    .map((b) => b.startAge);
+}
+const agesText = (ages: number[]) => ages.map((a) => `${a}세`).join(', ');
+
 export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSection[] {
   const dm = r.dayMaster.index;
   const image = DAY_MASTER_IMAGE[dm];
@@ -157,11 +183,20 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
     GROUP_PERSONALITY[top],
   ];
   if (ph) personalityParas.push(`${V('내 힘의 세기로 보면', '일간의 12운성은')} ${josa(phase(ph[0]), '이에요', '예요')}. ${ph[1]}`);
+  const yangCount = r.pillars.reduce((n, p) => n + (p.stem.index % 2 === 0 ? 1 : 0) + (p.branch.index % 2 === 0 ? 1 : 0), 0);
+  personalityParas.push(yangCount >= 6 ? YINYANG_TEXT.yang : yangCount <= 2 ? YINYANG_TEXT.yin : YINYANG_TEXT.even);
+  personalityParas.push(STRENGTH_PERSONALITY[strengthBucket(r)]);
 
   // 적성
   const aptitude = [GROUP_APTITUDE[top]];
   if (g[second] >= 15 && g[top] - g[second] <= 10) aptitude.push(`${group(second)}의 힘도 함께 있어서, ${firstSentence(GROUP_APTITUDE[second])}`);
   if (GEUKGUK_STRENGTH[geuk]) aptitude.push(`${T('이 사주', geuk)}의 강점인 ${josa(GEUKGUK_STRENGTH[geuk], '을', '를')} 살릴 수 있는 일을 고르면 오래 즐겁게 할 수 있어요.`);
+  aptitude.push(WORK_STYLE[strengthBucket(r)]);
+  if (g['관성'] >= 20) aptitude.push(`${josa(group('관성'), '이', '가')} 뚜렷해서 직급과 역할이 분명한 조직에서 인정받기 쉬워요. 공공기관, 큰 회사, 자격이 필요한 직업이 잘 맞아요.`);
+  else if (g['비겁'] + g['식상'] >= 45) aptitude.push(`${group('비겁')}과 ${josa(group('식상'), '이', '가')} 강해서 자기 이름을 걸고 하는 일이 잘 맞아요. 창업, 프리랜서, 전문 기술처럼 내 방식대로 일할 수 있는 길을 열어 두세요.`);
+  aptitude.push(`${josa(elementName(y.yong), '과', '와')} 맞닿은 ${ELEMENT_JOBS[y.yong]}도 잘 어울려요. 나에게 필요한 기운을 일로 채우는 셈이라 오래 해도 덜 지쳐요.`);
+  const workAges = upcomingAges(r, '관성');
+  if (workAges.length) aptitude.push(`${agesText(workAges)}에 시작하는 ${term.대운}에는 ${josa(group('관성'), '이', '가')} 들어와 맡는 역할이 커지기 쉬워요. 자리를 옮기거나 한 단계 올라서기 좋은 때예요.`);
 
   // 연애
   const love = [`${V('태어난 날의 아래 글자는 배우자 자리라고 불러요.', '일지는 배우자 자리예요.')} ${SPOUSE_PALACE[dayBranchTg]}`];
@@ -172,18 +207,43 @@ export function sajuTongbyeon(r: SajuResult, gender: 'M' | 'F'): TongbyeonSectio
   const dayCombos = r.combinations.filter((c) => c.positions.includes('day') && c.kind !== '천간합');
   if (dayCombos.some((c) => c.kind === '지지육합')) love.push(`배우자 자리가 옆 기둥과 ${HAP} 정이 깊고, 한번 맺은 인연을 오래 이어 가는 편이에요.`);
   if (dayCombos.some((c) => c.kind === '지지육충')) love.push(`배우자 자리가 옆 기둥과 ${CHUNG} 관계에 변화가 생기기 쉬워요. 서로의 거리와 생활 방식을 미리 맞춰 두면 좋아요.`);
+  const SPOUSE_ORDER: PillarKey[] = ['day', 'month', 'hour', 'year'];
+  const starAt = SPOUSE_ORDER.find((k) => {
+    const p = r.pillars.find((x) => x.key === k);
+    if (!p) return false;
+    const stemG = p.stemTenGod === '일간' ? null : tenGodGroup(p.stemTenGod);
+    return stemG === spouseGroup || tenGodGroup(p.branchTenGod as (typeof TEN_GODS)[number]) === spouseGroup;
+  });
+  if (starAt) love.push(SPOUSE_STAR_PILLAR[starAt]);
+  love.push(LOVE_STRENGTH[strengthBucket(r)]);
+  if (top !== tenGodGroup(dayBranchTg)) love.push(`사주 전체로 보면, ${GROUP_LOVE[top]}`);
   if (peach) love.push('사람을 끄는 매력(도화)이 있어 이성에게 인기가 있는 편이에요.');
+  const loveAges = upcomingAges(r, spouseGroup);
+  if (loveAges.length) love.push(`${agesText(loveAges)}에 시작하는 ${term.대운}에는 ${spouseWord}이 들어와, 좋은 인연을 만나거나 관계가 깊어지기 쉬워요.`);
 
   // 재물
   const wealth = sajuWealth(r);
+  const tg = r.tenGodRatios!;
+  if (tg['편재'] + tg['정재'] >= 5) wealth.push(tg['편재'] - tg['정재'] >= 10 ? WEALTH_STYLE.active : tg['정재'] - tg['편재'] >= 10 ? WEALTH_STYLE.steady : WEALTH_STYLE.both);
+  const bucket = strengthBucket(r);
+  if (g['재성'] >= 25 && bucket === 'weak') wealth.push(WEALTH_BALANCE.heavy);
+  else if (g['재성'] >= 15 && bucket === 'strong') wealth.push(WEALTH_BALANCE.able);
+  else if (g['재성'] < 10 && bucket === 'strong') wealth.push(WEALTH_BALANCE.light);
   if (wealthEl === y.yong || wealthEl === y.hee) wealth.push(`재물을 뜻하는 ${josa(elementName(wealthEl), '이', '가')} 나에게 필요한 기운이라, 돈을 버는 활동 자체가 힘이 되는 사주예요. 적극적으로 기회를 찾아도 좋아요.`);
   else if (wealthEl === y.gi || wealthEl === y.gu) wealth.push(`재물을 뜻하는 ${josa(elementName(wealthEl), '이', '가')} 부담이 되는 쪽이라, 돈을 먼저 쫓기보다 실력과 신용을 쌓으면 재물이 따라오기 쉬워요.`);
+  wealth.push(WEALTH_LEAK[top]);
   const caution = guaranteeCaution(r);
   if (caution) wealth.push(caution);
+  const moneyAges = upcomingAges(r, '재성');
+  if (moneyAges.length) wealth.push(`${agesText(moneyAges)}에 시작하는 ${term.대운}에는 ${josa(group('재성'), '이', '가')} 들어와 돈의 움직임이 활발해지기 쉬워요. 수입을 늘릴 기회도, 지출이 커질 일도 함께 오니 계획을 세워 두세요.`);
 
   // 건강
   const health = [`${josa(elementName(least), '이', '가')} 약한 편이라 ${ORGANS[least]} 쪽을 미리 챙겨 주면 좋아요. ${ELEMENT_LIFE[least]}`];
   if (ratios[most] >= 35) health.push(`${josa(elementName(most), '이', '가')} 지나치게 많아요. 넘치는 기운도 균형을 깨기 쉬우니 ${ORGANS[most]} 쪽이 무리하지 않게 살펴 주세요.`);
+  health.push(ELEMENT_BODY[me]);
+  health.push(HEALTH_STRENGTH[strengthBucket(r)]);
+  const mb = r.pillars.find((p) => p.key === 'month')!.branch.index;
+  health.push(SEASON_HEALTH[[2, 3, 4].includes(mb) ? 'spring' : [5, 6, 7].includes(mb) ? 'summer' : [8, 9, 10].includes(mb) ? 'autumn' : 'winter']);
   health.push(HEALTH_DISCLAIMER);
 
   return [
