@@ -17,6 +17,7 @@ export default defineConfig({
         licenses: resolve(import.meta.dirname, 'licenses.html'),
         terms: resolve(import.meta.dirname, 'terms.html'),
         today: resolve(import.meta.dirname, 'today.html'),
+        notFound: resolve(import.meta.dirname, '404.html'),
         ...guide,
       },
     },
