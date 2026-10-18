@@ -37,19 +37,24 @@
       <span data-seal></span>
       <span><span class="brand-title">인설명리</span><br><span class="brand-sub">사주팔자 &amp; 자미두수 명반</span></span>
     </a>
-    <nav class="topnav" aria-label="주 메뉴">
-      <a href="#/" data-nav="/">만세력 보기</a>
-      <a href="#/calendar" data-nav="/calendar">달력</a>
-      <a href="#/archive" data-nav="/archive">보관함</a>
+    <nav class="mainnav" aria-label="주 메뉴">
+      <a href="/" aria-current="page">내 사주팔자·명반 보기<span class="nowrap">(웹앱)</span></a>
+      <a href="/blog/">Blog</a>
     </nav>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="화면 테마 바꾸기">☾</button>
   </header>
+  <nav class="topnav subnav" aria-label="만세력 메뉴">
+    <a href="#/" data-nav="/">사주 보기</a>
+    <a href="#/calendar" data-nav="/calendar">달력</a>
+    <a href="#/archive" data-nav="/archive">보관함</a>
+  </nav>
 
   <main id="app"></main>
 
   <footer class="site">
     <nav aria-label="사이트 정보">
       <a href="/about.html">인설명리 소개</a>
+      <a href="/blog/">블로그</a>
       <a href="/guide/">명리 공부 글</a>
       <a href="/today.html">오늘의 일진</a>
       <a href="/ilju/">60일주 풀이</a>
@@ -63,7 +68,7 @@
   </footer>
 
   <nav class="bottomnav" aria-label="하단 메뉴">
-    <a href="#/" data-nav="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>만세력 보기</a>
+    <a href="#/" data-nav="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>사주 보기</a>
     <a href="#/calendar" data-nav="/calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>달력</a>
     <a href="#/archive" data-nav="/archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4z"/></svg>보관함</a>
   </nav>
