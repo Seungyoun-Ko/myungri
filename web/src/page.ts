@@ -10,7 +10,7 @@ if (top) {
   top.outerHTML = `<header class="topbar">
     <a class="brand" href="/" aria-label="인설명리 처음으로">${SEAL_SVG}
       <span><span class="brand-title">인설명리</span><br><span class="brand-sub">사주팔자 &amp; 자미두수 명반</span></span></a>
-    <nav class="mainnav" aria-label="주 메뉴"><a href="/"${inBlog ? '' : ' aria-current="page"'}>만세력 보기</a><a href="/blog/"${inBlog ? ' aria-current="page"' : ''}>Blog</a></nav>
+    <nav class="mainnav" aria-label="주 메뉴"><a href="/"${inBlog ? '' : ' aria-current="page"'}>내 사주팔자·명반 보기<span class="nowrap">(웹앱)</span></a><a href="/blog/"${inBlog ? ' aria-current="page"' : ''}>Blog</a></nav>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="화면 테마 바꾸기">☾</button>
   </header>`;
 }

@@ -531,3 +531,10 @@ main.article.blog:has(.news-list) { max-width: 960px; }
 .pager a, .pager span { min-width: 38px; text-align: center; padding: 7px 10px; border-radius: 10px; text-decoration: none; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid var(--outline-variant); color: var(--on-surface); }
 .pager span[aria-current='page'] { background: var(--on-surface); color: var(--background); border-color: var(--on-surface); }
 main.article .news-title { margin: 0; }
+/* 좁은 화면: 도장 로고만 남기고, 긴 메뉴 이름은 필요하면 두 줄로 */
+@media (max-width: 480px) {
+  .topbar .brand > span:last-child { display: none; }
+  .mainnav { gap: 2px; min-width: 0; }
+  .mainnav a { font-size: 0.86rem; padding: 7px 10px; white-space: normal; text-align: center; line-height: 1.25; }
+}
+.nowrap { white-space: nowrap; display: inline-block; }
