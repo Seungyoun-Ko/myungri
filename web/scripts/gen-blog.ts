@@ -1,5 +1,6 @@
-// 블로그 글 페이지(blog/*.html)와 목록(blog/index.html)을 만듭니다. 원본: content/blog/*.json
-// 빌드가 끝나면 scripts/flatten-blog.ts가 blog/{id}.html을 사이트 맨 위(/{id})로 옮겨,
+// 블로그 글 페이지(blog/*.html), 카테고리 목록(blog/{분류}.html), 블로그 첫 화면(blog/index.html)을 만듭니다.
+// 원고: content/blog/{글번호}.json · 분류와 주소 넘기기: content/blog/site.json
+// 빌드가 끝나면 scripts/flatten-blog.ts가 blog/{글번호}.html을 사이트 맨 위(/{글번호})로 옮겨,
 // 티스토리 때와 같은 주소(inseol.com/196)를 유지합니다.
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -27,23 +28,36 @@ interface Post {
   images: Img[];
   html: string;
 }
-
-const CATEGORY: Record<string, { key: string; label: string; intro: string }> = {
-  일주론: { key: 'ilju', label: '일주론', intro: '태어난 날의 기둥, 일주로 보는 나의 성격·직업·연애. 갑자일주부터 계해일주까지 60일주를 정리했습니다.' },
-  격국: { key: 'geukguk', label: '격국', intro: '사주의 뼈대인 격국으로 보는 사회적 적성과 나의 무기. 팔정격부터 외격(종격)까지 정리했습니다.' },
-};
+interface Category { key: string; label: string; intro: string; cta: string }
+interface SiteConfig {
+  categories: Category[];
+  /** 분류 key → 글 번호 목록 */
+  assign: Record<string, number[]>;
+  /** 합쳐진 글 번호 → 넘겨 줄 글 번호(또는 경로) */
+  redirects: Record<string, number | string>;
+}
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const date = (iso: string) => iso.slice(0, 10).replace(/-/g, '.');
-const catOf = (p: Post) => CATEGORY[p.category[p.category.length - 1]];
 
 const dir = 'content/blog';
 const posts: Post[] = existsSync(dir)
-  ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')) as Post)
+  ? readdirSync(dir).filter((f) => /^\d+\.json$/.test(f)).map((f) => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')) as Post)
   : [];
-/** 일주 글은 60갑자 순서, 나머지는 글 번호 순서. 일주론 소개 글처럼 일주가 없는 글이 맨 앞에 옵니다. */
+const config: SiteConfig = existsSync(`${dir}/site.json`)
+  ? JSON.parse(readFileSync(`${dir}/site.json`, 'utf8'))
+  : { categories: [], assign: {}, redirects: {} };
+
+const catById = new Map<number, Category>();
+for (const c of config.categories) for (const id of config.assign[c.key] ?? []) catById.set(id, c);
+const unassigned = posts.filter((p) => !catById.has(p.id)).map((p) => p.id);
+if (unassigned.length) throw new Error(`분류가 정해지지 않은 글: ${unassigned.join(', ')} (content/blog/site.json의 assign에 넣어 주세요)`);
+const catOf = (p: Post) => catById.get(p.id)!;
+
+/** 일주 글은 60갑자 순서, 나머지는 글 번호 순서. 일주가 없는 글(소개·일간 글)이 먼저 옵니다. */
 const sortKey = (p: Post) => (p.ilju ? p.ilju.order : p.id - 10000);
-const byCat = (key: string) => posts.filter((p) => catOf(p)?.key === key).sort((a, b) => sortKey(a) - sortKey(b));
+const byCat = (key: string) => posts.filter((p) => catOf(p).key === key).sort((a, b) => sortKey(a) - sortKey(b));
+const shortTitle = (p: Post) => (p.ilju ? `${p.ilju.ko}일주` : p.title.split(' - ')[0]);
 
 const head = (opt: { path: string; title: string; desc: string; type: string; image: string; ld?: object }) => `<!doctype html>
 <html lang="ko">
@@ -77,7 +91,7 @@ const tail = `  </main>
 </html>
 `;
 
-/** 본문: 이미지 자리표시를 실제 이미지로, 표는 가로 스크롤 상자로, 두 번째 소제목 앞에 광고 자리 */
+/** 본문: 이미지 자리표시를 실제 이미지로, 표는 가로 스크롤 상자로, 세 번째 소제목 앞에 광고 자리 */
 function renderBody(p: Post) {
   let html = p.html.replace(/<figure data-img="(\d+)"><\/figure>/g, (_m, n: string) => {
     const i = Number(n);
@@ -100,24 +114,26 @@ function related(p: Post) {
   const prev = list[idx - 1];
   const next = list[idx + 1];
   let others: Post[];
+  let heading: string;
   if (p.ilju) {
-    // 같은 일간(천간)의 다른 일주 + 앞뒤 일주
     const stem = p.ilju.ko[0];
     others = list.filter((x) => x.id !== p.id && x.ilju && x.ilju.ko[0] === stem);
+    heading = `같은 ${stem} 일간의 다른 일주`;
   } else {
-    others = list.filter((x) => x.id !== p.id).slice(0, 12);
+    // 같은 분류에서 앞뒤로 가까운 글
+    const from = Math.max(0, Math.min(idx - 4, list.length - 9));
+    others = list.slice(from, from + 9).filter((x) => x.id !== p.id);
+    heading = `${cat.label} 다른 글`;
   }
   const items = others.map((x) => `<li><a href="/${x.id}">${esc(x.title)}</a></li>`).join('\n      ');
-  const nav = [prev ? `<a href="/${prev.id}">← ${esc(prev.ilju ? `${prev.ilju.ko}일주` : prev.title.split(' - ')[0])}</a>` : '', next ? `<a href="/${next.id}">${esc(next.ilju ? `${next.ilju.ko}일주` : next.title.split(' - ')[0])} →</a>` : '']
-    .filter(Boolean)
-    .join(' · ');
+  const nav = [prev ? `<a href="/${prev.id}">← ${esc(shortTitle(prev))}</a>` : '', next ? `<a href="/${next.id}">${esc(shortTitle(next))} →</a>` : ''].filter(Boolean).join(' · ');
   return `    <section class="post-related">
-      <h2>${p.ilju ? `같은 ${p.ilju.ko[0]} 일간의 다른 일주` : `${cat.label} 다른 글`}</h2>
+      <h2>${heading}</h2>
       <ul>
       ${items}
       </ul>
       <p class="small">${nav}</p>
-      <p class="small"><a href="/blog/#${cat.key}">${cat.label} 글 전체 보기</a></p>
+      <p class="small"><a href="/blog/${cat.key}">${cat.label} 글 전체 보기 (${list.length}편)</a></p>
     </section>
 `;
 }
@@ -136,50 +152,70 @@ function page(p: Post) {
     author: { '@type': 'Person', name: '나이더' },
     publisher: { '@type': 'Organization', name: '인생설계 · 인설명리' },
     mainEntityOfPage: `${SITE}/${p.id}`,
+    articleSection: cat.label,
     keywords: p.tags.join(', '),
   };
-  const ilju = p.ilju
-    ? `    <p class="notice">한눈에 보는 요약 카드: <a href="/ilju/${p.ilju.slug}.html">${p.ilju.ko}일주 요약 보기</a></p>\n`
-    : '';
-  const body = `    <nav class="crumbs small" aria-label="위치"><a href="/blog/">블로그</a> › <a href="/blog/#${cat.key}">${cat.label}</a></nav>
+  const ilju = p.ilju ? `    <p class="notice">한눈에 보는 요약 카드: <a href="/ilju/${p.ilju.slug}.html">${p.ilju.ko}일주 요약 보기</a></p>\n` : '';
+  const cta = p.ilju ? `내 일주가 ${p.ilju.ko}일주인지 궁금하다면` : cat.cta;
+  const body = `    <nav class="crumbs small" aria-label="위치"><a href="/blog/">블로그</a> › <a href="/blog/${cat.key}">${cat.label}</a></nav>
     <h1>${esc(p.title)}</h1>
     <p class="post-meta small">나이더 · ${date(p.published)} 작성${p.edited ? ` · ${date(p.edited)} 고침` : ''}</p>
     <article class="post">
 ${renderBody(p)}
     </article>
     <p class="post-tags small">${p.tags.map((t) => `#${esc(t)}`).join(' ')}</p>
-${ilju}    <div class="card cta"><p><b>${p.ilju ? `내 일주가 ${p.ilju.ko}일주인지 궁금하다면` : '내 사주의 격국이 궁금하다면'}</b> 생년월일시를 넣으면 사주 원국, 대운, 자미두수 명반과 쉬운 말 풀이를 무료로 볼 수 있습니다.</p><p style="margin-top:10px"><a class="btn" href="/">무료 만세력 보기</a></p></div>
+${ilju}    <div class="card cta"><p><b>${cta}</b> 생년월일시를 넣으면 사주 원국, 대운, 자미두수 명반과 쉬운 말 풀이를 무료로 볼 수 있습니다.</p><p style="margin-top:10px"><a class="btn" href="/">무료 만세력 보기</a></p></div>
 ${related(p)}    <div data-ad="guideEnd"></div>
     <p class="disclaimer">타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않습니다.</p>
 `;
   return head({ path: `/${p.id}`, title: p.title, desc: p.description, type: 'article', image, ld }) + body + tail;
 }
 
+const postItem = (p: Post) => `<li><a href="/${p.id}">${esc(p.title)}</a> <span class="small">${date(p.published)}</span></li>`;
+
+function categoryPage(c: Category) {
+  const list = byCat(c.key);
+  const body = `    <nav class="crumbs small" aria-label="위치"><a href="/blog/">블로그</a></nav>
+    <h1>${c.label} <span class="small">${list.length}편</span></h1>
+    <p>${c.intro}</p>
+    <ul class="post-list">
+      ${list.map(postItem).join('\n      ')}
+    </ul>
+    <div data-ad="guideEnd"></div>
+`;
+  return head({ path: `/blog/${c.key}`, title: `${c.label} · 인생설계 블로그`, desc: c.intro, type: 'website', image: `${ASSET}/og.png` }) + body + tail;
+}
+
 function index() {
-  const sections = Object.values(CATEGORY)
+  const cards = config.categories
     .map((c) => {
       const list = byCat(c.key);
       if (!list.length) return '';
-      const items = list.map((p) => `<li><a href="/${p.id}">${esc(p.title)}</a> <span class="small">${date(p.published)}</span></li>`).join('\n        ');
-      return `    <section id="${c.key}">
-      <h2>${c.label} <span class="small">${list.length}편</span></h2>
-      <p>${c.intro}</p>
+      const latest = [...list].sort((a, b) => b.published.localeCompare(a.published)).slice(0, 3);
+      return `    <section class="card blog-cat">
+      <h2><a href="/blog/${c.key}">${c.label}</a> <span class="small">${list.length}편</span></h2>
+      <p class="small">${c.intro}</p>
       <ul class="post-list">
-        ${items}
+        ${latest.map((p) => `<li><a href="/${p.id}">${esc(p.title)}</a></li>`).join('\n        ')}
       </ul>
+      <p class="small"><a href="/blog/${c.key}">전체 보기 →</a></p>
     </section>`;
     })
     .join('\n');
   const body = `    <h1>인생설계 블로그</h1>
     <p>사주명리학과 자미두수를 일상의 언어로 풀어 쓰는 블로그입니다. 내 사주를 직접 보고 싶다면 <a href="/">무료 만세력</a>에서 생년월일시를 넣어 보세요.</p>
-${sections}
+${cards}
     <div data-ad="guideEnd"></div>
 `;
-  return head({ path: '/blog/', title: '인생설계 블로그 · 일주론 · 격국', desc: '사주명리학 일주론 60일주와 격국(팔정격·외격)을 쉬운 말로 정리한 인생설계 블로그 글 모음입니다.', type: 'website', image: `${ASSET}/og.png` }) + body + tail;
+  return head({ path: '/blog/', title: '인생설계 블로그 · 사주명리학 · 자미두수', desc: '사주 입문부터 일주론, 오행과 십신, 격국과 용신, 합충과 신살, 12운성과 운의 흐름, 명리 칼럼, 자미두수까지 쉬운 말로 정리한 인생설계 블로그입니다.', type: 'website', image: `${ASSET}/og.png` }) + body + tail;
 }
 
 rmSync('blog', { recursive: true, force: true });
 mkdirSync('blog', { recursive: true });
 for (const p of posts) writeFileSync(`blog/${p.id}.html`, page(p));
+for (const c of config.categories) writeFileSync(`blog/${c.key}.html`, categoryPage(c));
 writeFileSync('blog/index.html', index());
-console.log('blog pages:', posts.length, LIVE ? '(공개)' : '(검색 비노출 상태)');
+// 합쳐진 글의 주소 넘기기 목록 (flatten-blog.ts가 dist/_redirects에 씀)
+const redirects = Object.entries(config.redirects).map(([from, to]) => `/${from} ${typeof to === 'number' ? `/${to}` : to} 301`);
+writeFileSync('blog/redirects.txt', redirects.join('\n') + '\n');
+console.log('blog pages:', posts.length, '· categories:', config.categories.length, '· redirects:', redirects.length, LIVE ? '(공개)' : '(검색 비노출 상태)');
