@@ -1,11 +1,10 @@
 // 사주팔자 화면: 원국 · 운 흐름 · 통변 (기획서 2.3)
 import { ELEMENTS_HANJA, ELEMENTS_KO, mod, STEM_ELEMENT } from '../engine/constants';
 import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, type TenGod, PILLAR_TITLES } from '../engine/saju';
-import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
-import { renderTerms } from '../engine/terms';
-import { getTermMode, termToggleButton } from './term-mode';
-import { bigFortuneReading, monthFortuneReading, type FortuneReading, yearFortuneReading } from '../engine/fortune-tongbyeon';
+import { yearReading } from '../engine/reading';
+import { lifeGraphView, periodView, yearView } from './reading-view';
+import { bigReading, lifeGraph, monthReading } from '../engine/reading/flow';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
 
@@ -94,12 +93,6 @@ const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string) => 
     <div class="tg">${f.stemTenGod}<br>${f.branchTenGod}</div>
   </button>`;
 
-function readingBox(rd: FortuneReading | null) {
-  if (!rd) return '';
-  const m = getTermMode();
-  return `<div class="reading tongbyeon"><h3>${esc(renderTerms(rd.title, m))}</h3>${rd.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>`;
-}
-
 export function flowView(s: SajuResult, selectedBig: number, selectedYear: number, selectedMonth: number, now = new Date()) {
   if (!s.bigFortunes.length) return `<div class="card"><p class="notice">출생시간을 입력해야 대운과 세운을 볼 수 있어요.</p></div>`;
   const thisYear = now.getFullYear();
@@ -111,30 +104,31 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
     .map((y) => fortuneCell(y, `${y.year}`, y.year === thisYear, `data-year="${y.year}" aria-pressed="${y.year === selectedYear}" aria-label="${y.year}년 ${y.ganzhi}"`))
     .join('');
   const months = s.monthFortunes
-    .map((m) => fortuneCell(m, `${m.month}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${m.month}월 ${m.ganzhi}"`))
+    // 절기 달(인월=1)을 양력 이름으로 보여 줍니다: 인월은 양력 2월 무렵
+    .map((m) => fortuneCell(m, `${m.month === 12 ? 1 : m.month + 1}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="양력 ${m.month === 12 ? 1 : m.month + 1}월 무렵 ${m.ganzhi}"`))
     .join('');
   const sel = s.bigFortunes[selectedBig];
   return `<div class="card">
       <div class="flow-nav">
-        <h2 style="margin:0">대운 <span class="small muted">${s.bigFortuneForward ? '순행' : '역행'}</span></h2>
+        <h2 style="margin:0">10년 운 <span class="small muted">대운 · ${s.bigFortuneForward ? '순행' : '역행'}</span></h2>
         <div style="display:flex;gap:6px;align-items:center">
-          ${termToggleButton()}
           <button type="button" class="icon-btn" data-big-step="1" aria-label="다음 운" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
           <button type="button" class="icon-btn" data-big-step="-1" aria-label="이전 운" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>
         </div>
       </div>
+      ${lifeGraphView(lifeGraph(s))}
       <div class="flow">${big}</div>
-      ${readingBox(bigFortuneReading(s, selectedBig))}
+      ${periodView(bigReading(s, selectedBig))}
     </div>
     <div class="card">
-      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년 · 해를 누르면 풀이가 바뀌어요</span></h2>
+      <h2>한 해 운세 <span class="small muted">${sel.startAge}세부터 10년 · 해를 누르면 그 해 풀이가 나와요</span></h2>
       <div class="flow">${years}</div>
-      ${readingBox(yearFortuneReading(s, selectedBig, selectedYear))}
+      ${yearView(yearReading(s, selectedYear))}
     </div>
     <div class="card">
-      <h2>월운 <span class="small muted">${thisYear}년 · 절기 기준</span></h2>
+      <h2>이번 해 달마다 운 <span class="small muted">${thisYear}년 · 절기 기준이라 달은 4~8일 무렵 바뀌어요</span></h2>
       <div class="flow months">${months}</div>
-      ${readingBox(monthFortuneReading(s, selectedMonth))}
+      ${periodView(monthReading(s, selectedMonth))}
       <p class="disclaimer">${DISCLAIMER}</p>
     </div>`;
 }
@@ -152,19 +146,6 @@ function monthIndexOf(d: Date) {
   });
   if (m === 1 || (m === 2 && day < 4)) idx = 12;
   return idx;
-}
-
-export function tongbyeonView(sections: TongbyeonSection[], selected: string, attr: string) {
-  const cur = sections.find((s) => s.key === selected) ?? sections[0];
-  const m = getTermMode();
-  return `<div class="card">
-    <div class="tong-head">
-      <div class="tabs-under" role="tablist">${sections.map((s) => `<button type="button" role="tab" ${attr}="${s.key}" aria-selected="${s.key === cur.key}">${s.title}</button>`).join('')}</div>
-      ${termToggleButton()}
-    </div>
-    <div class="tongbyeon" style="margin-top:14px" role="tabpanel">${cur.paragraphs.map((p) => `<p>${esc(renderTerms(p, m))}</p>`).join('')}</div>
-    <p class="disclaimer">${DISCLAIMER}</p>
-  </div>`;
 }
 
 export function wongukCard(s: SajuResult) {

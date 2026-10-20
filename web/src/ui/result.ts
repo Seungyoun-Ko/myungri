@@ -2,17 +2,17 @@
 import { cityById } from '../engine/cities';
 import type { NormalizedBirth } from '../engine/birth';
 import { daehanChart, yunyeonChart, type JamidusuChart, type OverlayChart } from '../engine/jamidusu';
-import { combinedTongbyeon, jamidusuTongbyeon, sajuTongbyeon } from '../engine/tongbyeon';
+import { sajuReading } from '../engine/reading';
+import { readingView, stackedReadingView } from './reading-view';
+import { combinedReading, jamiReading } from '../engine/reading/jami';
 import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
 import { activateAds, adSlot } from '../ads';
 import { $, esc, pad2, toast } from './dom';
-import { flowView, monthIndexOf, ratioCard, summaryCard, tongbyeonView, wongukCard } from './saju-view';
+import { flowView, monthIndexOf, ratioCard, summaryCard, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
 import { saveAsImage } from './share-image';
-import { renderTerms } from '../engine/terms';
-import { getTermMode, termToggleButton, toggleTermMode } from './term-mode';
 
 export interface ResultState {
   snapshot: Snapshot;
@@ -124,13 +124,8 @@ function jamiBoard(st: ResultState, chart: JamidusuChart, wide: boolean, overlay
 
 function combinedHtml(st: ResultState) {
   const { saju, chart } = st.snapshot;
-  if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 통변을 볼 수 있어요.</p></div>`;
-  const sections = combinedTongbyeon(saju, chart);
-  return `<div class="card tongbyeon">
-    <div class="tong-head" style="justify-content:flex-end">${termToggleButton()}</div>
-    ${sections.map((x) => `<h2 style="margin-top:6px">${x.title}</h2>${x.paragraphs.map((p) => `<p>${esc(renderTerms(p, getTermMode()))}</p>`).join('')}`).join('<div style="height:14px"></div>')}
-    <p class="disclaimer">타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
-  </div>`;
+  if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 풀이를 볼 수 있어요.</p></div>`;
+  return stackedReadingView(combinedReading(saju, chart));
 }
 
 function appBanner() {
@@ -157,10 +152,10 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
   root.innerHTML = `
     <div data-region="profile"></div>
     <div class="segmented primary" role="tablist" data-tabs="main" style="margin-top:14px">
-      ${tabButtons('main', [['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 통변']], st.mainTab)}
+      ${tabButtons('main', [['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 풀이']], st.mainTab)}
     </div>
     <section data-panel="saju" style="margin-top:14px">
-      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '통변']], st.sajuTab)}</div>
+      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '풀이']], st.sajuTab)}</div>
       <div data-sub="wonguk" class="stack" style="margin-top:14px">
         <div data-region="wonguk"></div>
         ${adSlot('resultTop')}
@@ -192,13 +187,15 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
     flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
-    sajuTong: () => (region('sajuTong')!.innerHTML = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
+    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(sajuReading(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
       const overlay = overlayOf(st, chart);
       region('picker')!.innerHTML = jamiPicker(st, chart, overlay);
       region('board')!.innerHTML = jamiBoard(st, chart, wide, overlay);
-      region('jamiTong')!.innerHTML = tongbyeonView(jamidusuTongbyeon(chart, overlay), st.jamiTong, 'data-jami-tong');
+      const jamiSections = jamiReading(chart, overlay);
+      if (!jamiSections.some((x) => x.key === st.jamiTong)) st.jamiTong = jamiSections[0].key;
+      region('jamiTong')!.innerHTML = readingView(jamiSections, st.jamiTong, 'data-jami-tong');
     },
     combined: () => (region('combined')!.innerHTML = combinedHtml(st)),
     board: () => {
@@ -241,17 +238,11 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       if (group === 'jami' && chart) {
         st.jamiMode = v as ChartMode;
         st.selectedPalace = overlayOf(st, chart)?.mingBranch ?? chart.mingBranch;
+        // 10년·1년 흐름을 고르면 '이 시기' 풀이부터, 선천으로 돌아오면 '나 자신'부터 보여 줍니다
+        st.jamiTong = v === 'natal' ? 'general' : 'now';
         paint.jami();
       }
       syncTabs();
-      return;
-    }
-    if (t.closest('[data-term-toggle]')) {
-      toggleTermMode();
-      paint.sajuTong();
-      paint.flow();
-      paint.jami();
-      paint.combined();
       return;
     }
     const ratio = t.closest<HTMLButtonElement>('[data-ratio-mode] button');
