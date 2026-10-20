@@ -590,3 +590,24 @@ main.article .news-title { margin: 0; }
   .rd-months li { grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; }
   .rd-months .m-text { grid-column: 1 / -1; }
 }
+/* 자미두수: 여러 자리를 한 항목에 */
+.rd-block { border-top: 1px solid var(--outline-variant); padding-top: 12px; display: grid; gap: 8px; }
+.rd-block h3 { font-size: 1rem; font-family: var(--serif); }
+/* 인생 흐름 그래프 */
+.life-graph { margin: 12px 0 4px; }
+.life-graph figcaption { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+.lg-scroll { overflow-x: auto; }
+.life-graph svg { width: 100%; max-width: 680px; height: auto; display: block; }
+.lg-grid { stroke: var(--outline-variant); stroke-width: 1; stroke-dasharray: 3 4; }
+.lg-axis, .lg-gz { fill: var(--on-surface-variant); font-size: 16px; }
+.lg-age { fill: var(--on-surface); font-size: 17px; font-weight: 700; }
+.lg-now { fill: var(--primary); font-size: 16px; font-weight: 700; }
+.lg-line { fill: none; stroke: var(--primary); stroke-width: 3.5; stroke-linejoin: round; }
+.lg-area { fill: var(--primary-container); opacity: 0.45; }
+.lg-dot { stroke: var(--surface); stroke-width: 2; }
+.favor-dot-good { fill: var(--el-0); }
+.favor-dot-normal { fill: var(--outline); }
+.favor-dot-caution { fill: var(--el-1); }
+.lg-point { cursor: pointer; }
+.lg-point:focus-visible circle { stroke: var(--on-surface); stroke-width: 3; }
+.lg-point.current .lg-dot { stroke: var(--primary); stroke-width: 3; }

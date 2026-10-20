@@ -1,5 +1,6 @@
 // 새 사주 풀이와 한 해 운세 화면
 import type { ReadingSection, YearReadingView } from '../engine/reading';
+import type { LifePoint, PeriodReadingView } from '../engine/reading/flow';
 import type { FavorKey } from '../engine/reading/types';
 import { DISCLAIMER } from '../engine/tongbyeon-data';
 
@@ -12,7 +13,8 @@ function sectionBody(s: ReadingSection) {
   const out: string[] = [];
   if (s.headline) out.push(`<div class="rd-headline">${s.headline.label ? `<span class="rd-label">${esc(s.headline.label)}</span>` : ''}<p>${esc(s.headline.text)}</p></div>`);
   if (s.keywords.length) out.push(`<p class="rd-keywords">${s.keywords.map((k) => `<span>#${esc(k)}</span>`).join('')}</p>`);
-  out.push(`<div class="rd-text">${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`);
+  if (s.paragraphs.length) out.push(`<div class="rd-text">${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`);
+  for (const b of s.blocks ?? []) out.push(`<section class="rd-block"><h3>${esc(b.title)}</h3><div class="rd-text">${b.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</div></section>`);
   if (s.facts?.length) out.push(`<dl class="rd-facts">${s.facts.map((f) => `<div><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></div>`).join('')}</dl>`);
   if (s.energize?.length || s.drain?.length) {
     out.push(`<div class="rd-two">${s.energize?.length ? box('good', '이럴 때 힘이 나요', list(s.energize)) : ''}${s.drain?.length ? box('warn', '이럴 때 지쳐요', list(s.drain)) : ''}</div>`);
@@ -59,4 +61,57 @@ export function yearView(v: YearReadingView | null) {
     ${box('tip', '올해의 실천 팁', list(v.tips, 'ol'))}
     ${basis(v.basis)}
   </div>`;
+}
+
+/** 탭 없이 위에서 아래로 이어 읽는 풀이 (종합) */
+export function stackedReadingView(sections: ReadingSection[]) {
+  return `<div class="stack">${sections
+    .map((s) => `<div class="card"><h2>${esc(s.title)}</h2><div class="rd">${sectionBody(s)}</div></div>`)
+    .join('')}<p class="disclaimer">${DISCLAIMER}</p></div>`;
+}
+
+const PERIOD_FAVOR_LABEL: Record<FavorKey, string> = { good: '힘이 되는 때', normal: '무난한 때', caution: '속도를 조절할 때' };
+
+/** 10년 운·이번 달 풀이 */
+export function periodView(v: PeriodReadingView | null) {
+  if (!v) return '';
+  return `<div class="rd rd-year">
+    <div class="rd-headline"><span class="rd-label">${esc(v.label)} · <span class="favor favor-${v.favor}">${PERIOD_FAVOR_LABEL[v.favor]}</span></span><p>${esc(v.title)}</p></div>
+    <div class="rd-text">${v.intro ? `<p>${esc(v.intro)}</p>` : ''}${v.overview.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
+    <div class="rd-fields">${v.fields.map((f) => `<div><h4>${esc(f.label)}</h4><p>${esc(f.text)}</p></div>`).join('')}</div>
+    ${v.tips.length ? box('tip', '이 시기의 실천 팁', list(v.tips, 'ol')) : ''}
+    ${basis(v.basis)}
+  </div>`;
+}
+
+/** 인생 흐름 그래프: 10년 운마다 나에게 맞는 정도 (-2 ~ +2) */
+export function lifeGraphView(points: LifePoint[]) {
+  if (!points.length) return '';
+  // 휴대폰 폭에 맞춰 줄어들어도 글자가 읽히도록 좌표를 작게 잡습니다
+  const W = 560;
+  const H = 210;
+  const padX = 40;
+  const top = 30;
+  const bottom = 56;
+  const x = (i: number) => padX + (i * (W - padX * 2)) / Math.max(1, points.length - 1);
+  const y = (score: number) => top + ((2 - score) * (H - top - bottom)) / 4;
+  const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.score).toFixed(1)}`).join(' ');
+  const area = `${line} L${x(points.length - 1).toFixed(1)},${(H - bottom).toFixed(1)} L${x(0).toFixed(1)},${(H - bottom).toFixed(1)} Z`;
+  const grid = [2, 0, -2]
+    .map((v) => `<line class="lg-grid" x1="${padX}" x2="${W - padX}" y1="${y(v)}" y2="${y(v)}"/><text class="lg-axis" x="${padX - 6}" y="${y(v) + 5}" text-anchor="end">${v === 2 ? '좋음' : v === 0 ? '보통' : '조절'}</text>`)
+    .join('');
+  const dots = points
+    .map(
+      (p, i) => `<g class="lg-point${p.current ? ' current' : ''}" data-big="${p.index}" role="button" tabindex="0" aria-label="${p.startAge}세부터 10년: ${esc(p.title)}">
+        <circle class="lg-dot favor-dot-${p.favor}" cx="${x(i)}" cy="${y(p.score)}" r="${p.current ? 10 : 7}"/>
+        <text class="lg-age" x="${x(i)}" y="${H - bottom + 22}" text-anchor="middle">${p.startAge}세</text>
+        <text class="lg-gz" x="${x(i)}" y="${H - bottom + 42}" text-anchor="middle">${esc(p.ganzhi)}</text>
+        ${p.current ? `<text class="lg-now" x="${x(i)}" y="${y(p.score) - 17}" text-anchor="middle">지금</text>` : ''}
+      </g>`,
+    )
+    .join('');
+  return `<figure class="life-graph">
+    <figcaption>인생 흐름 · 10년마다 들어오는 기운이 나에게 얼마나 맞는지 <span class="small muted">점을 누르면 그 10년 풀이가 나와요</span></figcaption>
+    <div class="lg-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="10년 운 흐름 그래프">${grid}<path class="lg-area" d="${area}"/><path class="lg-line" d="${line}"/>${dots}</svg></div>
+  </figure>`;
 }

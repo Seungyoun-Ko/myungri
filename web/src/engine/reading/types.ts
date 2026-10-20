@@ -143,3 +143,66 @@ export interface DayComboReading {
   love: string; // 80~140자
   relations: string; // 80~140자
 }
+
+/** 10년 운(대운)에 들어온 십신. YearReading과 같은 모양이지만 10년이라는 긴 흐름으로 씁니다. */
+export type BigReading = YearReading;
+
+/** 그 달 운의 자세한 풀이 */
+export interface MonthDetail {
+  overview: string; // 120~180자
+  work: string; // 60~100자
+  money: string; // 60~100자
+  love: string; // 60~100자
+  health: string; // 60~100자
+}
+
+/** 자미두수 주성 14개 (본문에는 별 이름 대신 nick을 씀) */
+export interface StarReading {
+  /** 쉬운 별명 (예: '왕의 별', 3~8자) */
+  nick: string;
+  /** 이 별이 나 자신의 자리에 있을 때 한 줄 요약 (25~45자) */
+  title: string;
+  keywords: [string, string, string];
+  /** 별의 기본 성질 (130~200자) */
+  nature: string;
+  /** 나 자신의 자리에 있을 때 성격 (150~220자) */
+  self: string;
+  /** 일·직업 자리 (120~180자) */
+  work: string;
+  /** 돈·재물 자리, 집·부동산 자리 (120~180자) */
+  money: string;
+  /** 배우자·연애 자리 (120~180자) */
+  love: string;
+  /** 건강 자리 (80~140자). 질병 단정 금지 */
+  health: string;
+  /** 형제·친구·부모·자녀처럼 사람 자리 (110~170자) */
+  relations: string;
+  /** 바깥 활동·이동 자리, 마음·취미 자리 (100~160자) */
+  life: string;
+  /** 10년·1년 흐름의 중심 자리에 이 별이 올 때 (100~160자) */
+  flow: string;
+}
+
+/** 자미두수 12자리 */
+export interface PalaceReading {
+  /** 이 자리가 삶에서 보여 주는 것 (90~140자) */
+  intro: string;
+  /** 이 자리에 중심 별이 없어 맞은편 별을 빌려 볼 때 (70~120자) */
+  empty: string;
+}
+
+/** 자미두수 기타: 밝기, 네 가지 변화(사화), 돕는 별·부딪치는 별 */
+export interface JamiExtraReading {
+  bright: [string, string]; // 별빛이 밝을 때, 2가지 표현 (50~100자)
+  dim: [string, string]; // 별빛이 약할 때 (50~100자)
+  /** 사화: 록 좋은 기운·복, 권 힘과 주도권, 과 좋은 평판, 기 마음 쓸 일 */
+  sihwa: Record<'록' | '권' | '과' | '기', { natal: string; period: string }>; // 각 70~120자
+  /** 돕는 별 8개 (좌보 우필 문창 문곡 천괴 천월 녹존 천마) 한 문장씩 (40~90자) */
+  aux: Record<string, string>;
+  /** 부딪치는 별 6개 (경양 타라 화성 영성 지공 지겁) 한 문장씩 (40~90자) */
+  sal: Record<string, string>;
+  /** 나이 들수록 마음이 가는 자리(신궁)가 따로 있을 때, {field} 자리에 분야가 들어감 (70~120자) */
+  shen: string;
+  /** 신궁이 나 자신의 자리와 같을 때 (60~100자) */
+  shenSame: string;
+}

@@ -17,7 +17,7 @@ import { MONTH, YEAR, YEAR_DAY, YEAR_FAVOR } from './fortune';
 export const DAY_MASTER: DayMasterReading[] = [...DAY_MASTER_A, ...DAY_MASTER_B];
 
 export interface ReadingSection {
-  key: 'general' | 'personality' | 'aptitude' | 'love' | 'wealth' | 'health' | 'relations';
+  key: string;
   title: string;
   /** 맨 위에 크게 보이는 한 줄 (label이 있으면 작은 머리말을 붙임) */
   headline?: { label?: string; text: string };
@@ -38,9 +38,11 @@ export interface ReadingSection {
   basis: string[];
   /** 본문 아래 작은 안내 */
   note?: string;
+  /** 여러 자리를 한 항목에 묶을 때 (자미두수의 사람 자리·생활 자리) */
+  blocks?: { title: string; paragraphs: string[] }[];
 }
 
-export const READING_TABS: [ReadingSection['key'], string][] = [
+export const READING_TABS: [string, string][] = [
   ['general', '나는 어떤 사람'],
   ['personality', '성격'],
   ['aptitude', '일과 적성'],
