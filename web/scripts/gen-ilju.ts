@@ -189,7 +189,7 @@ for (const j of ALL) writeFileSync(`ilju/${j.slug}.html`, page(j));
 writeFileSync('ilju/index.html', index());
 
 // 사이트맵: 고정 페이지 + 공부 글 + 일주
-const fixed = ['/', '/today.html', '/about.html', '/privacy.html', '/terms.html', '/contact.html', '/licenses.html'];
+const fixed = ['/', '/today.html', '/about.html', '/privacy.html', '/terms.html', '/contact.html', '/licenses.html', '/en/', '/en/about.html', '/en/privacy.html', '/en/terms.html'];
 const guide = readdirSync('guide').filter((f) => f.endsWith('.html')).map((f) => (f === 'index.html' ? '/guide/' : `/guide/${f}`));
 const ilju = ['/ilju/', ...ALL.map((j) => `/ilju/${j.slug}.html`)];
 const urls = [...fixed, ...guide, ...ilju];

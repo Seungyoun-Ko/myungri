@@ -6,13 +6,14 @@ import { renderArchive } from './ui/archive-view';
 import { SEAL_SVG } from './ui/brand';
 import { $ } from './ui/dom';
 import { activateAds, adSlot, loadAdSense } from './ads';
+import { tr } from './i18n';
 
 const LAST_INPUT = 'inseol.lastInput';
 let current: ResultState | null = null;
 
 /** 계산·결과 코드는 처음 필요할 때 한 번만 불러옵니다. */
 let heavyPromise: Promise<typeof import('./heavy')> | null = null;
-const heavy = () => (heavyPromise ??= import('./heavy'));
+const heavy = () => (heavyPromise ??= import('./heavy').then(async (m) => (await m.readingsReady, m)));
 
 function readLastInput(): BirthInput | null {
   try {
@@ -45,10 +46,10 @@ function home() {
   const app = $('#app');
   app.innerHTML = `
     <div class="layout${current ? ' with-result' : ''}">
-      <section class="input-pane" aria-label="입력">
+      <section class="input-pane" aria-label="${tr('입력', 'Birth details')}">
         <div class="hero">
-          <h1>사주팔자 &amp; 자미두수 명반</h1>
-          <p>만세력과 명반을 한곳에서, 무료로. 쉬운 말로 풀어 드려요.</p>
+          <h1>${tr('사주팔자 &amp; 자미두수 명반', 'Korean Saju &amp; Zi Wei Chart')}</h1>
+          <p>${tr('만세력과 명반을 한곳에서, 무료로. 쉬운 말로 풀어 드려요.', 'Your Four Pillars and Purple Star charts in one place, free. Read in plain English, no jargon.')}</p>
         </div>
         <div id="input-root"></div>
       </section>
@@ -61,7 +62,7 @@ function home() {
       /* 무시 */
     }
     const pane = $('#result-pane');
-    pane.innerHTML = '<div class="card loading">사주와 자미두수 명반을 계산하고 있어요. 잠시만 기다려 주세요.</div>';
+    pane.innerHTML = `<div class="card loading">${tr('사주와 자미두수 명반을 계산하고 있어요. 잠시만 기다려 주세요.', 'Calculating your charts. Just a moment…')}</div>`;
     app.querySelector('.layout')!.classList.add('with-result');
     setTimeout(async () => {
       try {
@@ -69,7 +70,7 @@ function home() {
         await showResult(initialResultState(calculate(input)));
         if (!window.matchMedia('(min-width: 900px)').matches) pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (e) {
-        pane.innerHTML = `<div class="card"><p class="notice warn">계산하지 못했어요. 입력을 다시 확인해 주세요.</p></div>`;
+        pane.innerHTML = `<div class="card"><p class="notice warn">${tr('계산하지 못했어요. 입력을 다시 확인해 주세요.', 'Something went wrong. Please check your details and try again.')}</p></div>`;
         console.error(e);
       }
     }, 30);
@@ -85,23 +86,23 @@ function route() {
   });
   const app = $('#app');
   if (hash === '/calendar') {
-    document.title = '만세력 달력 · 인설명리';
+    document.title = tr('만세력 달력 · 인설명리', 'Calendar · Inseol Saju');
     // 달력은 날짜를 누를 때마다 다시 그리므로 광고는 그 바깥에 둡니다.
-    app.innerHTML = `<div id="calendar-root"><div class="card loading">달력을 불러오고 있어요.</div></div>${adSlot('calendar')}`;
+    app.innerHTML = `<div id="calendar-root"><div class="card loading">${tr('달력을 불러오고 있어요.', 'Loading the calendar…')}</div></div>${adSlot('calendar')}`;
     void heavy().then(({ renderCalendar }) => {
       if ((location.hash.replace(/^#/, '') || '/') !== '/calendar') return;
       renderCalendar($('#calendar-root'));
       activateAds(app);
     });
   } else if (hash === '/archive') {
-    document.title = '보관함 · 인설명리';
+    document.title = tr('보관함 · 인설명리', 'Saved charts · Inseol Saju');
     renderArchive(app, async (entry) => {
       const { initialResultState } = await heavy();
       current = initialResultState(entry.snapshot, entry.id);
       location.hash = '#/';
     });
   } else {
-    document.title = '인설명리 · 사주팔자 & 자미두수 명반';
+    document.title = tr('인설명리 · 사주팔자 & 자미두수 명반', 'Inseol Saju · Free Korean Saju & Zi Wei Dou Shu Chart');
     home();
   }
   window.scrollTo({ top: 0 });
@@ -114,7 +115,7 @@ function setupTheme() {
     else delete document.documentElement.dataset.theme;
     const dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
     btn.textContent = dark ? '☀' : '☾';
-    btn.setAttribute('aria-label', dark ? '밝은 화면으로' : '어두운 화면으로');
+    btn.setAttribute('aria-label', dark ? tr('밝은 화면으로', 'Switch to light mode') : tr('어두운 화면으로', 'Switch to dark mode'));
   };
   let saved: string | null = null;
   try {

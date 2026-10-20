@@ -2,6 +2,7 @@
 // 이미지는 이 기기 안에서만 만들어지고 어디에도 올라가지 않습니다.
 import { SEAL_SVG } from './brand';
 import { toast } from './dom';
+import { tr } from '../i18n';
 
 const SERIF_FAMILY = 'Noto Serif KR';
 
@@ -25,7 +26,7 @@ function frame(nodes: HTMLElement[], width: number, caption: string) {
   const wrap = document.createElement('div');
   wrap.className = 'export-frame';
   wrap.style.width = `${width}px`;
-  wrap.innerHTML = `<div class="export-head">${SEAL_SVG}<div><b>인설명리</b><span>${caption}</span></div></div>`;
+  wrap.innerHTML = `<div class="export-head">${SEAL_SVG}<div><b>${tr('인설명리', 'Inseol Saju')}</b><span>${caption}</span></div></div>`;
   for (const node of nodes) {
     const clone = node.cloneNode(true) as HTMLElement;
     clone.querySelectorAll('[data-no-export]').forEach((el) => el.remove());
@@ -33,14 +34,14 @@ function frame(nodes: HTMLElement[], width: number, caption: string) {
   }
   const foot = document.createElement('div');
   foot.className = 'export-foot';
-  foot.textContent = 'app.inseol.com · 타고난 성향을 풀이한 참고용 내용이에요';
+  foot.textContent = tr('app.inseol.com · 타고난 성향을 풀이한 참고용 내용이에요', 'app.inseol.com/en · for reflection, not prediction');
   wrap.append(foot);
   document.body.append(wrap);
   return wrap;
 }
 
 export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string; width: number; caption: string }) {
-  toast('이미지를 만들고 있어요…', undefined, 2500);
+  toast(tr('이미지를 만들고 있어요…', 'Creating image…'), undefined, 2500);
   const wrap = frame(nodes, opts.width, opts.caption);
   try {
     const { toBlob } = await import('html-to-image');
@@ -64,7 +65,7 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.canShare?.({ files: [file] }) && window.matchMedia('(pointer: coarse)').matches) {
       try {
-        await nav.share({ files: [file], title: '인설명리' });
+        await nav.share({ files: [file], title: tr('인설명리', 'Inseol Saju') });
         return;
       } catch (e) {
         if ((e as DOMException).name === 'AbortError') return;
@@ -79,9 +80,9 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
       URL.revokeObjectURL(a.href);
       a.remove();
     }, 1000);
-    toast('이미지를 저장했어요.');
+    toast(tr('이미지를 저장했어요.', 'Image saved.'));
   } catch {
-    toast('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    toast(tr('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.', "Couldn't create the image. Please try again in a moment."));
   } finally {
     wrap.remove();
   }

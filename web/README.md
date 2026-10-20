@@ -152,3 +152,18 @@ Cloudflare Pages 프로젝트 설정:
   - `jami-stars-a.ts`, `jami-stars-b.ts`, `jami-palaces.ts`, `jami.ts`: 자미두수 12자리 풀이(별 이름 대신 '왕의 별' 같은 별명), 대한·유년 '이 시기', 사주·자미두수 종합 풀이
 
 **규칙**: 본문에는 전문 용어·한자·괄호를 쓰지 않습니다. 용어는 항목마다 '명리 근거 보기'에만 나옵니다. `tests/reading.test.ts`가 무작위 300명으로 용어·분량을 검사합니다.
+
+## 영어 버전 (app.inseol.com/en/)
+
+- 페이지: `en/index.html`(웹앱), `en/about.html`, `en/privacy.html`, `en/terms.html`. `<html lang="en">`이면 영어 화면이 됩니다(`src/i18n.ts`의 `tr('한국어', 'English')`).
+- 풀이 문장: `src/engine/reading/en/*.ts`가 한국어 파일과 같은 키·구조의 영어판입니다. 조립은 `en/index.ts`(사주·한 해), `en/flow.ts`(10년·달·그래프), `en/jami.ts`(자미두수·종합). 계산 도우미는 `reading/shared.ts`를 함께 씁니다.
+- 언어별로 풀이 묶음 하나만 내려받습니다(`src/readings-ko.ts` / `src/readings-en.ts`, `heavy.ts`의 `readingsReady`).
+- 용어 영어 이름(십신, 12운성, 궁, 별 이름 등): `src/engine/en-labels.ts`.
+- 검사: `tests/reading-en.test.ts` — 본문에 한글·한자·전문 용어·깨진 문장이 없는지, 분량이 충분한지.
+- 한국어 문장을 고치면 같은 키의 영어 문장도 함께 고쳐 주세요.
+
+## 해외 출생지
+
+- `src/engine/cities.ts`의 해외 도시(`tz` 있음)는 브라우저의 시간대 자료(IANA)로 그 시각의 UTC 오프셋과 서머타임을 구합니다. 한국 도시는 예전처럼 한국 시각 규칙을 씁니다.
+- 절기 비교는 실제 출생 순간(UTC+8), 시주·일주는 기본으로 도시 경도 기준 현지 태양시(끄면 현지 표준시)입니다.
+- 서머타임 시작으로 없는 시각은 막고, 끝나서 두 번 있는 시각은 앞/뒤를 고르게 합니다. 검사: `tests/overseas.test.ts`.

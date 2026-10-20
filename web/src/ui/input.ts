@@ -1,6 +1,7 @@
 // 입력 화면 (기획서 2.2)
-import { CITIES, DEFAULT_CITY_ID } from '../engine/cities';
-import { BirthInputError, type BirthInput, dstState, normalizeBirth, toSolarDate } from '../engine/birth';
+import { CITIES, DEFAULT_CITY_ID, cityById } from '../engine/cities';
+import { BirthInputError, type BirthErrorCode, type BirthInput, clockStateFor, normalizeBirth, toSolarDate } from '../engine/birth';
+import { EN, tr } from '../i18n';
 import { $, $$, esc } from './dom';
 
 const DEFAULT_INPUT: BirthInput = {
@@ -13,10 +14,35 @@ const DEFAULT_INPUT: BirthInput = {
   hour: 12,
   minute: 0,
   timeUnknown: false,
-  cityId: DEFAULT_CITY_ID,
+  cityId: EN ? 'us-new-york' : DEFAULT_CITY_ID,
   useLongitude: false,
   fold: 'first',
+  solarTime: true,
 };
+
+const ERROR_EN: Record<BirthErrorCode, string> = {
+  noDate: 'That date does not exist.',
+  noLunar: 'That lunar date does not exist.',
+  noLeap: 'That year has no such leap month, or the date does not exist.',
+  range: 'Dates from January 1, 1900 to December 31, 2050 are supported.',
+  dstGap: 'That time did not exist: clocks jumped forward an hour for daylight saving.',
+  skipped1961: 'That time did not exist: Korea changed its standard time on August 10, 1961.',
+  tzGap: 'That time did not exist in this place: clocks jumped forward for daylight saving.',
+};
+
+/** 도시 목록: 한국어 화면은 한국 도시 먼저, 영어 화면은 해외 도시 먼저 */
+function cityOptions(selected: string) {
+  const groups = new Map<string, typeof CITIES>();
+  for (const c of CITIES) {
+    const g = c.tz ? (EN ? c.regionEn! : `해외 · ${c.region}`) : EN ? 'South Korea' : c.region;
+    groups.set(g, [...(groups.get(g) ?? []), c]);
+  }
+  const entries = [...groups.entries()];
+  if (EN) entries.sort((a, b) => Number(a[0] === 'South Korea') - Number(b[0] === 'South Korea'));
+  return entries
+    .map(([g, cs]) => `<optgroup label="${g}">${cs.map((c) => `<option value="${c.id}" ${c.id === selected ? 'selected' : ''}>${EN ? c.en : c.name}</option>`).join('')}</optgroup>`)
+    .join('');
+}
 
 const seg = (name: string, value: string, options: [string, string][]) =>
   `<div class="segmented" role="radiogroup" data-seg="${name}">${options
@@ -25,47 +51,46 @@ const seg = (name: string, value: string, options: [string, string][]) =>
 
 export function renderInput(root: HTMLElement, initial: BirthInput | null, onSubmit: (input: BirthInput) => void) {
   const v = { ...DEFAULT_INPUT, ...(initial ?? {}) };
-  const regions = [...new Set(CITIES.map((c) => c.region))];
 
   root.innerHTML = `
-    <form class="card form" novalidate aria-label="출생 정보 입력">
+    <form class="card form" novalidate aria-label="${tr('출생 정보 입력', 'Enter birth details')}">
       <div class="field">
-        <label for="f-name">이름</label>
-        <input id="f-name" type="text" maxlength="20" placeholder="이름 입력 (선택)" value="${esc(v.name)}" autocomplete="off">
+        <label for="f-name">${tr('이름', 'Name')}</label>
+        <input id="f-name" type="text" maxlength="20" placeholder="${tr('이름 입력 (선택)', 'Name (optional)')}" value="${esc(v.name)}" autocomplete="off">
       </div>
-      <div class="field"><span class="label">성별</span>${seg('gender', v.gender, [['F', '여자'], ['M', '남자']])}</div>
-      <div class="field"><span class="label">달력</span>${seg('calendar', v.calendar, [['solar', '양력'], ['lunar', '음력'], ['lunarLeap', '음력 윤달']])}</div>
+      <div class="field"><span class="label">${tr('성별', 'Gender')}</span>${seg('gender', v.gender, [['F', tr('여자', 'Female')], ['M', tr('남자', 'Male')]])}</div>
+      <div class="field"><span class="label">${tr('달력', 'Calendar')}</span>${seg('calendar', v.calendar, [['solar', tr('양력', 'Solar')], ['lunar', tr('음력', 'Lunar')], ['lunarLeap', tr('음력 윤달', 'Lunar leap')]])}</div>
       <div class="field">
-        <span class="label">생년월일</span>
+        <span class="label">${tr('생년월일', 'Date of birth')}</span>
         <div class="row">
-          <div class="unit"><input id="f-year" type="number" inputmode="numeric" min="1900" max="2050" value="${v.year}" aria-label="년"><span>년</span></div>
-          <div class="unit"><input id="f-month" type="number" inputmode="numeric" min="1" max="12" value="${v.month}" aria-label="월"><span>월</span></div>
-          <div class="unit"><input id="f-day" type="number" inputmode="numeric" min="1" max="31" value="${v.day}" aria-label="일"><span>일</span></div>
+          <div class="unit"><input id="f-year" type="number" inputmode="numeric" min="1900" max="2050" value="${v.year}" aria-label="${tr('년', 'Year')}"><span>${tr('년', 'Y')}</span></div>
+          <div class="unit"><input id="f-month" type="number" inputmode="numeric" min="1" max="12" value="${v.month}" aria-label="${tr('월', 'Month')}"><span>${tr('월', 'M')}</span></div>
+          <div class="unit"><input id="f-day" type="number" inputmode="numeric" min="1" max="31" value="${v.day}" aria-label="${tr('일', 'Day')}"><span>${tr('일', 'D')}</span></div>
         </div>
       </div>
       <div class="field">
-        <span class="label">출생시간</span>
+        <span class="label">${tr('출생시간', 'Time of birth (24h)')}</span>
         <div class="row two">
-          <div class="unit"><input id="f-hour" type="number" inputmode="numeric" min="0" max="23" value="${v.hour ?? 12}" aria-label="시"><span>시</span></div>
-          <div class="unit"><input id="f-minute" type="number" inputmode="numeric" min="0" max="59" value="${v.minute ?? 0}" aria-label="분"><span>분</span></div>
+          <div class="unit"><input id="f-hour" type="number" inputmode="numeric" min="0" max="23" value="${v.hour ?? 12}" aria-label="${tr('시', 'Hour')}"><span>${tr('시', 'h')}</span></div>
+          <div class="unit"><input id="f-minute" type="number" inputmode="numeric" min="0" max="59" value="${v.minute ?? 0}" aria-label="${tr('분', 'Minute')}"><span>${tr('분', 'min')}</span></div>
         </div>
-        <label class="check"><input id="f-unknown" type="checkbox" ${v.timeUnknown ? 'checked' : ''}> 출생시간 모름</label>
+        <label class="check"><input id="f-unknown" type="checkbox" ${v.timeUnknown ? 'checked' : ''}> ${tr('출생시간 모름', "I don't know my birth time")}</label>
       </div>
       <div class="field" id="fold-field" hidden>
-        <span class="label">같은 시각이 두 번 있어요</span>
-        <p class="small muted" style="margin-bottom:6px">서머타임이 끝나며 시계를 한 시간 되돌린 날이에요. 어느 쪽이었는지 골라 주세요.</p>
-        ${seg('fold', v.fold ?? 'first', [['first', '앞 (서머타임)'], ['second', '뒤 (표준시)']])}
+        <span class="label">${tr('같은 시각이 두 번 있어요', 'This time happened twice')}</span>
+        <p class="small muted" style="margin-bottom:6px">${tr('서머타임이 끝나며 시계를 한 시간 되돌린 날이에요. 어느 쪽이었는지 골라 주세요.', 'Clocks were set back an hour for the end of daylight saving that day. Which one was it?')}</p>
+        ${seg('fold', v.fold ?? 'first', [['first', tr('앞 (서머타임)', 'First (daylight time)')], ['second', tr('뒤 (표준시)', 'Second (standard time)')]])}
       </div>
       <div class="field">
-        <label for="f-city">출생 지역</label>
-        <select id="f-city">${regions
-          .map((r) => `<optgroup label="${r}">${CITIES.filter((c) => c.region === r).map((c) => `<option value="${c.id}" ${c.id === v.cityId ? 'selected' : ''}>${c.name}</option>`).join('')}</optgroup>`)
-          .join('')}</select>
-        <label class="check"><input id="f-longitude" type="checkbox" ${v.useLongitude ? 'checked' : ''}> 지역 경도 보정 사용</label>
+        <label for="f-city">${tr('출생 지역', 'Place of birth')}</label>
+        <select id="f-city">${cityOptions(v.cityId ?? DEFAULT_CITY_ID)}</select>
+        <label class="check" id="kr-longitude"><input id="f-longitude" type="checkbox" ${v.useLongitude ? 'checked' : ''}> ${tr('지역 경도 보정 사용', 'Apply local longitude correction')}</label>
+        <label class="check" id="world-solar"><input id="f-solar" type="checkbox" ${v.solarTime !== false ? 'checked' : ''}> ${tr('현지 태양시로 보기 (권장)', 'Use local solar time (recommended)')}</label>
+        <p class="small muted">${tr('목록에 없으면 같은 시간대의 가까운 도시를 고르세요.', 'Not listed? Pick a nearby city in the same time zone.')}</p>
       </div>
       <p class="error" id="f-error" role="alert" hidden></p>
-      <button class="btn block" type="submit">결과 보기</button>
-      <p class="small muted">출생 정보는 이 브라우저 안에서만 계산해요. 서버로 보내지 않아요.</p>
+      <button class="btn block" type="submit">${tr('결과 보기', 'See my chart')}</button>
+      <p class="small muted">${tr('출생 정보는 이 브라우저 안에서만 계산해요. 서버로 보내지 않아요.', 'Your birth details are calculated right here in your browser and never sent to a server.')}</p>
     </form>`;
 
   const form = $<HTMLFormElement>('form', root);
@@ -100,6 +125,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
     cityId: $<HTMLSelectElement>('#f-city', form).value,
     useLongitude: $<HTMLInputElement>('#f-longitude', form).checked,
     fold: state.fold,
+    solarTime: $<HTMLInputElement>('#f-solar', form).checked,
   });
 
   function refresh() {
@@ -110,34 +136,38 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
       try {
         const inp = collect();
         const { solar } = toSolarDate(inp);
-        inFold = dstState({ ...solar, hour: inp.hour ?? 0, minute: inp.minute ?? 0 }) === 'fold';
+        inFold = clockStateFor(cityById(inp.cityId ?? DEFAULT_CITY_ID), { ...solar, hour: inp.hour ?? 0, minute: inp.minute ?? 0 }) === 'fold';
       } catch {
         inFold = false;
       }
     }
     $('#fold-field', form).hidden = !inFold;
+    const overseas = !!cityById($<HTMLSelectElement>('#f-city', form).value).tz;
+    $('#kr-longitude', form).hidden = overseas;
+    $('#world-solar', form).hidden = !overseas;
   }
 
   form.addEventListener('input', refresh);
+  form.addEventListener('change', refresh);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const err = $('#f-error', form);
     const input = collect();
     const bad = [input.year, input.month, input.day, input.hour ?? 0, input.minute ?? 0].some((n) => !Number.isInteger(n));
     if (bad) {
-      err.textContent = '숫자를 정확히 입력해 주세요.';
+      err.textContent = tr('숫자를 정확히 입력해 주세요.', 'Please enter whole numbers.');
       err.hidden = false;
       return;
     }
     if (!input.timeUnknown && (input.hour! < 0 || input.hour! > 23 || input.minute! < 0 || input.minute! > 59)) {
-      err.textContent = '시간은 0시 0분부터 23시 59분까지 입력할 수 있어요.';
+      err.textContent = tr('시간은 0시 0분부터 23시 59분까지 입력할 수 있어요.', 'Enter a time from 0:00 to 23:59.');
       err.hidden = false;
       return;
     }
     try {
       normalizeBirth(input);
     } catch (ex) {
-      err.textContent = ex instanceof BirthInputError ? ex.message : '입력을 확인해 주세요.';
+      err.textContent = ex instanceof BirthInputError ? (EN ? ERROR_EN[ex.code] : ex.message) : tr('입력을 확인해 주세요.', 'Please check your details.');
       err.hidden = false;
       return;
     }
