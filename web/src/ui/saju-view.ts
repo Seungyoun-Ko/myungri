@@ -5,7 +5,9 @@ import type { TongbyeonSection } from '../engine/tongbyeon';
 import { DISCLAIMER } from '../engine/tongbyeon';
 import { renderTerms } from '../engine/terms';
 import { getTermMode, termToggleButton } from './term-mode';
-import { bigFortuneReading, monthFortuneReading, type FortuneReading, yearFortuneReading } from '../engine/fortune-tongbyeon';
+import { bigFortuneReading, monthFortuneReading, type FortuneReading } from '../engine/fortune-tongbyeon';
+import { yearReading } from '../engine/reading';
+import { yearView } from './reading-view';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
 
@@ -127,9 +129,9 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
       ${readingBox(bigFortuneReading(s, selectedBig))}
     </div>
     <div class="card">
-      <h2>세운 <span class="small muted">${sel.startAge}세 대운 ${sel.ganzhi}의 10년 · 해를 누르면 풀이가 바뀌어요</span></h2>
+      <h2>한 해 운세 <span class="small muted">${sel.startAge}세부터 10년 · 해를 누르면 그 해 풀이가 나와요</span></h2>
       <div class="flow">${years}</div>
-      ${readingBox(yearFortuneReading(s, selectedBig, selectedYear))}
+      ${yearView(yearReading(s, selectedYear))}
     </div>
     <div class="card">
       <h2>월운 <span class="small muted">${thisYear}년 · 절기 기준</span></h2>

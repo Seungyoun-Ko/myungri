@@ -2,7 +2,9 @@
 import { cityById } from '../engine/cities';
 import type { NormalizedBirth } from '../engine/birth';
 import { daehanChart, yunyeonChart, type JamidusuChart, type OverlayChart } from '../engine/jamidusu';
-import { combinedTongbyeon, jamidusuTongbyeon, sajuTongbyeon } from '../engine/tongbyeon';
+import { combinedTongbyeon, jamidusuTongbyeon } from '../engine/tongbyeon';
+import { sajuReading } from '../engine/reading';
+import { readingView } from './reading-view';
 import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
 import { activateAds, adSlot } from '../ads';
@@ -160,7 +162,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       ${tabButtons('main', [['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 통변']], st.mainTab)}
     </div>
     <section data-panel="saju" style="margin-top:14px">
-      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '통변']], st.sajuTab)}</div>
+      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '풀이']], st.sajuTab)}</div>
       <div data-sub="wonguk" class="stack" style="margin-top:14px">
         <div data-region="wonguk"></div>
         ${adSlot('resultTop')}
@@ -192,7 +194,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
     flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
-    sajuTong: () => (region('sajuTong')!.innerHTML = tongbyeonView(sajuTongbyeon(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
+    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(sajuReading(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
       const overlay = overlayOf(st, chart);

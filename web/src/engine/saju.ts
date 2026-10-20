@@ -353,6 +353,11 @@ function monthGanzhis(year: number) {
   return Array.from({ length: 12 }, (_, i) => STEMS_HANJA[(first + i) % 10] + BRANCHES_HANJA[(2 + i) % 12]);
 }
 
+/** 그 해의 월운 12개 (인월=1 … 축월=12, 절기 기준). 올해가 아닌 해의 월별 운세에 씁니다. */
+export function monthFortunesOf(year: number, dayStem: number): MonthFortune[] {
+  return monthGanzhis(year).map((gz, i) => ({ ...makeFortune(gz, dayStem), month: i + 1 }));
+}
+
 function fortunesOf(ec: any, genderCode: number, birthYear: number, dayStem: number, now: Date) {
   const yun = ec.getYun(genderCode, 2);
   const startAge = Math.round(yun.getStartYear() + yun.getStartMonth() / 12 + yun.getStartDay() / 365);
