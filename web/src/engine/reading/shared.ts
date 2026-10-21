@@ -61,3 +61,26 @@ export function fortuneScore(r: SajuResult, f: { stem: { element: number }; bran
 }
 export const favorOfScore = (n: number): FavorKey => (n >= 1 ? 'good' : n <= -1 ? 'caution' : 'normal');
 
+
+/**
+ * 한 해 12달 문장 고르기: 천간 십신 → 지지 십신 → 같은 무리의 짝 십신 순으로,
+ * 그 해에 아직 쓰지 않은 문장을 고릅니다(같은 문장이 두 달에 나오지 않게).
+ */
+export function pickMonthText<T extends string>(
+  table: Record<T, Record<FavorKey, string>>,
+  stemTg: T,
+  branchTg: T,
+  favor: FavorKey,
+  used: Set<string>,
+  /** 모두 쓰였을 때 쓸 같은 기운의 다른 문장들 (예: 그 달 자세히 풀이의 첫 문장) */
+  fallbacks: string[] = [],
+): string {
+  const sibling = (t: T) => TEN_GODS[TEN_GODS.indexOf(t as unknown as TenGod) ^ 1] as unknown as T;
+  const candidates = [...[stemTg, branchTg, sibling(stemTg), sibling(branchTg)].map((t) => table[t][favor]), ...fallbacks];
+  const text = candidates.find((x) => !used.has(x)) ?? table[stemTg][favor];
+  used.add(text);
+  return text;
+}
+
+/** 문단의 첫 문장 */
+export const firstSentence = (t: string) => (t.match(/^[^.!?]+[.!?]+["']?/) ?? [t])[0].trim();

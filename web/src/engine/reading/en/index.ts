@@ -3,7 +3,7 @@ import type { SajuResult, TenGodGroup, YearFortune } from '../../saju';
 import { BRANCH_CHUNG, BRANCH_HAP, TEN_GOD_GROUPS, monthFortunesOf, pairKey, tenGodGroup } from '../../saju';
 import type { AmountKey, DayMasterReading, FavorKey, TenGodName } from '../types';
 import type { MonthLine, ReadingSection, YearReadingView } from '../index';
-import { fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges } from '../shared';
+import { fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges, pickMonthText, firstSentence } from '../shared';
 import { BRANCH_EN, ELEMENT_EN, GROUP_EN, GROWTH_EN, STRENGTH_EN, TEN_GOD_EN, branchLabelEn, combinationEn, ganzhiFull, geukEn, stemLabelEn } from '../../en-labels';
 import { DAY_MASTER_A } from './day-master-a';
 import { DAY_MASTER_B } from './day-master-b';
@@ -11,6 +11,7 @@ import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
 import { ELEMENT_EXCESS, ELEMENT_LACK, GEUK, LUCKY } from './elements';
 import { CHARM, DAY_COMBO, DAY_PHASE, SPOUSE_AMOUNT, SPOUSE_PALACE, WEALTH_AMOUNT } from './love';
 import { MONTH, YEAR, YEAR_DAY, YEAR_FAVOR } from './fortune';
+import { MONTH_DETAIL } from './month-detail';
 
 export const DAY_MASTER: DayMasterReading[] = [...DAY_MASTER_A, ...DAY_MASTER_B];
 
@@ -27,10 +28,10 @@ export const ELEMENT_JOBS = [
 ];
 
 const SEASON_HEALTH = {
-  spring: "Born in spring, your energy tends to rise upward. Taking time to steady your mind helps keep sudden flashes of anger from boiling over.",
-  summer: "Born in summer, you tend to run warm. Drink water often and don't let the heat wear you down.",
-  autumn: 'Born in autumn, your body tends to dry out easily. Keep your skin and airways well moisturized.',
-  winter: 'Born in winter, you tend to feel the cold easily. Keeping your stomach, hands and feet warm helps a lot.',
+  spring: "By the East Asian solar calendar you were born in spring, so your energy tends to rise upward. Taking time to steady your mind helps keep sudden flashes of anger from boiling over.",
+  summer: "By the East Asian solar calendar you were born in summer, so you tend to run warm. Drink water often and don't let the heat wear you down.",
+  autumn: 'By the East Asian solar calendar you were born in autumn, so your body tends to dry out easily. Keep your skin and airways well moisturized.',
+  winter: 'By the East Asian solar calendar you were born in winter, so you tend to feel the cold easily. Keeping your stomach, hands and feet warm helps a lot.',
 };
 
 const EL = ELEMENT_EN;
@@ -40,15 +41,16 @@ const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: 'Allies & rivals', �
 const lowerFirst = (t: string) => t.replace(/^(\W*)(\w)/, (_, p, c) => p + c.toLowerCase());
 const favorWord = (f: FavorKey) => (f === 'good' ? 'helps' : f === 'caution' ? 'weighs on you' : 'neutral');
 
-export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[] {
+/** opts.southern: 남반구 출생이면 절기 계절 문장을 넣지 않습니다(실제 계절과 반대라서). */
+export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern?: boolean } = {}): ReadingSection[] {
   const dm = DAY_MASTER[r.dayMaster.index];
   const dmBasis = `Day Master: ${stemLabelEn(r.dayMaster)}`;
 
   if (r.incompleteBirthTime || !r.elementRatios || !r.yongsin) {
     const note = 'Add your birth time to get a much fuller reading: how strong your energy is, which energy dominates, and which energy you need most.';
-    const base = { keywords: [...dm.keywords], basis: [dmBasis, 'Birth time unknown: reading centered on the Day Master'], note };
+    const base = { keywords: [...dm.keywords], basis: [dmBasis, 'Birth time unknown: reading centered on the Day Master'] };
     return [
-      { key: 'general', title: 'Who you are', headline: { text: dm.title }, paragraphs: [dm.core[0]], ...base },
+      { key: 'general', title: 'Who you are', headline: { text: dm.title }, paragraphs: [dm.core[0]], ...base, note },
       { key: 'personality', title: 'Personality', paragraphs: [dm.core[1], dm.stress], energize: [...dm.energize], drain: [...dm.drain], tips: [...dm.tips], ...base },
       { key: 'aptitude', title: 'Work & talents', paragraphs: [dm.work], chips: { label: 'Work that suits you', items: dm.jobs }, ...base },
       { key: 'love', title: 'Love & partnership', paragraphs: [dm.love], ...base },
@@ -211,7 +213,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
     key: 'health',
     title: 'Health',
     keywords: uniq([`Bring in ${EL[y.yong]}`, healthLack && least !== y.yong && `Top up ${EL[least]}`, healthExcess && most !== y.yong && `Calm ${EL[most]}`]),
-    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
+    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,
     basis: [dmBasis, `Element balance: ${ratioText}`, `Month branch: ${branchLabelEn(r.pillars.find((p) => p.key === 'month')!.branch)}`, yongText],
@@ -249,9 +251,7 @@ export function yearReadingEn(r: SajuResult, year: number): YearReadingView | nu
   const used = new Set<string>();
   const months = monthFortunesOf(year, r.dayMaster.index).map((m, i): MonthLine => {
     const mf = fortuneFavor(r, m);
-    let text = MONTH[m.stemTenGod as TenGodName][mf];
-    if (used.has(text)) text = MONTH[m.branchTenGod as TenGodName][mf];
-    used.add(text);
+    const text = pickMonthText(MONTH, m.stemTenGod as TenGodName, m.branchTenGod as TenGodName, mf, used, [firstSentence(MONTH_DETAIL[m.stemTenGod as TenGodName].overview), firstSentence(MONTH_DETAIL[m.branchTenGod as TenGodName].overview)]);
     return { label: SOLAR_LABEL[i], ganzhi: ganzhiFull(m.stem.index, m.branch.index), favor: mf, text };
   });
   const pick = (f: FavorKey) => months.filter((m) => m.favor === f).map((m) => m.label);

@@ -134,8 +134,9 @@ export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayC
     <ul>
       ${p.stars.length ? p.stars
         .map((s) => `<li><span><b class="hanja">${s.hanja}</b> ${EN ? starEn(s) : s.name} <span class="muted small">${EN ? KIND_EN[s.kind] : KIND_LABEL[s.kind]}</span></span><span>${[EN ? (BRIGHTNESS_EN[s.brightness] ?? s.brightness) : s.brightness, sihwaText(s)].filter(Boolean).join(' · ')}</span></li>`)
-        .join('') : `<li>${tr('별이 없어요. 맞은편 궁의 주성을 빌려 봐요.', 'No stars here. Read this palace through the main stars of the opposite palace.')}</li>`}
+        .join('') : `<li>${tr('별이 없어요.', 'No stars here.')}</li>`}
     </ul>
+    ${p.stars.some((s) => s.kind === 'main') ? '' : `<p class="small muted" style="margin-top:8px">${tr(`주성이 없는 자리라 맞은편 ${chart.palaces[(b + 6) % 12].name}의 주성을 빌려 은은하게 봐요.`, `No main star here, so this palace is read, more softly, through the main stars of the opposite ${PALACE_EN[chart.palaces[(b + 6) % 12].name]} palace.`)}</p>`}
     <p class="small" style="margin-top:10px">${EN ? `Life cycle ${spirit('changsheng', p.changsheng)} · Doctor ${spirit('boshi', p.boshi)} · Year spirit ${spirit('suiqian', p.suiqian)} · General ${spirit('jiangqian', p.jiangqian)}` : `장생 ${p.changsheng} · 박사 ${p.boshi} · 태세 ${p.suiqian} · 장성 ${p.jiangqian}`}</p>
   </div>`;
 }

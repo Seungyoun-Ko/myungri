@@ -98,4 +98,4 @@ export const WEALTH_AMOUNT: Record<AmountKey, string> = {
 
 /** The charm that draws people in */
 export const CHARM: string =
-  "You have a natural charm that catches people's eye, even at a first meeting. Warmth comes through in your smile and the way you talk, so people find you easy to approach. But being sweet to everyone can sometimes lead to misunderstandings, so be clear about where your heart lies.";
+  "You have a natural charm that catches people's eye, even at a first meeting. Warmth comes through in your smile and the way you talk, so people find you easy to approach. But being sweet to everyone can sometimes lead to misunderstandings, so keep your boundaries clear and your friendliness won't be mistaken for something more.";

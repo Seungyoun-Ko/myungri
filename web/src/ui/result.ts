@@ -214,7 +214,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
     flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
-    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(R.saju(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
+    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(R.saju(s, st.snapshot.birth.input.gender, { southern: !!cityById(st.snapshot.birth.input.cityId ?? 'seoul').south }), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
       const overlay = overlayOf(st, chart);

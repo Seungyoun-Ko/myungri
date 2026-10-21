@@ -49,16 +49,18 @@ function palaceView(chart: JamidusuChart, branch: number, name: PalaceName, over
   const paras: string[] = [];
   if (borrowed) paras.push(PALACES[name].empty);
   for (const m of mains) if (STARS[m.name]) paras.push(STARS[m.name][field]);
-  if (!borrowed && withBrightness) {
+  // 건강 자리에는 일반 보좌·살성·사화·밝기 문장(말솜씨, 이동 등)이 맞지 않아 넣지 않습니다(v1.1에서 건강 전용 문장 예정).
+  const generic = name !== '질액궁';
+  if (!borrowed && withBrightness && generic) {
     if (ownMains.some((s) => STRONG.has(s.brightness))) paras.push(JAMI_EXTRA.bright[branch % 2]);
     else if (ownMains.some((s) => WEAK.has(s.brightness))) paras.push(JAMI_EXTRA.dim[branch % 2]);
   }
-  for (const s of p.stars) {
+  for (const s of generic ? p.stars : []) {
     if (s.kind === 'aux' && JAMI_EXTRA.aux[s.name]) paras.push(JAMI_EXTRA.aux[s.name]);
     if (s.kind === 'sal' && JAMI_EXTRA.sal[s.name]) paras.push(JAMI_EXTRA.sal[s.name]);
   }
-  for (const s of p.stars) if (s.sihwa && s.kind !== 'minor') paras.push(JAMI_EXTRA.sihwa[s.sihwa].natal);
-  for (const h of overlay?.sihwa.filter((x) => x.branch === branch) ?? []) paras.push(JAMI_EXTRA.sihwa[h.sihwa].period);
+  for (const s of generic ? p.stars : []) if (s.sihwa && s.kind !== 'minor') paras.push(JAMI_EXTRA.sihwa[s.sihwa].natal);
+  for (const h of generic ? (overlay?.sihwa.filter((x) => x.branch === branch) ?? []) : []) paras.push(JAMI_EXTRA.sihwa[h.sihwa].period);
   const starBasis = p.stars
     .filter((s) => s.kind !== 'minor')
     .map((s) => `${s.name}${s.kind === 'main' ? `(${s.brightness})` : ''}${s.sihwa ? `·화${s.sihwa}` : ''}`)

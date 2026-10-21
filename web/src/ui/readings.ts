@@ -5,7 +5,7 @@ import type { ReadingSection, YearReadingView } from '../engine/reading';
 import type { LifePoint, PeriodReadingView } from '../engine/reading/flow';
 
 export interface ReadingFns {
-  saju: (r: SajuResult, gender: 'M' | 'F') => ReadingSection[];
+  saju: (r: SajuResult, gender: 'M' | 'F', opts?: { southern?: boolean }) => ReadingSection[];
   year: (r: SajuResult, year: number) => YearReadingView | null;
   big: (r: SajuResult, index: number) => PeriodReadingView | null;
   month: (r: SajuResult, month: number) => PeriodReadingView | null;

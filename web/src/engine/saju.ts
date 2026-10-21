@@ -31,7 +31,7 @@ import {
 } from './birth';
 import { type City, cityById } from './cities';
 
-export const CALCULATION_BASIS = 'KR-2026.10-4';
+export const CALCULATION_BASIS = 'KR-2026.10-5';
 
 // ---------------------------------------------------------------- 십신 · 12운성
 export const TEN_GODS = ['비견', '겁재', '식신', '상관', '편재', '정재', '편관', '정관', '편인', '정인'] as const;
@@ -343,6 +343,12 @@ const GEUKGUK: Record<TenGod, string> = {
   정인: '정인격',
 };
 
+/** 월지 십신으로 정한 격국 이름. 겁재 월지는 양간이면 양인격, 음간이면 월겁격입니다. */
+export function geukName(monthTenGod: TenGod, dayStem: number) {
+  if (monthTenGod === '겁재' && dayStem % 2 === 1) return '월겁격';
+  return GEUKGUK[monthTenGod];
+}
+
 // ---------------------------------------------------------------- 운
 const yearGanzhi = (year: number) => STEMS_HANJA[mod(year - 4, 10)] + BRANCHES_HANJA[mod(year - 4, 12)];
 
@@ -362,15 +368,19 @@ function fortunesOf(ec: any, genderCode: number, birthYear: number, dayStem: num
   const yun = ec.getYun(genderCode, 2);
   const startAge = Math.round(yun.getStartYear() + yun.getStartMonth() / 12 + yun.getStartDay() / 365);
   const daYun = yun.getDaYun(9).slice(1, 9);
+  // 대운수(반올림한 시작 나이)와 시작 해를 맞춥니다: 시작 해 = 출생 해 + 대운수 (연 나이 기준).
   const big: BigFortune[] = daYun.map((d: any, i: number) => ({
     ...makeFortune(d.getGanZhi(), dayStem),
     index: i,
     startAge: startAge + i * 10,
-    startYear: d.getStartYear(),
-    endYear: d.getEndYear(),
+    startYear: birthYear + startAge + i * 10,
+    endYear: birthYear + startAge + i * 10 + 9,
   }));
-  const perBig: YearFortune[][] = daYun.map((d: any) =>
-    d.getLiuNian().map((n: any) => ({ ...makeFortune(n.getGanZhi(), dayStem), year: n.getYear(), age: n.getYear() - birthYear })),
+  const perBig: YearFortune[][] = big.map((b) =>
+    Array.from({ length: 10 }, (_, k) => {
+      const year = b.startYear + k;
+      return { ...makeFortune(yearGanzhi(year), dayStem), year, age: year - birthYear };
+    }),
   );
   const thisYear = now.getFullYear();
   const current = big.findIndex((b) => thisYear >= b.startYear && thisYear <= b.endYear);
@@ -517,7 +527,7 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
     strengthScore: score,
     strengthText: strength,
     yongsin: yongsinOf(dayStem, score, base.element),
-    geukgukLabel: strength === '극강' ? `${GEUKGUK[monthTenGod]} (전왕격 후보)` : GEUKGUK[monthTenGod],
+    geukgukLabel: strength === '극강' ? `${geukName(monthTenGod, dayStem)} (전왕격 후보)` : geukName(monthTenGod, dayStem),
     combinations,
     bigFortunes: f.big,
     bigFortuneForward: f.forward,

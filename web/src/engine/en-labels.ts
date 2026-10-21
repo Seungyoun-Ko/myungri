@@ -81,6 +81,7 @@ export const STRENGTH_EN: Record<StrengthLabel, string> = {
 const GEUK_EN: Record<string, string> = {
   건록격: 'Prosperity structure',
   양인격: 'Yang Blade structure',
+  월겁격: 'Month Rob Wealth structure',
   식신격: 'Eating God structure',
   상관격: 'Hurting Officer structure',
   편재격: 'Indirect Wealth structure',

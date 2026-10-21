@@ -169,7 +169,7 @@ export const GROUP_NONE: Record<GroupKey, GroupNoneReading> = {
   },
   재성: {
     personality:
-      'You tend to look at meaning, people, and values before money or profit. You\'re not big on calculating, so people sometimes call you pure-hearted. This doesn\'t mean money isn\'t in the cards for you. It just means the knack for managing it isn\'t as ingrained yet, and a 10-year cycle can come along that fills in that sense.',
+      'You tend to look at meaning, people, and values before money or profit. You\'re not big on calculating, so people sometimes say you\'re refreshingly unmaterialistic. This doesn\'t mean money isn\'t in the cards for you. It just means the knack for managing it isn\'t as ingrained yet, and a 10-year cycle can come along that fills in that sense.',
     work:
       'You\'re more motivated by work that feels meaningful than by work judged in numbers. Putting a price on your own effort may not be your strong suit, so when you negotiate a salary or fee, look up the going rate before you walk in.',
     love:
