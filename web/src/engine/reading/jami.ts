@@ -12,8 +12,9 @@ import { STARS_A } from './jami-stars-a';
 import { STARS_B } from './jami-stars-b';
 import { JAMI_EXTRA, PALACES } from './jami-palaces';
 import { JAMI_EXTRA2 } from './jami-extra2';
+import { JAMI_PATTERNS, PAIR_STARS } from './jami-pairs';
 import { PALACE_STARS } from './jami-palace-stars';
-import { PALACE_FIELD_OF, brightClass, sihwaLines } from './jami-build';
+import { PALACE_FIELD_OF, brightClass, sihwaLines, pairKey, detectJamiPatterns, JAMI_PATTERN_NAME_KO } from './jami-build';
 import { GEUK, LUCKY, ELEMENT_LACK } from './elements';
 import { GROUP_MANY } from './groups';
 import { WEALTH_AMOUNT } from './love';
@@ -119,14 +120,20 @@ export function jamiReading(chart: JamidusuChart, overlay?: OverlayChart): Readi
   const self = palaceView(chart, chart.mingBranch, '명궁');
   const mingStars = self.names.filter((n) => STARS[n]);
   const shen = chart.palaces[chart.shenBranch];
+  const pk = self.borrowed ? null : pairKey(mingStars);
+  const pair = pk ? PAIR_STARS[pk] : undefined;
+  const patterns = overlay ? [] : detectJamiPatterns(chart);
   sections.push({
     key: 'general',
     title: '나 자신',
     headline: mingStars.length ? { label: headlineOf(self), text: STARS[mingStars[0]].title } : undefined,
     keywords: [...new Set(mingStars.flatMap((n) => STARS[n].keywords))].slice(0, 4),
-    paragraphs: [...mingStars.map((n) => STARS[n].nature), ...self.paragraphs, shen.isMing ? JAMI_EXTRA.shenSame : JAMI_EXTRA.shen.replace('{field}', PALACE_FIELD[shen.name])],
+    // 한 자리에 주성 둘이면 두 별을 따로 풀지 않고 조합 풀이 하나로
+    paragraphs: [...(pair ? [pair.text] : mingStars.map((n) => STARS[n].nature)), ...self.paragraphs, shen.isMing ? JAMI_EXTRA.shenSame : JAMI_EXTRA.shen.replace('{field}', PALACE_FIELD[shen.name])],
     facts: overlay ? undefined : sihwaFacts,
-    basis: [self.basis, `신궁: ${shen.name}(${shen.branchKo})`, `오행국: ${chart.guk.name}`, `생년 사화: ${chart.sihwa.map((s) => `화${s.sihwa} ${s.star}(${s.palace})`).join(' · ')}`],
+    blocks: patterns.length ? patterns.map((k) => ({ title: `명반 구조 · ${JAMI_PATTERNS[k].title}`, paragraphs: [JAMI_PATTERNS[k].text] })) : undefined,
+
+    basis: [self.basis, ...(patterns.length ? [`격국: ${patterns.map((k) => JAMI_PATTERN_NAME_KO[k]).join(', ')}`] : []), ...(pk && pair ? [`쌍성: ${pk}`] : []), `신궁: ${shen.name}(${shen.branchKo})`, `오행국: ${chart.guk.name}`, `생년 사화: ${chart.sihwa.map((s) => `화${s.sihwa} ${s.star}(${s.palace})`).join(' · ')}`],
   });
 
   const mingStar = mingStars[0];

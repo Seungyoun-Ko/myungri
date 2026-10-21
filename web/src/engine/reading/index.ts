@@ -14,6 +14,7 @@ import { STRUCTURES } from './structures';
 import { detectStructures, STRUCTURE_NAME_KO } from './structure-detect';
 import { BRANCH_ELEMENT as BRANCH_EL, BRANCHES_HANJA as BRANCHES_HANJA_LIST, STEM_ELEMENT as STEM_EL, STEMS_HANJA as STEMS_HANJA_LIST } from '../constants';
 import { DAY_LINE } from './day-line';
+import { JOHU } from './johu';
 import { dayPillars } from '../calendar';
 import { calcTenGod } from '../saju';
 import { DAY_MASTER_A } from './day-master-a';
@@ -137,6 +138,13 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
   const relHas = (k: string) => rels.some((x) => x.kind === k && x.where.includes('day'));
   const peach = has('dohwa');
   const structs = detectStructures(r);
+  // 조후(궁통보감): 태어난 계절의 균형으로 필요한 기운. 억부 용신과 같으면 확신을 더해 줍니다.
+  const johu = JOHU[r.dayMaster.index][r.pillars.find((p) => p.key === 'month')!.branch.index];
+  const johuMatch = johu.need[0] === y.yong;
+  const johuLine = johuMatch
+    ? `태어난 계절로 봐도 ${EL[y.yong]} 기운이 필요해, 이 기운을 채우는 생활이 특히 잘 맞아요. ${johu.note}`
+    : `태어난 계절의 균형으로 보면 ${EL[johu.need[0]]} 기운도 중요해요. ${johu.note}`;
+  const johuBasis = `조후(궁통보감): ${johu.need.map((e) => EL_TERM[e]).join('·')}${johuMatch ? ' — 억부 용신과 일치' : ''}`;
   const PK: Record<string, string> = { hour: '시', day: '일', month: '월', year: '년' };
   const shinsalBasis = [
     ...(hits.length ? [`${'신살'}: ${hits.map((h) => `${h.name} ${h.hanja}(${h.where.map((w) => PK[w]).join('·')})`).join(', ')}`] : []),
@@ -165,7 +173,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '나는 어떤 사람',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro, johuLine]),
     facts: [
       { label: '나에게 필요한 기운', value: `${EL[y.yong]} 기운` },
       { label: '힘이 되는 색', value: lucky.colors.join(', ') },
@@ -176,7 +184,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     ],
     blocks: structs.map((k) => ({ title: `이런 구조예요 · ${STRUCTURES[k].title}`, paragraphs: [STRUCTURES[k].text] })),
     tips: [...lucky.activities, ...structs.map((k) => STRUCTURES[k].tip)],
-    basis: [dmBasis, `강약: ${r.strengthText}`, `격국: ${r.geukgukLabel ?? '-'}`, yongText, `오행 비율: ${ratioText}`, ...(structs.length ? [`구조: ${structs.map((k) => STRUCTURE_NAME_KO[k]).join(', ')}`] : []), ...shinsalBasis],
+    basis: [dmBasis, `강약: ${r.strengthText}`, `격국: ${r.geukgukLabel ?? '-'}`, yongText, `오행 비율: ${ratioText}`, ...(structs.length ? [`구조: ${structs.map((k) => STRUCTURE_NAME_KO[k]).join(', ')}`] : []), johuBasis, ...shinsalBasis],
   };
 
   const personality: ReadingSection = {

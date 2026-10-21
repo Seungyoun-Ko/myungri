@@ -14,6 +14,7 @@ import { STRUCTURES } from './structures';
 import { detectStructures, STRUCTURE_NAME_EN } from '../structure-detect';
 import { BRANCH_ELEMENT as BRANCH_EL, BRANCHES_HANJA as BRANCHES_HANJA_LIST, STEM_ELEMENT as STEM_EL, STEMS_HANJA as STEMS_HANJA_LIST } from '../../constants';
 import { DAY_LINE } from './day-line';
+import { JOHU } from './johu';
 import { dayPillars } from '../../calendar';
 import { calcTenGod } from '../../saju';
 import { DAY_MASTER_A } from './day-master-a';
@@ -114,6 +115,13 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
   const relHas = (k: string) => rels.some((x) => x.kind === k && x.where.includes('day'));
   const peach = has('dohwa');
   const structs = detectStructures(r);
+  // Seasonal balance (Qiong Tong Bao Jian). When it matches the useful element, the reading gets more confident.
+  const johu = JOHU[r.dayMaster.index][r.pillars.find((p) => p.key === 'month')!.branch.index];
+  const johuMatch = johu.need[0] === y.yong;
+  const johuLine = johuMatch
+    ? `The season you were born in calls for ${EL[y.yong]} energy too, so bringing it into your life suits you twice over. ${johu.note}`
+    : `Looking at the season you were born in, ${EL[johu.need[0]]} energy matters as well. ${johu.note}`;
+  const johuBasis = `Seasonal balance (Qiong Tong Bao Jian): ${johu.need.map((e) => EL[e]).join(' · ')}${johuMatch ? ' — matches the useful element' : ''}`;
   const PK: Record<string, string> = { hour: 'hour', day: 'day', month: 'month', year: 'year' };
   const shinsalBasis = [
     ...(hits.length ? [`${'Symbolic stars'}: ${hits.map((h) => `${SHINSAL_EN[h.name]} ${h.hanja}(${h.where.map((w) => PK[w]).join('·')})`).join(', ')}`] : []),
@@ -142,7 +150,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     title: 'Who you are',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro, johuLine]),
     facts: [
       { label: 'The energy you need most', value: `${EL[y.yong]} energy` },
       { label: 'Colors that help', value: lucky.colors.join(', ') },
@@ -153,7 +161,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     ],
     blocks: structs.map((k) => ({ title: `Your chart's shape · ${STRUCTURES[k].title}`, paragraphs: [STRUCTURES[k].text] })),
     tips: [...lucky.activities, ...structs.map((k) => STRUCTURES[k].tip)],
-    basis: [dmBasis, `Strength: ${strengthText}`, `Structure: ${geukEn(r.geukgukLabel)}`, yongText, `Element balance: ${ratioText}`, ...(structs.length ? [`Patterns: ${structs.map((k) => STRUCTURE_NAME_EN[k]).join(', ')}`] : []), ...shinsalBasis],
+    basis: [dmBasis, `Strength: ${strengthText}`, `Structure: ${geukEn(r.geukgukLabel)}`, yongText, `Element balance: ${ratioText}`, ...(structs.length ? [`Patterns: ${structs.map((k) => STRUCTURE_NAME_EN[k]).join(', ')}`] : []), johuBasis, ...shinsalBasis],
   };
 
   const personality: ReadingSection = {

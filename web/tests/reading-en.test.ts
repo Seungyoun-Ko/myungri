@@ -85,7 +85,7 @@ it('English Zi Wei and combined readings: clean text and all 12 areas covered', 
   for (const { saju, chart } of randomCharts(200)) {
     for (const ov of [undefined, daehanChart(chart, 40), yunyeonChart(chart, 2027)]) {
       const sections = jamiReadingEn(chart, ov);
-      expect(sections.filter((x) => x.key !== 'now').reduce((n, x) => n + (x.blocks?.length ?? 1), 0)).toBe(12);
+      expect(sections.filter((x) => x.key !== 'now').reduce((n, x) => n + (x.key === 'general' ? 1 : (x.blocks?.length ?? 1)), 0)).toBe(12);
       for (const s of sections) {
         for (const t of bodyTexts(s)) {
           const p = problemsOf(t);

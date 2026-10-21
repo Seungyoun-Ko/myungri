@@ -31,7 +31,7 @@ import {
 } from './birth';
 import { type City, cityById } from './cities';
 
-export const CALCULATION_BASIS = 'KR-2026.10-6';
+export const CALCULATION_BASIS = 'KR-2026.10-7';
 
 // ---------------------------------------------------------------- 십신 · 12운성
 export const TEN_GODS = ['비견', '겁재', '식신', '상관', '편재', '정재', '편관', '정관', '편인', '정인'] as const;
