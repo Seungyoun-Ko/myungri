@@ -44,6 +44,15 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
   toast(tr('이미지를 만들고 있어요…', 'Creating image…'), undefined, 2500);
   const wrap = frame(nodes, opts.width, opts.caption);
   try {
+    await exportElement(wrap, opts.fileName);
+  } finally {
+    wrap.remove();
+  }
+}
+
+/** 화면 밖에 그린 요소를 PNG로 만들어 공유(휴대폰)하거나 내려받습니다. */
+async function exportElement(wrap: HTMLElement, fileName: string, pixelRatio = 2) {
+  try {
     const { toBlob } = await import('html-to-image');
     let fontEmbedCSS: string | undefined;
     try {
@@ -53,7 +62,7 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
     }
     const bg = getComputedStyle(document.body).backgroundColor;
     const blob = await toBlob(wrap, {
-      pixelRatio: 2,
+      pixelRatio,
       backgroundColor: bg,
       cacheBust: false,
       // 화면 밖에 둔 틀의 위치가 이미지에 따라오지 않게 고정합니다.
@@ -61,7 +70,7 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
       ...(fontEmbedCSS ? { fontEmbedCSS } : { skipFonts: true }),
     });
     if (!blob) throw new Error('empty image');
-    const file = new File([blob], opts.fileName, { type: 'image/png' });
+    const file = new File([blob], fileName, { type: 'image/png' });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.canShare?.({ files: [file] }) && window.matchMedia('(pointer: coarse)').matches) {
       try {
@@ -73,7 +82,7 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = opts.fileName;
+    a.download = fileName;
     document.body.append(a);
     a.click();
     setTimeout(() => {
@@ -83,7 +92,47 @@ export async function saveAsImage(nodes: HTMLElement[], opts: { fileName: string
     toast(tr('이미지를 저장했어요.', 'Image saved.'));
   } catch {
     toast(tr('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.', "Couldn't create the image. Please try again in a moment."));
+  }
+}
+
+export interface ShareCardData {
+  /** 일주 타입 (예: 흰 용) */
+  type: string;
+  /** 일주 한자·읽기 (예: 庚辰 · 경진일주) */
+  ilju: string;
+  /** 한 줄 은유 */
+  title: string;
+  keywords: string[];
+  /** 아래 작은 정보 (예: 필요한 기운: 쇠 · 행운의 색: 흰색) */
+  facts: [string, string][];
+  /** 'story' 9:16, 'square' 1:1 */
+  shape: 'story' | 'square';
+}
+
+/** "나를 한 줄로" 공유 카드. 이름·생년월일은 넣지 않습니다. */
+export async function saveShareCard(d: ShareCardData) {
+  toast(tr('카드를 만들고 있어요…', 'Creating your card…'), undefined, 2500);
+  const w = 360;
+  const h = d.shape === 'story' ? 640 : 360;
+  const card = document.createElement('div');
+  card.className = `share-card ${d.shape}`;
+  card.style.width = `${w}px`;
+  card.style.height = `${h}px`;
+  const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  card.innerHTML = `<div class="sc-head">${SEAL_SVG}<b>${tr('인설명리', 'Inseol Saju')}</b></div>
+    <div class="sc-body">
+      <p class="sc-label">${tr('나의 일주 타입', 'My day pillar type')}</p>
+      <p class="sc-type">${esc(d.type)}</p>
+      <p class="sc-ilju">${esc(d.ilju)}</p>
+      <p class="sc-title">${esc(d.title)}</p>
+      <p class="sc-tags">${d.keywords.map((k) => `<span>#${esc(k)}</span>`).join('')}</p>
+      ${d.facts.length ? `<dl class="sc-facts">${d.facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+    </div>
+    <div class="sc-foot"><b>app.inseol.com${tr('', '/en')}</b><span>${tr('무료 · 회원가입 없이 · 참고용 풀이', 'Free · no sign-up · for reflection')}</span></div>`;
+  document.body.append(card);
+  try {
+    await exportElement(card, `${tr('인설명리', 'inseol')}-${d.shape}.png`, 3);
   } finally {
-    wrap.remove();
+    card.remove();
   }
 }

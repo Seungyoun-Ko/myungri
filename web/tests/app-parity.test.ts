@@ -49,7 +49,7 @@ describe('Android 앱 결과 대조', () => {
       if (ex?.strength) expect(s.strengthText, '강약').toBe(ex.strength);
       if (ex?.geukguk) expect(s.geukgukLabel, '격국').toBe(ex.geukguk);
       if (ex?.yongsin && s.yongsin) {
-        for (const [k, v] of Object.entries(ex.yongsin)) expect(ELEMENTS_KO[s.yongsin[k as keyof typeof s.yongsin]], k).toBe(v);
+        for (const [k, v] of Object.entries(ex.yongsin)) expect(ELEMENTS_KO[s.yongsin[k as 'yong' | 'hee' | 'gi' | 'gu']], k).toBe(v);
       }
       if (ex?.daeun?.startAge !== undefined) expect(s.bigFortunes[0]?.startAge, '대운 시작 나이').toBe(ex.daeun.startAge);
       if (ex?.daeun?.list) expect(s.bigFortunes.slice(0, ex.daeun.list.length).map((b) => b.ganzhi), '대운').toEqual(ex.daeun.list);

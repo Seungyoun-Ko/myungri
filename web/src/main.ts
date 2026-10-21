@@ -50,6 +50,7 @@ function home() {
         <div class="hero">
           <h1>${tr('사주팔자 &amp; 자미두수 명반', 'Korean Saju &amp; Zi Wei Dou Shu Chart')}</h1>
           <p>${tr('만세력과 명반을 한곳에서, 무료로. 쉬운 말로 풀어 드려요.', 'Your Four Pillars (BaZi) and Purple Star charts in one place. Free, and explained in plain English.')}</p>
+          <p class="small" style="margin-top:6px"><a href="${tr('/2027/', '/en/2027/')}">${tr('2027 정미년 신년운세 · 띠별 운세 보기', '2027 Year of the Fire Goat · forecast by zodiac animal')}</a> · <a href="#/match">${tr('두 사람 궁합', 'Compatibility')}</a></p>
         </div>
         <div id="input-root"></div>
       </section>
@@ -79,12 +80,40 @@ function home() {
 }
 
 function route() {
-  const hash = location.hash.replace(/^#/, '') || '/';
+  const raw = location.hash.replace(/^#/, '') || '/';
+  const [hash, query = ''] = raw.split('?');
   document.querySelectorAll<HTMLAnchorElement>('[data-nav]').forEach((a) => {
     if (a.dataset.nav === hash) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
   const app = $('#app');
+  if (hash.startsWith('/r/')) {
+    // 결과 링크: 주소 # 뒤의 입력값으로 바로 계산합니다(서버로 가지 않음).
+    app.innerHTML = `<div class="card loading">${tr('사주와 자미두수 명반을 계산하고 있어요. 잠시만 기다려 주세요.', 'Calculating your charts. Just a moment…')}</div>`;
+    void heavy().then(({ decodeInput, calculate, initialResultState }) => {
+      const input = decodeInput(hash.slice(3));
+      if (input) {
+        try {
+          current = initialResultState(calculate(input));
+          sessionStorage.setItem(LAST_INPUT, JSON.stringify(input));
+        } catch {
+          /* 잘못된 링크면 첫 화면으로 */
+        }
+      }
+      location.replace('#/');
+    });
+    return;
+  }
+  if (hash === '/match') {
+    document.title = tr('두 사람 궁합 · 인설명리', 'Compatibility · Inseol Saju');
+    app.innerHTML = `<div class="card loading">${tr('불러오고 있어요.', 'Loading…')}</div>`;
+    void heavy().then(({ renderMatch, parseCode }) => {
+      const day = current?.snapshot.saju.pillars.find((p) => p.key === 'day');
+      renderMatch(app, parseCode(new URLSearchParams(query).get('a')), day ? { stem: day.stem.index, branch: day.branch.index } : null);
+    });
+    window.scrollTo({ top: 0 });
+    return;
+  }
   if (hash === '/calendar') {
     document.title = tr('만세력 달력 · 인설명리', 'Saju Calendar · Inseol Saju');
     // 달력은 날짜를 누를 때마다 다시 그리므로 광고는 그 바깥에 둡니다.

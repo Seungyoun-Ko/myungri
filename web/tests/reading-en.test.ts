@@ -45,7 +45,8 @@ function randomCharts(n: number) {
 it('English saju reading: 300 charts, clean body text and enough length', () => {
   const problems = new Map<string, string>();
   const short = new Map<string, number>();
-  const MIN: Record<string, number> = { general: 1100, personality: 1500, aptitude: 1400, love: 1200, wealth: 950, health: 800, relations: 800 };
+  // v1.1: the conflict filter drops contradicting fragments, so the floor is lower (medians unchanged).
+  const MIN: Record<string, number> = { general: 800, personality: 1100, aptitude: 1000, love: 850, wealth: 700, health: 600, relations: 500 };
   for (const { input, saju } of randomCharts(300)) {
     for (const s of sajuReadingEn(saju, input.gender)) {
       for (const t of bodyTexts(s)) {

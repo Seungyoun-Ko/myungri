@@ -3,6 +3,7 @@ import type { SajuResult } from '../engine/saju';
 import type { JamidusuChart, OverlayChart } from '../engine/jamidusu';
 import type { ReadingSection, YearReadingView } from '../engine/reading';
 import type { LifePoint, PeriodReadingView } from '../engine/reading/flow';
+import type { MatchPairReading } from '../engine/reading/types';
 
 export interface ReadingFns {
   saju: (r: SajuResult, gender: 'M' | 'F', opts?: { southern?: boolean }) => ReadingSection[];
@@ -13,6 +14,8 @@ export interface ReadingFns {
   jami: (chart: JamidusuChart, overlay?: OverlayChart) => ReadingSection[];
   combined: (r: SajuResult, chart: JamidusuChart, now?: Date) => ReadingSection[];
   disclaimer: string;
+  /** 궁합: 일간 쌍 풀이와 일지 관계 문장 */
+  match: { pairs: Record<string, MatchPairReading>; branch: { hap: string; chung: string; same: string } };
 }
 
 export let R: ReadingFns;

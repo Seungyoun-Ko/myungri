@@ -36,12 +36,18 @@ export function upcomingAges(r: SajuResult, g: TenGodGroup): number[] {
     .map((b) => b.startAge);
 }
 
-/** 그 기운이 나에게 얼마나 맞는지: 필요한 기운 +1, 부담 되는 기운 -1 */
+/**
+ * 그 기운이 나에게 얼마나 맞는지.
+ * 용신·희신 +1, 기신·구신 −1, 나머지 도움 쪽 기운 +0.5, 나머지 부담 쪽 기운 −0.5.
+ * (v1.0의 예전 결과처럼 help·burden이 없으면 나머지는 0)
+ */
 export function elementFavor(r: SajuResult, e: Element): number {
   const y = r.yongsin;
   if (!y) return 0;
   if (e === y.yong || e === y.hee) return 1;
   if (e === y.gi || e === y.gu) return -1;
+  if (y.help?.includes(e)) return 0.5;
+  if (y.burden?.includes(e)) return -0.5;
   return 0;
 }
 export const favorOf = (score: number): FavorKey => (score >= 1 ? 'good' : score <= -1 ? 'caution' : 'normal');
@@ -54,10 +60,7 @@ export function fortuneFavor(r: SajuResult, f: { stem: { element: number }; bran
 
 /** 그 운의 천간·지지 오행이 나에게 맞는 정도: -2 ~ +2 */
 export function fortuneScore(r: SajuResult, f: { stem: { element: number }; branch: { element: number } }): number {
-  const y = r.yongsin;
-  if (!y) return 0;
-  const one = (e: number) => (e === y.yong || e === y.hee ? 1 : e === y.gi || e === y.gu ? -1 : 0);
-  return one(f.stem.element as Element) + one(f.branch.element as Element);
+  return elementFavor(r, f.stem.element as Element) + elementFavor(r, f.branch.element as Element);
 }
 export const favorOfScore = (n: number): FavorKey => (n >= 1 ? 'good' : n <= -1 ? 'caution' : 'normal');
 

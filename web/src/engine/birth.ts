@@ -22,6 +22,10 @@ export interface BirthInput {
   fold?: FoldChoice;
   /** 해외 도시: 현지 태양시(경도 기준)로 볼지. 기본 true, false면 현지 표준시 */
   solarTime?: boolean;
+  /** 23시대(자시) 처리: next = 다음 날로 봄(기본, 사주·명반 공통), same = 당일로 봄(야자시) */
+  jasi?: 'next' | 'same';
+  /** 자미두수 윤달 처리: mid = 15일까지 이번 달·16일부터 다음 달(기본), same = 같은 달, next = 다음 달 */
+  leapMode?: 'same' | 'mid' | 'next';
 }
 
 export interface DateTime {

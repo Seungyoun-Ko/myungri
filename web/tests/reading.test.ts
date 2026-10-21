@@ -71,7 +71,8 @@ it('사주 풀이: 300명 본문에 전문 용어·한자·괄호가 없고, 항
       }
       const n = len(bodyTexts(s));
       // 항목별 최소 분량 (공백 제외, 예전 풀이는 항목당 230~370자)
-      const MIN: Record<string, number> = { general: 480, personality: 650, aptitude: 620, love: 540, wealth: 420, health: 360, relations: 360 };
+      // v1.1부터 모순 거르개가 반대 성향 조각을 빼므로 하한을 낮췄습니다(중앙값은 그대로 480~670자).
+      const MIN: Record<string, number> = { general: 360, personality: 480, aptitude: 450, love: 400, wealth: 350, health: 300, relations: 280 };
       const min = MIN[s.key];
       if (n < min) short.set(s.key, Math.min(short.get(s.key) ?? 9999, n));
     }

@@ -11,6 +11,9 @@ import type { StarReading, TenGodName } from './types';
 import { STARS_A } from './jami-stars-a';
 import { STARS_B } from './jami-stars-b';
 import { JAMI_EXTRA, PALACES } from './jami-palaces';
+import { JAMI_EXTRA2 } from './jami-extra2';
+import { PALACE_STARS } from './jami-palace-stars';
+import { PALACE_FIELD_OF, brightClass, sihwaLines } from './jami-build';
 import { GEUK, LUCKY, ELEMENT_LACK } from './elements';
 import { GROUP_MANY } from './groups';
 import { WEALTH_AMOUNT } from './love';
@@ -47,20 +50,26 @@ function palaceView(chart: JamidusuChart, branch: number, name: PalaceName, over
   const mains = borrowed ? chart.palaces[(branch + 6) % 12].stars.filter((s) => s.kind === 'main') : ownMains;
   const field = FIELD_OF[name];
   const paras: string[] = [];
-  if (borrowed) paras.push(PALACES[name].empty);
-  for (const m of mains) if (STARS[m.name]) paras.push(STARS[m.name][field]);
-  // 건강 자리에는 일반 보좌·살성·사화·밝기 문장(말솜씨, 이동 등)이 맞지 않아 넣지 않습니다(v1.1에서 건강 전용 문장 예정).
-  const generic = name !== '질액궁';
-  if (!borrowed && withBrightness && generic) {
-    if (ownMains.some((s) => STRONG.has(s.brightness))) paras.push(JAMI_EXTRA.bright[branch % 2]);
-    else if (ownMains.some((s) => WEAK.has(s.brightness))) paras.push(JAMI_EXTRA.dim[branch % 2]);
+  const health = name === '질액궁';
+  // 주성이 없으면 맞은편 별을 빌려 은은하게 봅니다
+  if (borrowed) paras.push(PALACES[name].empty, JAMI_EXTRA2.borrowed[branch % 2]);
+  // 육친·생활 자리는 그 자리 전용 별 문장(그 상대·그 분야를 그림), 나머지는 분야별 별 문장
+  const pf = PALACE_FIELD_OF[name];
+  for (const m of mains) {
+    if (pf && PALACE_STARS[m.name]) paras.push(PALACE_STARS[m.name][pf]);
+    else if (STARS[m.name]) paras.push(STARS[m.name][field]);
+    const bc = brightClass(m.brightness);
+    if (!borrowed && withBrightness && bc && JAMI_EXTRA2.bright[m.name]) paras.push(JAMI_EXTRA2.bright[m.name][bc]);
   }
-  for (const s of generic ? p.stars : []) {
-    if (s.kind === 'aux' && JAMI_EXTRA.aux[s.name]) paras.push(JAMI_EXTRA.aux[s.name]);
-    if (s.kind === 'sal' && JAMI_EXTRA.sal[s.name]) paras.push(JAMI_EXTRA.sal[s.name]);
+  // 보좌성·살성: 건강 자리는 건강 전용 문장
+  for (const s of p.stars) {
+    const t = s.kind === 'aux' ? (health ? JAMI_EXTRA2.healthAux : JAMI_EXTRA.aux)[s.name] : s.kind === 'sal' ? (health ? JAMI_EXTRA2.healthSal : JAMI_EXTRA.sal)[s.name] : undefined;
+    if (t) paras.push(t);
   }
-  for (const s of generic ? p.stars : []) if (s.sihwa && s.kind !== 'minor') paras.push(JAMI_EXTRA.sihwa[s.sihwa].natal);
-  for (const h of generic ? (overlay?.sihwa.filter((x) => x.branch === branch) ?? []) : []) paras.push(JAMI_EXTRA.sihwa[h.sihwa].period);
+  // 사화: 타고난 것과 그 시기 것, 겹치면 묶어서
+  const natal = p.stars.filter((s) => s.sihwa && s.kind !== 'minor').map((s) => s.sihwa!);
+  const period = overlay?.sihwa.filter((x) => x.branch === branch).map((x) => x.sihwa) ?? [];
+  paras.push(...sihwaLines(natal, period, health, JAMI_EXTRA, JAMI_EXTRA2));
   const starBasis = p.stars
     .filter((s) => s.kind !== 'minor')
     .map((s) => `${s.name}${s.kind === 'main' ? `(${s.brightness})` : ''}${s.sihwa ? `·화${s.sihwa}` : ''}`)
@@ -127,8 +136,12 @@ export function jamiReading(chart: JamidusuChart, overlay?: OverlayChart): Readi
     const all = [b, (b + 6) % 12, (b + 4) % 12, (b + 8) % 12].map((x) => chart.palaces[x]);
     const good = all.flatMap((p) => p.stars.filter((x) => (x.kind === 'aux' && JAMI_EXTRA.aux[x.name]) || (x.sihwa && x.sihwa !== '기' && x.kind !== 'minor'))).length;
     const bad = all.flatMap((p) => p.stars.filter((x) => x.kind === 'sal' || (x.sihwa === '기' && x.kind !== 'minor'))).length;
-    if (good >= bad + 2) return '이 자리와 이어진 다른 자리들에도 돕는 기운이 넉넉해요. 혼자 애쓰기보다 주변의 도움을 받으면 이 분야를 훨씬 크게 키울 수 있어요.';
-    if (bad >= good + 2) return '이 자리와 이어진 다른 자리들에 부딪치는 기운이 많은 편이에요. 혼자 버티기보다 믿을 만한 사람과 나누며 가면 부딪침이 오히려 추진력이 돼요.';
+    // 대한·유년을 보고 있으면 그 시기의 사화도 셉니다
+    const periodHere = overlay?.sihwa.filter((h) => all.some((q) => q.branch === h.branch)) ?? [];
+    const goodAll = good + periodHere.filter((h) => h.sihwa !== '기').length;
+    const badAll = bad + periodHere.filter((h) => h.sihwa === '기').length;
+    if (goodAll >= badAll + 2) return '이 자리와 이어진 다른 자리들에도 돕는 기운이 넉넉해요. 혼자 애쓰기보다 주변의 도움을 받으면 이 분야를 훨씬 크게 키울 수 있어요.';
+    if (badAll >= goodAll + 2) return '이 자리와 이어진 다른 자리들에 부딪치는 기운이 많은 편이에요. 혼자 버티기보다 믿을 만한 사람과 나누며 가면 부딪침이 오히려 추진력이 돼요.';
     return '이 자리와 이어진 다른 자리들에는 돕는 기운과 부딪치는 기운이 고르게 섞여 있어요. 꾸준히 다져 가면 무리 없이 자라는 분야예요.';
   };
   const single = (key: string, title: string, n: PalaceName, selfField: Field): ReadingSection => {

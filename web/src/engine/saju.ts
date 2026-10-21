@@ -31,7 +31,7 @@ import {
 } from './birth';
 import { type City, cityById } from './cities';
 
-export const CALCULATION_BASIS = 'KR-2026.10-5';
+export const CALCULATION_BASIS = 'KR-2026.10-6';
 
 // ---------------------------------------------------------------- 십신 · 12운성
 export const TEN_GODS = ['비견', '겁재', '식신', '상관', '편재', '정재', '편관', '정관', '편인', '정인'] as const;
@@ -146,7 +146,8 @@ export interface SajuResult {
   transformedRatios: Ratios | null;
   strengthScore: number | null;
   strengthText: StrengthLabel | null;
-  yongsin: { yong: Element; hee: Element; gi: Element; gu: Element } | null;
+  /** help·burden: 강약 방향으로 나눈 도움 쪽·부담 쪽 기운 (v1.1부터) */
+  yongsin: { yong: Element; hee: Element; gi: Element; gu: Element; help?: Element[]; burden?: Element[] } | null;
   geukgukLabel: string | null;
   combinations: Combination[];
   bigFortunes: BigFortune[];
@@ -211,12 +212,19 @@ interface Slot {
   isDayMaster: boolean;
 }
 
+/** 지지 지장간의 몫: 셋이면 여기 10 · 중기 30 · 본기 60, 둘이면 여기 30 · 본기 70 (%) */
+const HIDDEN_SHARE: Record<number, number[]> = { 1: [1], 2: [0.3, 0.7], 3: [0.1, 0.3, 0.6] };
+
 function slotsOf(pillars: Pillar[]): Slot[] {
   const out: Slot[] = [];
   for (const p of pillars) {
     out.push({ pillar: p.key, part: 'stem', element: p.stem.element, yinYang: stemYinYang(p.stem.index), weight: STEM_WEIGHT[p.key], isDayMaster: p.key === 'day' });
-    const main = mainHiddenStem(p.branch.index);
-    out.push({ pillar: p.key, part: 'branch', element: p.branch.element, yinYang: stemYinYang(main), weight: BRANCH_WEIGHT[p.key], isDayMaster: false });
+    // 지지는 지장간 비율대로 나눠 셉니다(통근 반영). 예: 未의 丁·乙·己
+    const hidden = HIDDEN_STEMS[p.branch.index];
+    const share = HIDDEN_SHARE[hidden.length];
+    hidden.forEach((h, i) =>
+      out.push({ pillar: p.key, part: 'branch', element: STEM_ELEMENT[h], yinYang: stemYinYang(h), weight: BRANCH_WEIGHT[p.key] * share[i], isDayMaster: false }),
+    );
   }
   return out;
 }
@@ -264,16 +272,13 @@ export function findCombinations(pillars: Pillar[]): Combination[] {
  */
 function applyTransform(slots: Slot[], combos: Combination[]): Slot[] {
   const next = slots.map((s) => ({ ...s }));
-  const find = (pillar: PillarKey, part: 'stem' | 'branch') => next.find((s) => s.pillar === pillar && s.part === part)!;
+  const find = (pillar: PillarKey, part: 'stem' | 'branch') => next.filter((s) => s.pillar === pillar && s.part === part);
   for (const c of combos) {
     const part = c.kind === '천간합' ? 'stem' : 'branch';
-    const [x, y] = [find(c.positions[0], part), find(c.positions[1], part)];
-    if (c.kind === '지지육충') {
-      x.weight /= 2;
-      y.weight /= 2;
-    } else if (c.element !== undefined) {
-      if (!x.isDayMaster) x.element = c.element;
-      if (!y.isDayMaster) y.element = c.element;
+    const both = [...find(c.positions[0], part), ...find(c.positions[1], part)];
+    for (const x of both) {
+      if (c.kind === '지지육충') x.weight /= 2;
+      else if (c.element !== undefined && !x.isDayMaster) x.element = c.element;
     }
   }
   return next;
@@ -302,11 +307,15 @@ function ratiosOf(slots: Slot[], dayStem: number): Ratios {
 }
 
 // ---------------------------------------------------------------- 강약 · 용신 · 격국
+/**
+ * 강약 단계. 지장간을 나눠 세면서 점수 폭이 넓어져(무작위 4,000명: 5% −78, 중앙 −20, 95% +34)
+ * 극강·극약이 드문 경우(각 약 5% 안팎)만 가리키도록 경계를 정했습니다.
+ */
 export function strengthLabelOf(score: number): StrengthLabel {
-  if (score >= 55) return '극강';
-  if (score >= 18) return '신강';
-  if (score > -18) return '중화';
-  if (score > -50) return '신약';
+  if (score >= 40) return '극강';
+  if (score >= 12) return '신강';
+  if (score > -22) return '중화';
+  if (score > -80) return '신약';
   return '극약';
 }
 
@@ -317,17 +326,29 @@ function strengthScoreOf(tg: Record<TenGod, number>) {
   return round1(support - drain);
 }
 
-function yongsinOf(dayStem: number, score: number, elementRatios: number[]) {
+/**
+ * 용신·희신·기신·구신 (억부).
+ * 먼저 강약 방향으로 다섯 기운을 '도움 쪽'과 '부담 쪽'으로 나누고, 그 안에서 고릅니다.
+ * - 강하면 도움 쪽 = 식상·재성·관성, 부담 쪽 = 비겁·인성
+ * - 약하면 도움 쪽 = 비겁·인성,     부담 쪽 = 식상·재성·관성
+ * 용신: 도움 쪽에서 가장 적은 기운. 희신: 도움 쪽에서 용신을 생하는 기운(없으면 용신이 생하는 기운, 그것도 없으면 남은 도움 기운).
+ * 기신: 부담 쪽에서 용신을 극하는 기운(없으면 부담 쪽에서 가장 많은 기운). 구신: 부담 쪽에서 기신을 생하는 기운(없으면 남은 부담 기운).
+ */
+export function yongsinOf(dayStem: number, score: number, elementRatios: number[]) {
   const me = STEM_ELEMENT[dayStem];
   const output = mod(me + 1, 5);
   const wealth = mod(me + 2, 5);
   const officer = mod(me + 3, 5);
   const resource = mod(me + 4, 5);
-  const candidates = score >= 0 ? [output, wealth, officer] : [me, resource];
-  let yong = candidates[0];
-  for (const c of candidates) if (elementRatios[c] < elementRatios[yong]) yong = c;
-  const hee = generatorOf(yong);
-  return { yong: yong as Element, hee, gi: controllerOf(yong), gu: controllerOf(hee) };
+  const help = score >= 0 ? [output, wealth, officer] : [me, resource];
+  const burden = score >= 0 ? [me, resource] : [output, wealth, officer];
+  let yong = help[0];
+  for (const c of help) if (elementRatios[c] < elementRatios[yong]) yong = c;
+  const hee =
+    [generatorOf(yong), mod(yong + 1, 5)].find((e) => e !== yong && help.includes(e)) ?? help.find((e) => e !== yong) ?? generatorOf(yong);
+  let gi = burden.includes(controllerOf(yong)) ? controllerOf(yong) : burden.reduce((a, b) => (elementRatios[b] > elementRatios[a] ? b : a));
+  const gu = burden.includes(generatorOf(gi)) && generatorOf(gi) !== gi ? generatorOf(gi) : (burden.find((e) => e !== gi) ?? controllerOf(hee));
+  return { yong: yong as Element, hee: hee as Element, gi: gi as Element, gu: gu as Element, help: help as Element[], burden: burden as Element[] };
 }
 
 const GEUKGUK: Record<TenGod, string> = {
@@ -486,7 +507,8 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
 
   // 보정 시각이 23시대면 다음 날 0시로 넘겨 일주를 바꿉니다(자시 일자 전환).
   let pillarClock = birth.corrected!;
-  if (pillarClock.hour === 23) pillarClock = fromMinutes(toMinutes({ ...pillarClock, minute: 0 }) + 60 + pillarClock.minute);
+  // 야자시(same)를 고르면 23시대도 당일 일주로 둡니다.
+  if (pillarClock.hour === 23 && birth.input.jasi !== 'same') pillarClock = fromMinutes(toMinutes({ ...pillarClock, minute: 0 }) + 60 + pillarClock.minute);
 
   const ec = eightCharOf(pillarClock);
   const termEc = eightCharOf(birth.termClock!);
@@ -527,7 +549,7 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
     strengthScore: score,
     strengthText: strength,
     yongsin: yongsinOf(dayStem, score, base.element),
-    geukgukLabel: strength === '극강' ? `${geukName(monthTenGod, dayStem)} (전왕격 후보)` : geukName(monthTenGod, dayStem),
+    geukgukLabel: strength === '극강' ? `${geukName(monthTenGod, dayStem)} (전왕격 후보)` : strength === '극약' ? `${geukName(monthTenGod, dayStem)} (종격 후보)` : geukName(monthTenGod, dayStem),
     combinations,
     bigFortunes: f.big,
     bigFortuneForward: f.forward,

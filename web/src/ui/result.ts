@@ -12,7 +12,10 @@ import { $, esc, pad2, toast } from './dom';
 import { flowView, monthIndexOf, ratioCard, summaryCard, wongukCard } from './saju-view';
 import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
-import { saveAsImage } from './share-image';
+import { saveAsImage, saveShareCard } from './share-image';
+import { shareResultLink } from './share-link';
+import { iljuTypeEn, iljuTypeKo } from '../engine/ilju-type';
+import { ganzhiEn } from '../engine/en-labels';
 
 export interface ResultState {
   snapshot: Snapshot;
@@ -109,6 +112,14 @@ function profileCard(st: ResultState) {
       `1970년 이전 해외 출생은 지역에 따라 당시 시간대 기록이 부정확할 수 있어요. 위의 ${utcText(birth.utcOffset)}가 출생 당시 그 지역 시각과 맞는지 확인해 주세요. 다르면 같은 오프셋을 쓰는 가까운 도시를 고르면 돼요.`,
       `For births outside Korea before 1970, historical time zone records can be wrong for some places. Check that ${utcText(birth.utcOffset)} above matches the local clock time when you were born. If it doesn't, choose a nearby city that used the correct offset.`,
     )}</p>` : ''}
+    ${birth.corrected && birth.corrected.hour === 23 ? `<p class="small muted" style="margin-top:8px">${tr(
+      `밤 11시대(자시) 출생이에요. ${birth.input.jasi === 'same' ? '당일 기준(야자시)' : '다음 날 기준'}으로 일주와 명반을 계산했어요. 학파에 따라 일주가 하루 다르게 보일 수 있어요.`,
+      `Born in the 11 pm hour. Your day pillar and Zi Wei chart use the ${birth.input.jasi === 'same' ? 'same-day' : 'next-day'} rule; schools differ on this, so other apps may show a different day pillar.`,
+    )}</p>` : ''}
+    ${st.snapshot.chart && st.snapshot.chart.lunar.leap ? `<p class="small muted" style="margin-top:8px">${tr(
+      `윤달 출생이에요. 자미두수 명반은 '${{ same: '같은 달', mid: '15일 기준', next: '다음 달' }[birth.input.leapMode ?? 'mid']}'으로 배치했어요.`,
+      `Born in a lunar leap month. The Zi Wei chart uses the "${{ same: 'same month', mid: 'split at day 15', next: 'next month' }[birth.input.leapMode ?? 'mid']}" rule.`,
+    )}</p>` : ''}
     ${st.archiveId ? `<div class="notice" style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <span style="flex:1">${tr('보관함에 저장된 결과예요', 'This is a saved chart')} (${tr('계산 기준', 'method')} ${esc(saju.basis)}).${stale ? tr(' 지금 기준과 달라요.', ' The calculation method has been updated since.') : ''}</span>
         <button type="button" class="btn small" data-action="recalc">${tr('현재 기준으로 새로 계산', 'Recalculate with latest method')}</button></div>` : ''}
@@ -119,6 +130,36 @@ function overlayOf(st: ResultState, chart: JamidusuChart): OverlayChart | undefi
   if (st.jamiMode === 'daehan') return daehanChart(chart, st.daehanAge);
   if (st.jamiMode === 'yunyeon') return yunyeonChart(chart, st.yunyeonYear);
   return undefined;
+}
+
+const FAVOR_WORD = { good: tr('힘이 되는 해', 'a supportive year'), normal: tr('무난한 해', 'a steady year'), caution: tr('속도를 조절할 해', 'a year to pace yourself') } as const;
+
+/** 결과 맨 위 '한눈에' 카드: 일주 타입, 한 줄 은유, 올해, 지금 10년, 공유·궁합 버튼 */
+function heroCard(st: ResultState) {
+  const { birth, saju: s } = st.snapshot;
+  const day = s.pillars.find((p) => p.key === 'day')!;
+  const type = EN ? iljuTypeEn(day.stem.index, day.branch.index) : iljuTypeKo(day.stem.index, day.branch.index);
+  const iljuName = EN ? `${day.stem.hanja}${day.branch.hanja} ${ganzhiEn(day.stem.index, day.branch.index)} day pillar` : `${day.stem.hanja}${day.branch.hanja} · ${day.stem.korean}${day.branch.korean}일주`;
+  const general = R.saju(s, birth.input.gender, { southern: !!cityById(birth.input.cityId ?? 'seoul').south })[0];
+  const thisYear = new Date().getFullYear();
+  const year = s.incompleteBirthTime ? null : R.year(s, thisYear);
+  const big = s.currentBigFortuneIndex >= 0 ? R.big(s, s.currentBigFortuneIndex) : null;
+  const need = general.facts?.[0];
+  const facts: [string, string][] = [];
+  if (year) facts.push([tr(`${thisYear}년`, `${thisYear}`), `${year.title} · ${FAVOR_WORD[year.favor]}`]);
+  if (big) facts.push([tr('지금 10년', 'This decade'), big.title]);
+  if (need) facts.push([need.label, need.value]);
+  return `<div class="card hero-card">
+    <div class="hero-type"><b>${esc(type)}</b><span class="hanja">${esc(iljuName)}</span></div>
+    <p class="hero-title">${esc(general.headline?.text ?? '')}</p>
+    <p class="rd-keywords">${general.keywords.map((k) => `<span>#${esc(k)}</span>`).join('')}</p>
+    ${facts.length ? `<dl class="hero-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+    <div class="hero-actions" data-no-export>
+      <button type="button" class="btn small" data-share-card="story">${tr('나를 한 줄로 · 카드 저장', 'Save my card')}</button>
+      <button type="button" class="btn small ghost" data-share-link>${tr('결과 링크 공유', 'Share link')}</button>
+      <a class="btn small ghost" href="#/match">${tr('궁합 보기', 'Compatibility')}</a>
+    </div>
+  </div>`;
 }
 
 const tabButtons = (group: string, items: [string, string][], current: string) =>
@@ -178,6 +219,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
 
   root.innerHTML = `
     <div data-region="profile"></div>
+    <div data-region="hero" style="margin-top:14px"></div>
     <div class="segmented primary" role="tablist" data-tabs="main" style="margin-top:14px">
       ${tabButtons('main', [['saju', tr('사주팔자', 'Saju')], ['jamidusu', tr('자미두수 명반', 'Zi Wei chart')], ['combined', tr('종합 풀이', 'Combined')]], st.mainTab)}
     </div>
@@ -210,6 +252,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
   const region = (name: string) => root.querySelector<HTMLElement>(`[data-region="${name}"]`);
   const paint = {
     profile: () => (region('profile')!.innerHTML = profileCard(st)),
+    hero: () => (region('hero')!.innerHTML = heroCard(st)),
     wonguk: () => (region('wonguk')!.innerHTML = wongukCard(s)),
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
@@ -324,6 +367,25 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       st.selectedPalace = Number(pal.dataset.palace);
       if (wide) return paint.board();
       openSheet(palaceDetail(chart, st.selectedPalace, overlayOf(st, chart)));
+      return;
+    }
+    const card = t.closest<HTMLElement>('[data-share-card]');
+    if (card) {
+      const day = s.pillars.find((p) => p.key === 'day')!;
+      const general = R.saju(s, st.snapshot.birth.input.gender, { southern: !!cityById(st.snapshot.birth.input.cityId ?? 'seoul').south })[0];
+      const facts = (general.facts ?? []).slice(0, 3).map((f) => [f.label, f.value] as [string, string]);
+      void saveShareCard({
+        type: EN ? iljuTypeEn(day.stem.index, day.branch.index) : iljuTypeKo(day.stem.index, day.branch.index),
+        ilju: EN ? `${day.stem.hanja}${day.branch.hanja} · ${ganzhiEn(day.stem.index, day.branch.index)} day pillar` : `${day.stem.hanja}${day.branch.hanja} · ${day.stem.korean}${day.branch.korean}일주`,
+        title: general.headline?.text ?? '',
+        keywords: general.keywords.slice(0, 3),
+        facts,
+        shape: (card.dataset.shareCard as 'story' | 'square') ?? 'story',
+      });
+      return;
+    }
+    if (t.closest('[data-share-link]')) {
+      void shareResultLink(st.snapshot.birth.input);
       return;
     }
     const save = t.closest<HTMLElement>('[data-save-image]');
