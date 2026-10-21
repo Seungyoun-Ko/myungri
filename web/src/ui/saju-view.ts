@@ -12,6 +12,8 @@ import { iljuSlug } from '../engine/ilju-data';
 const charCell = (hanja: string, korean: string, el: number, extra = '', roman = '') =>
   `<div class="char bg-${el} el-${el} ${extra}"><span class="hanja">${hanja}</span><small>${EN ? `${roman} · ${ELEMENT_EN[el]}` : `${korean}·${ELEMENTS_KO[el]}`}</small></div>`;
 const tg = (t: string) => (EN ? (TEN_GOD_SHORT[t as TenGod] ?? t) : t);
+/** 6칸 월운 격자처럼 아주 좁은 칸용 (영어만 줄임) */
+const tgTight = (t: string) => (EN ? tg(t).replace('Indirect', 'Ind.').replace('Direct', 'Dir.').replace('Resource', 'Res.') : t);
 const tgLong = (t: string) => (EN ? (TEN_GOD_EN[t as TenGod] ?? t) : t);
 const growth = (g: string) => (EN ? (GROWTH_EN[g] ?? g) : g);
 /** 간지 두 글자(한자)의 읽기: 한국어 '갑자', 영어 'Gapja' */
@@ -98,10 +100,10 @@ export function ratioCard(s: SajuResult, mode: 'base' | 'transform') {
   </div>`;
 }
 
-const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string) => `<button type="button" class="cell${isNow ? ' now' : ''}" ${attrs}>
+const fortuneCell = (f: Fortune, top: string, isNow: boolean, attrs: string, label: (t: string) => string = tg) => `<button type="button" class="cell${isNow ? ' now' : ''}" ${attrs}>
     <div class="age">${top}</div>
     <div class="gz hanja"><span class="el-${f.stem.element}">${f.stem.hanja}</span><br><span class="el-${f.branch.element}">${f.branch.hanja}</span></div>
-    <div class="tg">${tg(f.stemTenGod)}<br>${tg(f.branchTenGod)}</div>
+    <div class="tg">${label(f.stemTenGod)}<br>${label(f.branchTenGod)}</div>
   </button>`;
 
 export function flowView(s: SajuResult, selectedBig: number, selectedYear: number, selectedMonth: number, now = new Date()) {
@@ -116,15 +118,18 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
     .join('');
   const months = s.monthFortunes
     // 절기 달(인월=1)을 양력 이름으로 보여 줍니다: 인월은 양력 2월 무렵
-    .map((m) => fortuneCell(m, EN ? MONTH_ABBR[m.month % 12] : `${m.month === 12 ? 1 : m.month + 1}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${EN ? `Around ${MONTH_FULL[m.month % 12]}` : `양력 ${m.month === 12 ? 1 : m.month + 1}월 무렵`} ${gzRead(m.ganzhi)}"`))
+    .map((m) => fortuneCell(m, EN ? MONTH_ABBR[m.month % 12] : `${m.month === 12 ? 1 : m.month + 1}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${EN ? `Around ${MONTH_FULL[m.month % 12]}` : `양력 ${m.month === 12 ? 1 : m.month + 1}월 무렵`} ${gzRead(m.ganzhi)}"`, tgTight))
     .join('');
   const sel = s.bigFortunes[selectedBig];
   return `<div class="card">
       <div class="flow-nav">
         <h2 style="margin:0">${tr('10년 운', '10-year cycles')} <span class="small muted">${EN ? (s.bigFortuneForward ? 'run forward' : 'run backward') : `대운 · ${s.bigFortuneForward ? '순행' : '역행'}`}</span></h2>
         <div style="display:flex;gap:6px;align-items:center">
-          <button type="button" class="icon-btn" data-big-step="1" aria-label="${tr('다음 운', 'Next cycle')}" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
-          <button type="button" class="icon-btn" data-big-step="-1" aria-label="${tr('이전 운', 'Previous cycle')}" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>
+          ${EN
+            ? `<button type="button" class="icon-btn" data-big-step="-1" aria-label="Previous cycle" ${selectedBig <= 0 ? 'disabled' : ''}>&lt;</button>
+          <button type="button" class="icon-btn" data-big-step="1" aria-label="Next cycle" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&gt;</button>`
+            : `<button type="button" class="icon-btn" data-big-step="1" aria-label="다음 운" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
+          <button type="button" class="icon-btn" data-big-step="-1" aria-label="이전 운" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>`}
         </div>
       </div>
       ${lifeGraphView(R.life(s))}

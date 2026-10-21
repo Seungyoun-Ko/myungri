@@ -336,7 +336,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 16px var(--gutter) 32px; }
 .archive-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--outline-variant); border-radius: 12px; background: var(--surface); }
 .archive-item .info { flex: 1; min-width: 0; cursor: pointer; }
 .archive-item .info .nm { font-weight: 800; }
-.archive-item .info .sub { font-size: 0.84rem; color: var(--on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.archive-item .info .sub { font-size: 0.84rem; color: var(--on-surface-variant); overflow-wrap: anywhere; }
 .archive-item .pin[aria-pressed='true'] { color: var(--primary); border-color: var(--primary); }
 .search { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--outline-variant); background: var(--surface); }
 .toast {
@@ -620,3 +620,8 @@ main.article .news-title { margin: 0; }
 .form .check[hidden] { display: none; }
 
 :lang(en) .flow .cell.now::after { content: 'Now'; white-space: nowrap; }
+
+/* 영어 화면: 운 흐름은 왼쪽→오른쪽(나이 순), 달력 칸의 절기 이름은 줄바꿈 */
+:lang(en) .flow { flex-direction: row; }
+:lang(en) .flow.months { direction: ltr; }
+:lang(en) .cal-day .term { white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }

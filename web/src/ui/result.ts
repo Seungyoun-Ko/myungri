@@ -194,7 +194,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     </section>
     <section data-panel="jamidusu" style="margin-top:14px">
       ${chart
-        ? `<div class="segmented" role="tablist" data-tabs="jami">${tabButtons('jami', [['natal', tr('선천 명반', 'Natal')], ['daehan', tr('대한 명반', 'Decade')], ['yunyeon', tr('유년 명반', 'Year')]], st.jamiMode)}</div>
+        ? `<div class="segmented" role="tablist" data-tabs="jami">${tabButtons('jami', [['natal', tr('선천 명반', 'Natal')], ['daehan', tr('대한 명반', 'Decade')], ['yunyeon', tr('유년 명반', 'Yearly')]], st.jamiMode)}</div>
            <div data-region="picker"></div>
            <div data-region="board"></div>
            <div data-region="jamiTong" style="margin-top:14px"></div>
@@ -364,7 +364,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       if (!saved) return toast(tr('브라우저 저장 공간을 쓸 수 없어 저장하지 못했어요.', "Couldn't save: browser storage is unavailable."));
       st.archiveId = saved.id;
       paint.profile();
-      toast(tr('보관함에 저장했어요. 이 브라우저에만 보관돼요.', 'Added to Saved charts (kept in this browser only).'));
+      toast(tr('보관함에 저장했어요. 이 브라우저에만 보관돼요.', 'Saved (in this browser only).'));
     }
   };
 

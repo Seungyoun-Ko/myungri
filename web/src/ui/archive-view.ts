@@ -19,7 +19,7 @@ export function renderArchive(root: HTMLElement, onOpen: (entry: ArchiveEntry) =
     return `<div class="archive-item" style="min-width:0">
       <div class="info" data-open="${e.id}" role="button" tabindex="0">
         <div class="nm">${esc(e.name)} <span class="hanja small muted">${day.stem.hanja}${day.branch.hanja}</span></div>
-        <div class="sub">${b.input.gender === 'M' ? tr('남', 'Male') : tr('여', 'Female')} · ${tr('양력', 'Born')} ${born}${time} · ${tr('저장', 'saved')} ${savedOn}</div>
+        <div class="sub">${b.input.gender === 'M' ? tr('남', 'Male') : tr('여', 'Female')} · ${EN ? '' : '양력 '}${born}${time} · ${tr('저장', 'Saved')} ${savedOn}</div>
       </div>
       <button type="button" class="icon-btn pin" data-pin="${e.id}" aria-pressed="${e.pinned}" aria-label="${e.pinned ? tr('고정 해제', 'Unpin') : tr('고정', 'Pin')}">${e.pinned ? tr('고정됨', 'Pinned') : tr('고정', 'Pin')}</button>
       <button type="button" class="icon-btn" data-del="${e.id}">${tr('삭제', 'Delete')}</button>

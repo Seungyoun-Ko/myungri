@@ -103,7 +103,7 @@ export function lifeGraphView(points: LifePoint[]) {
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.score).toFixed(1)}`).join(' ');
   const area = `${line} L${x(points.length - 1).toFixed(1)},${(H - bottom).toFixed(1)} L${x(0).toFixed(1)},${(H - bottom).toFixed(1)} Z`;
   const grid = [2, 0, -2]
-    .map((v) => `<line class="lg-grid" x1="${padX}" x2="${W - padX}" y1="${y(v)}" y2="${y(v)}"/><text class="lg-axis" x="${padX - 6}" y="${y(v) + 5}" text-anchor="end">${v === 2 ? tr('좋음', 'Good') : v === 0 ? tr('보통', 'Steady') : tr('조절', 'Slow')}</text>`)
+    .map((v) => `<line class="lg-grid" x1="${padX}" x2="${W - padX}" y1="${y(v)}" y2="${y(v)}"/><text class="lg-axis" x="${padX - 6}" y="${y(v) + 5}" text-anchor="end">${v === 2 ? tr('좋음', 'Good') : v === 0 ? tr('보통', 'Even') : tr('조절', 'Slow')}</text>`)
     .join('');
   const dots = points
     .map(
