@@ -41,7 +41,7 @@ export function renderCalendar(root: HTMLElement) {
       const cls = ['cal-day', d.dow === 0 ? 'sun' : '', d.dow === 6 ? 'sat' : '', isToday(d.day) ? 'today' : '', d.day === state.selected ? 'selected' : '']
         .filter(Boolean)
         .join(' ');
-      const lunar = `${d.lunar.leap ? tr('윤', 'L') : ''}${d.lunar.day === 1 ? tr(`${d.lunar.month}월 1일`, `${d.lunar.month}/1`) : `${d.lunar.month}.${d.lunar.day}`}`;
+      const lunar = `${d.lunar.leap ? tr('윤', 'L') : ''}${d.lunar.day === 1 ? tr(`${d.lunar.month}월 1일`, `${d.lunar.month}/1`) : EN ? `${d.lunar.month}/${d.lunar.day}` : `${d.lunar.month}.${d.lunar.day}`}`;
       const term = d.terms.map((t) => `${termName(t.name)} ${pad2(t.hour)}:${pad2(t.minute)}`).join(' ');
       return `<button type="button" class="${cls}" data-day="${d.day}" aria-label="${tr(`${d.month}월 ${d.day}일 ${d.dayGanzhi}일, 음력 ${lunar}`, `${MONTHS[d.month - 1]} ${d.day}, ${gzText(d.dayGanzhi)} day, lunar ${lunar}`)}${term ? ', ' + term : ''}">
         <span class="d">${d.day}</span><span class="gz">${gzSpan(d.dayGanzhi)}</span><span class="lunar">${lunar}</span>${term ? `<span class="term">${term}</span>` : ''}
@@ -59,7 +59,7 @@ export function renderCalendar(root: HTMLElement) {
     const t1 = calcTenGod(dm, ds);
     const t2 = calcTenGod(dm, mainHiddenStem(db));
     tenGod = EN
-      ? `<p style="margin-top:8px">For <b>${esc(person.name)}</b> (Day Master <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span>): today's stem is <b>${TEN_GOD_EN[t1]}</b>, branch <b>${TEN_GOD_EN[t2]}</b></p>`
+      ? `<p style="margin-top:8px">For <b>${esc(person.name)}</b> (Day Master <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span>), this day's stem is <b>${TEN_GOD_EN[t1]}</b> and its branch is <b>${TEN_GOD_EN[t2]}</b>.</p>`
       : `<p style="margin-top:8px"><b>${esc(person.name)}</b>님 일간 <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span> 기준: 일진 천간 <b>${t1}</b>, 지지 <b>${t2}</b></p>`;
   }
 
@@ -85,11 +85,13 @@ export function renderCalendar(root: HTMLElement) {
         <div class="item"><div class="k">${tr('년', 'Year')}</div><div class="v">${gzSpan(p.year)}</div></div>
         <div class="item"><div class="k">${tr('월', 'Month')}</div><div class="v">${gzSpan(p.month)}</div></div>
         <div class="item"><div class="k">${tr('일진', 'Day')}</div><div class="v">${gzSpan(p.day)}</div></div>
-        <div class="item"><div class="k">${tr('음력', 'Lunar date')}</div><div class="v">${tr(`${sel.lunar.leap ? '윤' : ''}${sel.lunar.month}월 ${sel.lunar.day}일`, `${sel.lunar.leap ? 'leap ' : ''}month ${sel.lunar.month}, day ${sel.lunar.day}`)}</div></div>
+        <div class="item"><div class="k">${tr('음력', 'Lunar date')}</div><div class="v">${tr(`${sel.lunar.leap ? '윤' : ''}${sel.lunar.month}월 ${sel.lunar.day}일`, `${sel.lunar.leap ? 'Leap month' : 'Month'} ${sel.lunar.month}, day ${sel.lunar.day}`)}</div></div>
       </div>
-      ${sel.terms.length ? `<p class="notice" style="margin-top:10px">${sel.terms.map((t) => `<b>${termName(t.name)}</b> ${pad2(t.hour)}:${pad2(t.minute)} ${tr('(한국 시각)', '(Korea time)')}`).join(', ')} — ${tr('년·월 간지는 정오 기준이에요.', 'year and month pillars shown are for noon.')}</p>` : ''}
+      ${sel.terms.length ? `<p class="notice" style="margin-top:10px">${EN
+        ? `${sel.terms.map((t) => `<b>${termName(t.name)}</b> begins at ${pad2(t.hour)}:${pad2(t.minute)} Korea time`).join(', ')}. The year and month pillars above are as of noon.`
+        : `${sel.terms.map((t) => `<b>${termName(t.name)}</b> ${pad2(t.hour)}:${pad2(t.minute)} (한국 시각)`).join(', ')} — 년·월 간지는 정오 기준이에요.`}</p>` : ''}
       <div class="field" style="margin-top:14px">
-        <label for="cal-person">${tr('보관함 사람 기준 십신 보기', 'Show Ten Gods for a saved person')}</label>
+        <label for="cal-person">${tr('보관함 사람 기준 십신 보기', 'Ten Gods for a saved chart')}</label>
         <select id="cal-person" data-person>
           <option value="">${tr('선택 안 함', 'None')}</option>
           ${people.map((x) => `<option value="${x.id}" ${x.id === state.personId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}

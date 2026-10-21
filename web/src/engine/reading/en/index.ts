@@ -20,17 +20,17 @@ export const HEALTH_DISCLAIMER = 'This is not medical advice. If you feel unwell
 /** Fields that suit the energy you need most */
 export const ELEMENT_JOBS = [
   'fields that grow and nurture things, such as education, publishing, design, fashion, plants and the environment',
-  'fields that show and shine, such as media, tech, marketing, beauty and cooking',
+  'fields that put things in the spotlight, such as media, tech, marketing, beauty and cooking',
   'fields that build foundations and connect people, such as real estate, construction, brokering, counseling and farming',
   'fields that call for precision, such as finance, law, engineering, medicine and quality control',
   'fields where things flow and move, such as trade, logistics, research, travel and hospitality',
 ];
 
 const SEASON_HEALTH = {
-  spring: "Born in spring, your energy tends to rise upward. Time to steady your mind helps keep sudden flashes of anger from boiling over.",
-  summer: 'Born in summer, you tend to run warm. Drink water often and watch that the heat does not wear you down.',
+  spring: "Born in spring, your energy tends to rise upward. Taking time to steady your mind helps keep sudden flashes of anger from boiling over.",
+  summer: "Born in summer, you tend to run warm. Drink water often and don't let the heat wear you down.",
   autumn: 'Born in autumn, your body tends to dry out easily. Keep your skin and airways well moisturized.',
-  winter: 'Born in winter, your body tends to get cold easily. Keeping your stomach, hands and feet warm helps a lot.',
+  winter: 'Born in winter, you tend to feel the cold easily. Keeping your stomach, hands and feet warm helps a lot.',
 };
 
 const EL = ELEMENT_EN;
@@ -78,7 +78,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
   const healthExcess = ratios[most] >= 30;
   const healthLack = ratios[least] < 12;
   const BALANCED =
-    "The five energies in your chart are mixed fairly evenly, without leaning hard in one direction. You tend to adapt wherever you go without being thrown off balance. The flip side is that your colors may not stand out as boldly, so pick one thing you truly love and dig deep into it. That is where your individuality comes alive.";
+    "The five energies in your chart are mixed fairly evenly, without leaning hard in one direction. You tend to adapt wherever you go without being thrown off balance. The flip side is that your true colors may not stand out as boldly, so pick one thing you truly love and dig deep into it. That's where your individuality comes alive.";
   const y = r.yongsin;
   const geukName = (r.geukgukLabel ?? '').split(' ')[0];
   const geuk = GEUK[geukName];
@@ -157,7 +157,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
       geuk?.work,
       st.work,
       workNone && GROUP_NONE[workNone].work,
-      `You'll also do well in ${ELEMENT_JOBS[y.yong]}, which connect with the ${EL[y.yong]} energy you need most. Work like this tops up what you're missing, so you tire less even over the long haul.`,
+      `You'll also do well in ${ELEMENT_JOBS[y.yong]}, which draw on the ${EL[y.yong]} energy you need most. Work like this tops up what you're missing, so you tire less even over the long haul.`,
     ]),
     chips: { label: 'Work that suits you', items: uniq([...dm.jobs, ...GROUP_MANY[top].jobs, ...(second ? GROUP_MANY[second].jobs.slice(0, 2) : [])]).slice(0, 12) },
     timing: { label: 'When work picks up momentum', items: mergedAges([['관성', 'your role and responsibilities tend to grow'], ['식상', 'a good time to put your talents and ideas out there']]) },
@@ -173,7 +173,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
     keywords: uniq([dm.keywords[2], GROUP_MANY[top].keyword]),
     paragraphs: uniq([dm.love, spouse.love, SPOUSE_AMOUNT[amount(g[spouseGroup], 25, 8)], hap && DAY_COMBO.hap.love, chung && DAY_COMBO.chung.love, top !== tenGodGroup(dayTg) && GROUP_MANY[top].love, st.love, peach && CHARM]),
     caution: spouse.caution,
-    timing: { label: 'When relationships tend to deepen', items: ageItems(spouseGroup, 'a time when good connections come along or a relationship deepens') },
+    timing: { label: 'When relationships tend to deepen', items: ageItems(spouseGroup, 'good connections tend to come along, or a relationship deepens') },
     basis: [
       dmBasis,
       `Day branch (spouse palace): ${branchLabelEn(dayPillar.branch)} · ${TEN_GOD_EN[dayTg]}`,
@@ -195,9 +195,9 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
       second && also(GROUP_MANY[second].money),
       st.money,
       wealthNone && GROUP_NONE['재성'].money,
-      g['비겁'] >= 30 && 'With so many people around you, chances to share money come up often too. Put any co-signing or joint venture in writing, and give yourself extra time before you decide.',
+      g['비겁'] >= 30 && 'With so many people around you, money often ends up shared with others too. Put any co-signing or joint venture in writing, and give yourself extra time before you decide.',
     ]),
-    timing: { label: 'When money starts moving', items: ageItems('재성', 'chances to earn more tend to arrive together with bigger expenses') },
+    timing: { label: 'When money starts moving', items: ageItems('재성', 'chances to earn more tend to arrive along with bigger expenses') },
     tips: uniq([wealthNone && GROUP_NONE['재성'].tip]),
     basis: [
       dmBasis,
@@ -210,7 +210,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
   const health: ReadingSection = {
     key: 'health',
     title: 'Health',
-    keywords: uniq([`Bring in ${EL[y.yong]}`, healthLack && `Top up ${EL[least]}`, healthExcess && `Calm ${EL[most]}`]),
+    keywords: uniq([`Bring in ${EL[y.yong]}`, healthLack && least !== y.yong && `Top up ${EL[least]}`, healthExcess && most !== y.yong && `Calm ${EL[most]}`]),
     paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,

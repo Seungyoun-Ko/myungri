@@ -47,7 +47,7 @@ function boundaryTable(s: SajuResult) {
       )}
     </div>
     <table class="wonguk" style="margin-top:8px" aria-label="${tr('절입 전후 기둥', 'Pillars before and after the solar term')}">
-      <thead><tr><th></th><th>${tr('절입 후', 'After')}</th><th>${tr('절입 전', 'Before')}</th></tr></thead>
+      <thead><tr><th></th><th>${tr('절입 후', 'After term')}</th><th>${tr('절입 전', 'Before term')}</th></tr></thead>
       <tbody>
         <tr><td class="rowlabel">${tr('월주', 'Month')}</td><td>${cell(b.after.month)}</td><td>${cell(b.before.month)}</td></tr>
         ${yearDiff ? `<tr><td class="rowlabel">${tr('년주', 'Year')}</td><td>${cell(b.after.year)}</td><td>${cell(b.before.year)}</td></tr>` : ''}
@@ -66,11 +66,11 @@ export function summaryCard(s: SajuResult) {
   ];
   if (s.strengthText) items.push([tr('강약', 'Strength'), `${EN ? STRENGTH_EN[s.strengthText] : s.strengthText} <span class="muted small">(${s.strengthScore})</span>`]);
   if (s.geukgukLabel) items.push([tr('격국', 'Structure'), EN ? geukEn(s.geukgukLabel) : s.geukgukLabel]);
-  const combos = s.combinations.length ? s.combinations.map((c) => esc(EN ? combinationEn(c) : c.text)).join('<br>') : tr('인접한 합충 없음', 'No combinations or clashes between neighboring pillars');
+  const combos = s.combinations.length ? s.combinations.map((c) => esc(EN ? combinationEn(c) : c.text)).join('<br>') : tr('인접한 합충 없음', 'No combinations or clashes between adjacent pillars');
   return `<div class="card">
     <h2>${tr('핵심 요약', 'Key points')}</h2>
     <div class="summary-grid">${items.map(([k, v]) => `<div class="item"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
-    ${s.yongsin ? `<h3 style="margin-top:14px">${tr('용신 · 희신 · 기신 · 구신', 'Useful · Favorable · Unfavorable · Harmful elements')}</h3><div class="yong">${elChip(s.yongsin.yong, tr('용신', 'Useful'))}${elChip(s.yongsin.hee, tr('희신', 'Favorable'))}${elChip(s.yongsin.gi, tr('기신', 'Unfavorable'))}${elChip(s.yongsin.gu, tr('구신', 'Harmful'))}</div>` : ''}
+    ${s.yongsin ? `<h3 style="margin-top:14px">${tr('용신 · 희신 · 기신 · 구신', 'Helpful &amp; unhelpful elements')}</h3><div class="yong">${elChip(s.yongsin.yong, tr('용신', 'Useful'))}${elChip(s.yongsin.hee, tr('희신', 'Favorable'))}${elChip(s.yongsin.gi, tr('기신', 'Unfavorable'))}${elChip(s.yongsin.gu, tr('구신', 'Harmful'))}</div>` : ''}
     <h3 style="margin-top:14px">${tr('합충', 'Combinations & clashes')}</h3><p class="small">${combos}</p>
   </div>`;
 }
@@ -94,7 +94,7 @@ export function ratioCard(s: SajuResult, mode: 'base' | 'transform') {
       <div><h3>${tr('오행', 'Five elements')}</h3><div class="bars">${el.map((v, i) => bar(`${EN ? ELEMENT_EN[i] : ELEMENTS_KO[i]} <span class="hanja">${ELEMENTS_HANJA[i]}</span>`, v, `var(--el-${i})`)).join('')}</div></div>
       <div><h3>${tr('십신', 'Ten Gods')}</h3><div class="bars">${TEN_GODS.map((t) => bar(tgLong(t), tgr[t], `var(--el-${tenGodElement(s.dayMaster.index, t)})`)).join('')}</div></div>
     </div>
-    <p class="small muted" style="margin-top:10px">${tr('가중치: 월지 30 · 일지 20 · 나머지 각 10. 십신 비율은 일간을 뺀 7자리로 계산해요.', 'Weights: month branch 30 · day branch 20 · others 10 each. Ten God shares use the 7 characters other than the Day Master.')}</p>
+    <p class="small muted" style="margin-top:10px">${tr('가중치: 월지 30 · 일지 20 · 나머지 각 10. 십신 비율은 일간을 뺀 7자리로 계산해요.', 'Weights: month branch 30, day branch 20, all others 10. Ten God percentages leave out the Day Master and count the other 7 characters.')}</p>
   </div>`;
 }
 
@@ -116,12 +116,12 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
     .join('');
   const months = s.monthFortunes
     // 절기 달(인월=1)을 양력 이름으로 보여 줍니다: 인월은 양력 2월 무렵
-    .map((m) => fortuneCell(m, EN ? MONTH_ABBR[m.month % 12] : `${m.month === 12 ? 1 : m.month + 1}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${EN ? `Around ${MONTH_ABBR[m.month % 12]}` : `양력 ${m.month === 12 ? 1 : m.month + 1}월 무렵`} ${gzRead(m.ganzhi)}"`))
+    .map((m) => fortuneCell(m, EN ? MONTH_ABBR[m.month % 12] : `${m.month === 12 ? 1 : m.month + 1}월`, m.month === thisMonthIdx, `data-month="${m.month}" aria-pressed="${m.month === selectedMonth}" aria-label="${EN ? `Around ${MONTH_FULL[m.month % 12]}` : `양력 ${m.month === 12 ? 1 : m.month + 1}월 무렵`} ${gzRead(m.ganzhi)}"`))
     .join('');
   const sel = s.bigFortunes[selectedBig];
   return `<div class="card">
       <div class="flow-nav">
-        <h2 style="margin:0">${tr('10년 운', '10-year cycles')} <span class="small muted">${EN ? (s.bigFortuneForward ? 'forward' : 'reverse') : `대운 · ${s.bigFortuneForward ? '순행' : '역행'}`}</span></h2>
+        <h2 style="margin:0">${tr('10년 운', '10-year cycles')} <span class="small muted">${EN ? (s.bigFortuneForward ? 'run forward' : 'run backward') : `대운 · ${s.bigFortuneForward ? '순행' : '역행'}`}</span></h2>
         <div style="display:flex;gap:6px;align-items:center">
           <button type="button" class="icon-btn" data-big-step="1" aria-label="${tr('다음 운', 'Next cycle')}" ${selectedBig >= s.bigFortunes.length - 1 ? 'disabled' : ''}>&lt;</button>
           <button type="button" class="icon-btn" data-big-step="-1" aria-label="${tr('이전 운', 'Previous cycle')}" ${selectedBig <= 0 ? 'disabled' : ''}>&gt;</button>
@@ -137,7 +137,7 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
       ${yearView(R.year(s, selectedYear))}
     </div>
     <div class="card">
-      <h2>${tr('이번 해 달마다 운', 'Month by month this year')} <span class="small muted">${tr(`${thisYear}년 · 절기 기준이라 달은 4~8일 무렵 바뀌어요`, `${thisYear} · months follow the solar terms, so each one starts around the 4th to 8th`)}</span></h2>
+      <h2>${tr('이번 해 달마다 운', 'Month by month this year')} <span class="small muted">${tr(`${thisYear}년 · 절기 기준이라 달은 4~8일 무렵 바뀌어요`, `${thisYear} · solar months start around the 4th–8th`)}</span></h2>
       <div class="flow months">${months}</div>
       ${periodView(R.month(s, selectedMonth))}
       <p class="disclaimer">${R.disclaimer}</p>
@@ -146,6 +146,7 @@ export function flowView(s: SajuResult, selectedBig: number, selectedYear: numbe
 
 export { monthIndexOf };
 const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 /** 오늘이 몇 번째 절기월(인월=1)인지 대략 계산 */
 function monthIndexOf(d: Date) {
@@ -162,7 +163,7 @@ function monthIndexOf(d: Date) {
 
 export function wongukCard(s: SajuResult) {
   const note = s.incompleteBirthTime
-    ? `<p class="notice" style="margin-top:12px">${tr('출생시간을 몰라 시주 없이 보여 드려요. 일주는 그날 정오 기준의 참고값이고, 강약·용신·대운은 제공하지 않아요.', 'Without a birth time, the hour pillar is left out. The day pillar is based on noon that day, and strength, useful element and 10-year cycles are not available.')}</p>`
+    ? `<p class="notice" style="margin-top:12px">${tr('출생시간을 몰라 시주 없이 보여 드려요. 일주는 그날 정오 기준의 참고값이고, 강약·용신·대운은 제공하지 않아요.', 'Without a birth time, the hour pillar is left out and the day pillar is calculated for noon. Strength, helpful elements and 10-year cycles are not available.')}</p>`
     : '';
   return `<div class="card"><div class="card-head"><h2>${tr('원국', 'Four Pillars')}</h2><button type="button" class="icon-btn" data-save-image="wonguk" data-no-export>${tr('이미지로 저장', 'Save as image')}</button></div>${wongukTable(s)}${boundaryTable(s)}${note}</div>`;
 }

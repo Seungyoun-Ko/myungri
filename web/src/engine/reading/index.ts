@@ -219,7 +219,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F'): ReadingSection[] 
   const health: ReadingSection = {
     key: 'health',
     title: '건강',
-    keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && `${EL[least]} 기운 보충`, healthExcess && `${EL[most]} 기운 다스리기`]),
+    keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && least !== y.yong && `${EL[least]} 기운 보충`, healthExcess && most !== y.yong && `${EL[most]} 기운 다스리기`]),
     paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,

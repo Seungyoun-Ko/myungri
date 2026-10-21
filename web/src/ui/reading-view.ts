@@ -20,7 +20,7 @@ function sectionBody(s: ReadingSection) {
   if (s.energize?.length || s.drain?.length) {
     out.push(`<div class="rd-two">${s.energize?.length ? box('good', tr('이럴 때 힘이 나요', 'What energizes you'), list(s.energize)) : ''}${s.drain?.length ? box('warn', tr('이럴 때 지쳐요', 'What drains you'), list(s.drain)) : ''}</div>`);
   }
-  if (s.caution) out.push(box('warn', tr('관계에서 조심할 점', 'Watch out for'), `<p>${esc(s.caution)}</p>`));
+  if (s.caution) out.push(box('warn', tr('관계에서 조심할 점', 'Relationship pitfalls'), `<p>${esc(s.caution)}</p>`));
   if (s.chips?.items.length) out.push(`<div class="rd-chips"><h4>${esc(s.chips.label)}</h4><p>${s.chips.items.map((c) => `<span>${esc(c)}</span>`).join('')}</p></div>`);
   if (s.timing?.items.length) out.push(box('time', esc(s.timing.label), list(s.timing.items)));
   if (s.tips?.length) out.push(box('tip', tr('실천 팁', 'Try this'), list(s.tips, 'ol')));
@@ -58,7 +58,7 @@ export function yearView(v: YearReadingView | null) {
     <div class="rd-headline"><span class="rd-label">${EN ? `${v.year} · ${esc(v.ganzhi)} year` : `${v.year}년 ${esc(v.ganzhi)}년`} · <span class="favor favor-${v.favor}">${YEAR_FAVOR_LABEL[v.favor]}</span></span><p>${esc(v.title)}</p></div>
     <div class="rd-text"><p>${esc(v.intro)}</p>${v.overview.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
     <div class="rd-fields">${v.fields.map((f) => `<div><h4>${esc(f.label)}</h4><p>${esc(f.text)}</p></div>`).join('')}</div>
-    <h4 class="rd-subhead">${tr(`${v.year}년 달마다 운세`, `${v.year} month by month`)} <span class="small muted">${tr('절기 기준이라 달이 바뀌는 날은 4~8일 무렵이에요', 'months follow the solar terms and start around the 4th to 8th')}</span></h4>
+    <h4 class="rd-subhead">${tr(`${v.year}년 달마다 운세`, `${v.year} month by month`)} <span class="small muted">${tr('절기 기준이라 달이 바뀌는 날은 4~8일 무렵이에요', 'solar months start around the 4th–8th')}</span></h4>
     ${summary ? `<div class="rd-month-summary">${summary}</div>` : ''}
     <ol class="rd-months">${months}</ol>
     ${box('tip', tr('올해의 실천 팁', 'Tips for the year'), list(v.tips, 'ol'))}
@@ -103,7 +103,7 @@ export function lifeGraphView(points: LifePoint[]) {
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.score).toFixed(1)}`).join(' ');
   const area = `${line} L${x(points.length - 1).toFixed(1)},${(H - bottom).toFixed(1)} L${x(0).toFixed(1)},${(H - bottom).toFixed(1)} Z`;
   const grid = [2, 0, -2]
-    .map((v) => `<line class="lg-grid" x1="${padX}" x2="${W - padX}" y1="${y(v)}" y2="${y(v)}"/><text class="lg-axis" x="${padX - 6}" y="${y(v) + 5}" text-anchor="end">${v === 2 ? tr('좋음', 'Good') : v === 0 ? tr('보통', 'Even') : tr('조절', 'Pace')}</text>`)
+    .map((v) => `<line class="lg-grid" x1="${padX}" x2="${W - padX}" y1="${y(v)}" y2="${y(v)}"/><text class="lg-axis" x="${padX - 6}" y="${y(v) + 5}" text-anchor="end">${v === 2 ? tr('좋음', 'Good') : v === 0 ? tr('보통', 'Steady') : tr('조절', 'Slow')}</text>`)
     .join('');
   const dots = points
     .map(
@@ -116,7 +116,7 @@ export function lifeGraphView(points: LifePoint[]) {
     )
     .join('');
   return `<figure class="life-graph">
-    <figcaption>${tr('인생 흐름 · 10년마다 들어오는 기운이 나에게 얼마나 맞는지', 'Your life flow · how well each 10-year cycle suits you')} <span class="small muted">${tr('점을 누르면 그 10년 풀이가 나와요', 'tap a dot to read that decade')}</span></figcaption>
+    <figcaption>${tr('인생 흐름 · 10년마다 들어오는 기운이 나에게 얼마나 맞는지', 'Life graph · how well each 10-year cycle suits you')} <span class="small muted">${tr('점을 누르면 그 10년 풀이가 나와요', 'tap a dot to read that decade')}</span></figcaption>
     <div class="lg-scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${tr('10년 운 흐름 그래프', '10-year cycle graph')}">${grid}<path class="lg-area" d="${area}"/><path class="lg-line" d="${line}"/>${dots}</svg></div>
   </figure>`;
 }

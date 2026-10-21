@@ -18,20 +18,20 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `Your love seeps in slowly. You're cautious at first, but once you open up, you remember your partner's habits and tastes and look after them. You find happiness in shopping for groceries together and making dinner side by side. If you expect your partner to pick up on your hurt feelings without words, though, they can easily miss it. Practicing short, simple lines like "That stung a little today" is what protects the relationship.`,
     health:
-      `Your state of mind tends to show directly in your body, so it matters to look after your sleep and your mood together. This star has traditionally been linked with the kidneys, the eyes and coldness in the body. Keep your hands and feet warm and keep a regular bedtime. If discomfort continues, don't put it off; see a doctor.`,
+      `Your state of mind tends to show directly in your body, so it matters to look after your sleep and your mood together. The Moon star has traditionally been linked with the kidneys, the eyes and coldness in the body. Keep your hands and feet warm and keep a regular bedtime. If discomfort continues, don't put it off; see a doctor.`,
     relations:
       `Among family and friends, you easily become the one who quietly keeps the household running. You show affection by remembering birthdays and bringing soup to someone who's sick. Your bond with the elders who nurtured and raised you tends to stay especially deep. But if you only ever give and forget how to lean on others, the relationship tilts to one side. Now and then, be the first to ask for help yourself.`,
     life:
       `You draw strength from familiar, cozy places more than from noisy crowds. Even somewhere new, you settle in quickly once you've made your room feel like your own. Hobbies that feed your senses suit you well, like night walks, strolls by the water, photography or drawing, and listening to music. Put quiet time alone into your schedule on purpose.`,
     flow:
-      `When the Moon star comes to the center of a period, caring for your home, your family and your own heart tends to matter more than outward achievement. Big household decisions may come up, like moving, redecorating or a savings plan. It's a time when results stay with you in proportion to how patiently and steadily you build. When your emotions run high, look after your sleep and rest first.`,
+      `With the Moon star at the heart of this period, caring for your home, your family and your own heart tends to matter more than outward achievement. Big household decisions may come up, like moving, redecorating or a savings plan. It's a time when results stay with you in proportion to how patiently and steadily you build. When your emotions run high, look after your sleep and rest first.`,
   },
   탐랑: {
     nick: 'Charm star',
     title: 'Full of wants and talents, someone who draws eyes wherever they go',
     keywords: ['Charm', 'Many talents', 'Curiosity'],
     nature:
-      `The Charm star draws in people, pleasure and desire. Many talents, like singing, cooking, sports and a way with words, gather in one person, along with an easy friendliness that clicks with strangers in no time. The clearer its wants, the stronger this star becomes, so depending on where that desire is aimed, it can turn into real talent or scatter.`,
+      `The Charm star draws in people, pleasure and desire. Many talents, like singing, cooking, sports and a way with words, gather in one person, along with an easy friendliness that clicks with strangers in no time. The clearer its wants, the stronger this star becomes, so depending on where that desire is aimed, it can either sharpen into real talent or scatter.`,
     self:
       `Walk into any gathering and before long you're at the center of the conversation. When you start a new hobby, you get the gear first, and within a few weeks you're surprisingly good at it. You spot great restaurants, songs that are just taking off and things people are going to love faster than anyone. But your interests branch in so many directions that unfinished projects pile up easily. Pick one thing you'll definitely finish this year, and your knack will harden into real skill.`,
     work:
@@ -41,13 +41,13 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `You have a pull that draws people in, so romance finds you often. You have a great sense for picking date spots, and you're a partner who's never boring to be with. You value that fluttery feeling, so once a relationship becomes familiar, your heart can start to wander. Going somewhere new together or picking up a hobby to learn side by side can bring the spark back even to a long relationship.`,
     health:
-      `Because you love a good time, late nights out drinking and midnight snacks can easily stack up. This star has traditionally been linked with the liver and kidneys. Mark fun days and rest days separately on the calendar, and build the habit of working up a light sweat the next morning. If your body keeps feeling heavy, get checked by a doctor.`,
+      `Because you love a good time, late nights out drinking and midnight snacks can easily stack up. The Charm star has traditionally been linked with the liver and kidneys. Mark fun days and rest days separately on the calendar, and build the habit of working up a light sweat the next morning. If your body keeps feeling heavy, get checked by a doctor.`,
     relations:
       `You have lots of friends and act as the link in any group. You have a knack for bringing together friends who don't know each other and getting them close in no time. You tend to be friends with your siblings and children too. But knowing so many people can make your relationships look shallow. Set aside time for the few who have stood by you for years and let them know how you feel.`,
     life:
       `Your energy comes alive when you go out instead of staying home. You get ideas in places full of people and things to see, like a newly opened shop, a festival or a concert hall. Hobbies that use your body and senses suit you well, like dancing, singing, cooking and sports. When you have more you want to do than you can handle, pick just three things for this month.`,
     flow:
-      `When the Charm star comes to the center of a period, new people and offers tend to rush in all at once. Your social life picks up and your popularity rises, but trying to grab every opportunity scatters your strength. Write down what you want to do and what you need to do separately, and focus on one main thread. Enjoy yourself, but keep your spending and daily rhythm in check, and this becomes a rich and rewarding time.`,
+      `With the Charm star at the heart of this period, new people and offers tend to rush in all at once. Your social life picks up and your popularity rises, but trying to grab every opportunity scatters your strength. Write down what you want to do and what you need to do separately, and focus on one main thread. Enjoy yourself, but keep your spending and daily rhythm in check, and this becomes a rich and rewarding time.`,
   },
   거문: {
     nick: 'Words-and-Inquiry star',
@@ -64,13 +64,13 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `Your heart opens to someone you can have deep conversations with. If you can talk late into the night without getting bored, you can stay together a long time. In a fight, though, trying to win with logic can push your partner's heart away even if you win the argument. Before deciding who was right, ask first how they felt. Clearing up small misunderstandings the same day is the secret to protecting the relationship.`,
     health:
-      `When thoughts and worries pile up, your appetite and digestion are often the first to wobble. This star has traditionally been linked with the mouth, the throat and digestion. On days you've talked a lot, sip warm water often, and before bed, write your worries down on paper to clear your head. If discomfort lasts, see a doctor.`,
+      `When thoughts and worries pile up, your appetite and digestion are often the first to wobble. The Words-and-Inquiry star has traditionally been linked with the mouth, the throat and digestion. On days you've talked a lot, sip warm water often, and before bed, write your worries down on paper to clear your head. If discomfort lasts, see a doctor.`,
     relations:
       `The closer someone is, the more freely you speak your mind. When a friend opens up about a problem, you become a solid advisor who gets right to the heart of it. With family, though, the same words tend to come out with a sharper edge, and small arguments can drag on. Checking whether the other person is ready to hear it, before checking whether you're right, makes relationships much easier.`,
     life:
       `Quiet time spent digging into things alone fills you up. Hobbies with the joy of discovery suit you well, like documentaries, mystery novels and studying history or science. Out in the world, a single remark can easily be misunderstood, so when meeting people for the first time, lean a bit more toward listening. When you travel, look up the old stories of the place and read them too.`,
     flow:
-      `When the Words-and-Inquiry star comes to the center of a period, there tends to be more to say, explain and scrutinize. It's a good time to study, prepare for a certification or build your expertise. On the other hand, words can easily breed misunderstandings or disputes, so put important agreements in writing and respond to rumors a beat late. It's a time when you're recognized in proportion to how deep you've dug.`,
+      `With the Words-and-Inquiry star at the heart of this period, there tends to be more to say, explain and scrutinize. It's a good time to study, prepare for a certification or build your expertise. On the other hand, words can easily breed misunderstandings or disputes, so put important agreements in writing and respond to rumors a beat late. It's a time when you're recognized in proportion to how deep you've dug.`,
   },
   천상: {
     nick: 'Trust star',
@@ -87,13 +87,13 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `You're a partner who respects the other person and takes thoughtful care of them. You remember anniversaries and treat your partner's family with courtesy too. But because you're used to accommodating, it's easy to let what you want go unsaid. Those swallowed disappointments can burst out all at once one day. Saying even small wishes as they come up makes for a balanced relationship where you both lean on each other.`,
     health:
-      `Looking after everyone else's business, you can be slow to notice your own body's signals. This star has traditionally been linked with the skin, the body's waterways and swelling. Drink water often, cut back on salty food, and don't skip meals even on busy days. If discomfort continues, see a doctor.`,
+      `Looking after everyone else's business, you can be slow to notice your own body's signals. The Trust star has traditionally been linked with the skin, the body's waterways and swelling. Drink water often, cut back on salty food, and don't skip meals even on busy days. If discomfort continues, see a doctor.`,
     relations:
       `You're the person who naturally ends up as the group's treasurer or the one who keeps everyone in the loop. When hurt feelings arise among siblings or friends, you carry messages between them and smooth things over. That earns you trust all around, but trying to be on everyone's side can wear you out. Stepping back, knowing you don't have to solve everything yourself, is a kind of care too.`,
     life:
       `You feel at ease in a tidy space with an orderly schedule. Out in the world, you leave a good impression even on people you've just met, so help comes to you easily. You tend to enjoy seeking out good food and choosing clothes and little accessories. A trip that goes calmly according to plan is a good way for you to rest, too.`,
     flow:
-      `When the Trust star comes to the center of a period, your role in helping and coordinating others tends to grow. Chances to join hands with good people come along, and on the strength of that trust, you may be handed important work. Results can differ greatly depending on who you're working with in this period, so an eye for choosing people matters more than anything.`,
+      `With the Trust star at the heart of this period, your role in helping and coordinating others tends to grow. Chances to join hands with good people come along, and on the strength of that trust, you may be handed important work. Results can differ greatly depending on who you work with now, so an eye for choosing people matters more than anything.`,
   },
   천량: {
     nick: 'Elder star',
@@ -102,7 +102,7 @@ export const STARS_B: Record<string, StarReading> = {
     nature:
       `The Elder star wraps people in protection like the shade a great tree casts in midsummer. It holds a principled sense of right and wrong, a warmth that can't walk past someone in trouble, and the wisdom to find a way through a crisis. It has a strength that actually grows firmer after going through hardship, so the more trials it gets through, the more trust it earns.`,
     self:
-      `You may have often heard, even as a kid, that you were an old soul. When a friend shares a problem, you listen to the end and offer practical advice. When you see someone on the street who looks lost or in trouble, you're the type to walk over and ask first. But when the urge to take care of people runs ahead, your advice can sound like nagging. Try switching to questions that help people find their own answers, and both respect and affection will follow.`,
+      `Even as a kid, you may often have heard that you were an old soul. When a friend shares a problem, you listen to the end and offer practical advice. When you see someone on the street who looks lost or in trouble, you're the type to walk over and ask first. But when the urge to take care of people runs ahead, your advice can sound like nagging. Try switching to questions that help people find their own answers, and both respect and affection will follow.`,
     work:
       `You find deep meaning in work that cares for and protects people. Work that helps others while upholding principles suits you well, such as medicine and pharmacy, education, counseling, social services, insurance, and auditing or review. You're strong at getting things under control when problems erupt, so you easily become the first person people look for in a crisis. Experience gains weight as you get older, so building up over a long time in one field works in your favor.`,
     money:
@@ -110,13 +110,13 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `Your urge to cherish and protect the one you love is strong. When your partner is sick, you rush over with medicine, and you think hard decisions through together with them. You may be drawn to someone with an age gap or someone with a deep, thoughtful mind. If the protecting goes too far, though, your partner may feel treated like a child. Setting your worry down a little and trusting them is one form of deep love too.`,
     health:
-      `Caring for others, you can easily push your own meals and rest to the back. This star has traditionally been linked with the stomach and digestion, and with the body's changes as you age. Bringing regular meals and light walks into your life early on keeps you sturdy for a long time. If you notice changes in your body, don't put it off; see a doctor.`,
+      `Caring for others, you can easily push your own meals and rest to the back. The Elder star has traditionally been linked with the stomach and digestion, and with the body's changes as you age. Bringing regular meals and light walks into your life early on keeps you sturdy for a long time. If you notice changes in your body, don't put it off; see a doctor.`,
     relations:
       `In your family or friend group, you tend to take on the role of the eldest child. When someone gets sick or something happens, you're the first one people call. Your bonds with elders and mentors run deep, and you may receive valuable guidance from them. But carrying every load alone can build resentment, so make a habit of sharing roles and exchanging thanks.`,
     life:
       `You prefer calm places with something to think about over busy ones. Places where time has piled up, like old temples, forest trails and museums, help settle your mind. Hobbies that look deeply into life suit you well, like philosophy, history and practices that work on the inner self. You tend to find great meaning in volunteering, too.`,
     flow:
-      `When the Elder star comes to the center of a period, there tends to be more to take responsibility for and look after. You may be handed the role of the elder in your family or a position leading younger colleagues. Even when difficulties arise, working through them calmly can actually grow your trust and reputation in this period. As much as you care for others, be sure to look after your own health and rest too.`,
+      `With the Elder star at the heart of this period, there tends to be more to take responsibility for and look after. You may be handed the role of the elder in your family or a position leading younger colleagues. Even when difficulties arise, working through them calmly can actually grow your trust and reputation. As much as you care for others, be sure to look after your own health and rest too.`,
   },
   칠살: {
     nick: 'General star',
@@ -133,13 +133,13 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `When you like someone, you go straight for it without hesitating; you're an honest, direct kind of partner. Your urge to protect the one you love is strong, and when trouble comes, you step in front to shield them. When your stubbornness clashes with theirs, though, your words can come out rough. Agree in advance that when anger rises, you'll step away for a moment and come back to talk. Respecting each other's time and space is what makes the relationship last.`,
     health:
-      `You tend to push your body without sparing it and then suddenly run out of steam. This star has traditionally been linked with the breathing organs, the bones and physical injuries. Warm up thoroughly before exercise, and in moments when you're rushing, take one more look around you. If discomfort continues, see a doctor.`,
+      `You tend to push your body without sparing it and then suddenly run out of steam. The General star has traditionally been linked with the breathing organs, the bones and physical injuries. Warm up thoroughly before exercise, and in moments when you're rushing, take one more look around you. If discomfort continues, see a doctor.`,
     relations:
       `You may not have a huge circle, but you stay loyal to the end to any friend you've given your heart to. When a sibling or coworker gets into trouble, you take their side without weighing the pros and cons. But your strong tendency to handle things alone means your family sometimes learns about your situation late. When things are hard, share the process, not just the outcome, and the people close to you will become a solid team behind you.`,
     life:
       `Rather than staying in one place, you widen your path by moving. Business trips, moving house and taking on challenges somewhere unfamiliar often turn into opportunities. Hobbies where you sweat and push past your limits, like hiking, martial arts and running, help release what's built up inside. Traveling alone is also good time for sorting out your thoughts.`,
     flow:
-      `When the General star comes to the center of a period, big changes and challenges tend to arrive all at once. Moments that call for bold decisions come up, like changing positions or taking on new work. It's a time when results match how much you move, but pushing the speed too high wears you out easily. Decide quickly, and carry it out steadily.`,
+      `With the General star at the heart of this period, big changes and challenges tend to arrive all at once. Moments that call for bold decisions come up, like changing positions or taking on new work. It's a time when results match how much you move, but pushing the speed too high wears you out easily. Decide quickly, and carry it out steadily.`,
   },
   파군: {
     nick: 'Pioneer star',
@@ -156,12 +156,12 @@ export const STARS_B: Record<string, StarReading> = {
     love:
       `Your romances are free-spirited and passionate. When you're drawn to someone, you move in fast, and you find joy in experiencing new things together. But when a relationship starts to feel stuck in a rut, it can look as if your feelings have suddenly cooled. When you need change, instead of ending the relationship, try suggesting a change in how you spend your time together. Keeping small promises consistently gives your partner a great sense of security.`,
     health:
-      `You have a habit of pouring out all your energy at once and running yourself down to empty. This star has traditionally been linked with the lower back and lower belly, and with energy draining out of the body. The busier things get, the more important it is to mark rest days on the calendar first and not run up a sleep debt. If discomfort lingers, see a doctor.`,
+      `You have a habit of pouring out all your energy at once and running yourself down to empty. The Pioneer star has traditionally been linked with the lower back and lower belly, and with energy draining out of the body. The busier things get, the more important it is to mark rest days on the calendar first and not run up a sleep debt. If discomfort lingers, see a doctor.`,
     relations:
       `Your thinking often differs from your family's, so you may set out early to find your own path. Your friendships change a lot from one stage of life to the next, and in a new environment you quickly fit in with new people. But how easily you let go of old ties can look cold. A habit of sending an old friend a quick check-in text, even when you're busy, protects the relationships that matter.`,
     life:
       `Changing your surroundings, through moving, switching jobs or traveling, actually gives you energy. You aren't afraid of building a life from scratch in an unfamiliar city. Hobbies where you make, take apart and rebuild things with your own hands suit you well, like fixing up furniture, restoring old objects and camping. When you feel stuck, start by tidying your room.`,
     flow:
-      `When the Pioneer star comes to the center of a period, chances tend to arise to clear out the old and start fresh. Big parts of your life, like your job, your home or your relationships, may shift. Even if it feels shaky, it's the process of laying a new foundation. First sort out on paper what to let go of and what to keep, and change things one at a time rather than all at once.`,
+      `With the Pioneer star at the heart of this period, chances tend to arise to clear out the old and start fresh. Big parts of your life, like your job, your home or your relationships, may shift. Even if it feels shaky, it's the process of laying a new foundation. First sort out on paper what to let go of and what to keep, and change things one at a time rather than all at once.`,
   },
 };

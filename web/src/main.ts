@@ -48,8 +48,8 @@ function home() {
     <div class="layout${current ? ' with-result' : ''}">
       <section class="input-pane" aria-label="${tr('입력', 'Birth details')}">
         <div class="hero">
-          <h1>${tr('사주팔자 &amp; 자미두수 명반', 'Korean Saju &amp; Zi Wei Chart')}</h1>
-          <p>${tr('만세력과 명반을 한곳에서, 무료로. 쉬운 말로 풀어 드려요.', 'Your Four Pillars and Purple Star charts in one place, free. Read in plain English, no jargon.')}</p>
+          <h1>${tr('사주팔자 &amp; 자미두수 명반', 'Korean Saju &amp; Zi Wei Dou Shu Chart')}</h1>
+          <p>${tr('만세력과 명반을 한곳에서, 무료로. 쉬운 말로 풀어 드려요.', 'Your Four Pillars (BaZi) and Purple Star charts in one place. Free, and explained in plain English.')}</p>
         </div>
         <div id="input-root"></div>
       </section>
@@ -86,7 +86,7 @@ function route() {
   });
   const app = $('#app');
   if (hash === '/calendar') {
-    document.title = tr('만세력 달력 · 인설명리', 'Calendar · Inseol Saju');
+    document.title = tr('만세력 달력 · 인설명리', 'Saju Calendar · Inseol Saju');
     // 달력은 날짜를 누를 때마다 다시 그리므로 광고는 그 바깥에 둡니다.
     app.innerHTML = `<div id="calendar-root"><div class="card loading">${tr('달력을 불러오고 있어요.', 'Loading the calendar…')}</div></div>${adSlot('calendar')}`;
     void heavy().then(({ renderCalendar }) => {
@@ -102,7 +102,7 @@ function route() {
       location.hash = '#/';
     });
   } else {
-    document.title = tr('인설명리 · 사주팔자 & 자미두수 명반', 'Inseol Saju · Free Korean Saju & Zi Wei Dou Shu Chart');
+    document.title = tr('인설명리 · 사주팔자 & 자미두수 명반', 'Free Korean Saju & Zi Wei Dou Shu Chart · Inseol Saju');
     home();
   }
   window.scrollTo({ top: 0 });

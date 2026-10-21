@@ -24,7 +24,7 @@ const ERROR_EN: Record<BirthErrorCode, string> = {
   noDate: 'That date does not exist.',
   noLunar: 'That lunar date does not exist.',
   noLeap: 'That year has no such leap month, or the date does not exist.',
-  range: 'Dates from January 1, 1900 to December 31, 2050 are supported.',
+  range: 'Please enter a date between January 1, 1900 and December 31, 2050.',
   dstGap: 'That time did not exist: clocks jumped forward an hour for daylight saving.',
   skipped1961: 'That time did not exist: Korea changed its standard time on August 10, 1961.',
   tzGap: 'That time did not exist in this place: clocks jumped forward for daylight saving.',
@@ -59,7 +59,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
         <input id="f-name" type="text" maxlength="20" placeholder="${tr('이름 입력 (선택)', 'Name (optional)')}" value="${esc(v.name)}" autocomplete="off">
       </div>
       <div class="field"><span class="label">${tr('성별', 'Gender')}</span>${seg('gender', v.gender, [['F', tr('여자', 'Female')], ['M', tr('남자', 'Male')]])}</div>
-      <div class="field"><span class="label">${tr('달력', 'Calendar')}</span>${seg('calendar', v.calendar, [['solar', tr('양력', 'Solar')], ['lunar', tr('음력', 'Lunar')], ['lunarLeap', tr('음력 윤달', 'Lunar leap')]])}</div>
+      <div class="field"><span class="label">${tr('달력', 'Calendar')}</span>${seg('calendar', v.calendar, [['solar', tr('양력', 'Solar')], ['lunar', tr('음력', 'Lunar')], ['lunarLeap', tr('음력 윤달', 'Leap month')]])}</div>
       <div class="field">
         <span class="label">${tr('생년월일', 'Date of birth')}</span>
         <div class="row">
@@ -69,7 +69,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
         </div>
       </div>
       <div class="field">
-        <span class="label">${tr('출생시간', 'Time of birth (24h)')}</span>
+        <span class="label">${tr('출생시간', 'Time of birth (24-hour)')}</span>
         <div class="row two">
           <div class="unit"><input id="f-hour" type="number" inputmode="numeric" min="0" max="23" value="${v.hour ?? 12}" aria-label="${tr('시', 'Hour')}"><span>${tr('시', 'h')}</span></div>
           <div class="unit"><input id="f-minute" type="number" inputmode="numeric" min="0" max="59" value="${v.minute ?? 0}" aria-label="${tr('분', 'Minute')}"><span>${tr('분', 'min')}</span></div>
@@ -77,20 +77,20 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
         <label class="check"><input id="f-unknown" type="checkbox" ${v.timeUnknown ? 'checked' : ''}> ${tr('출생시간 모름', "I don't know my birth time")}</label>
       </div>
       <div class="field" id="fold-field" hidden>
-        <span class="label">${tr('같은 시각이 두 번 있어요', 'This time happened twice')}</span>
-        <p class="small muted" style="margin-bottom:6px">${tr('서머타임이 끝나며 시계를 한 시간 되돌린 날이에요. 어느 쪽이었는지 골라 주세요.', 'Clocks were set back an hour for the end of daylight saving that day. Which one was it?')}</p>
+        <span class="label">${tr('같은 시각이 두 번 있어요', 'This time occurred twice')}</span>
+        <p class="small muted" style="margin-bottom:6px">${tr('서머타임이 끝나며 시계를 한 시간 되돌린 날이에요. 어느 쪽이었는지 골라 주세요.', 'Clocks were set back an hour that day as daylight saving time ended. Which one was your birth time?')}</p>
         ${seg('fold', v.fold ?? 'first', [['first', tr('앞 (서머타임)', 'First (daylight time)')], ['second', tr('뒤 (표준시)', 'Second (standard time)')]])}
       </div>
       <div class="field">
         <label for="f-city">${tr('출생 지역', 'Place of birth')}</label>
         <select id="f-city">${cityOptions(v.cityId ?? DEFAULT_CITY_ID)}</select>
-        <label class="check" id="kr-longitude"><input id="f-longitude" type="checkbox" ${v.useLongitude ? 'checked' : ''}> ${tr('지역 경도 보정 사용', 'Apply local longitude correction')}</label>
+        <label class="check" id="kr-longitude"><input id="f-longitude" type="checkbox" ${v.useLongitude ? 'checked' : ''}> ${tr('지역 경도 보정 사용', 'Adjust for local longitude')}</label>
         <label class="check" id="world-solar"><input id="f-solar" type="checkbox" ${v.solarTime !== false ? 'checked' : ''}> ${tr('현지 태양시로 보기 (권장)', 'Use local solar time (recommended)')}</label>
         <p class="small muted">${tr('목록에 없으면 같은 시간대의 가까운 도시를 고르세요.', 'Not listed? Pick a nearby city in the same time zone.')}</p>
       </div>
       <p class="error" id="f-error" role="alert" hidden></p>
       <button class="btn block" type="submit">${tr('결과 보기', 'See my chart')}</button>
-      <p class="small muted">${tr('출생 정보는 이 브라우저 안에서만 계산해요. 서버로 보내지 않아요.', 'Your birth details are calculated right here in your browser and never sent to a server.')}</p>
+      <p class="small muted">${tr('출생 정보는 이 브라우저 안에서만 계산해요. 서버로 보내지 않아요.', 'Your chart is calculated right here in your browser. Your birth details are never sent to a server.')}</p>
     </form>`;
 
   const form = $<HTMLFormElement>('form', root);
@@ -160,7 +160,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
       return;
     }
     if (!input.timeUnknown && (input.hour! < 0 || input.hour! > 23 || input.minute! < 0 || input.minute! > 59)) {
-      err.textContent = tr('시간은 0시 0분부터 23시 59분까지 입력할 수 있어요.', 'Enter a time from 0:00 to 23:59.');
+      err.textContent = tr('시간은 0시 0분부터 23시 59분까지 입력할 수 있어요.', 'Please enter a time between 0:00 and 23:59.');
       err.hidden = false;
       return;
     }

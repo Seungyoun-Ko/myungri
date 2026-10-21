@@ -34,18 +34,19 @@ export const TEN_GOD_EN: Record<TenGod | '일간', string> = {
   정인: 'Direct Resource',
   일간: 'Day Master',
 };
-/** Short form for tight grid cells */
+/** Labels for tight grid cells: full words that wrap onto two short lines
+ *  (no word longer than 8 letters) instead of clipped abbreviations */
 export const TEN_GOD_SHORT: Record<TenGod | '일간', string> = {
   비견: 'Friend',
-  겁재: 'Rob W.',
-  식신: 'Eat. God',
-  상관: 'Hurt. Off.',
-  편재: 'Ind. Wealth',
-  정재: 'Dir. Wealth',
+  겁재: 'Rob Wealth',
+  식신: 'Eating God',
+  상관: 'Hurting Officer',
+  편재: 'Indirect Wealth',
+  정재: 'Direct Wealth',
   편관: '7 Killings',
-  정관: 'Dir. Officer',
-  편인: 'Ind. Res.',
-  정인: 'Dir. Res.',
+  정관: 'Direct Officer',
+  편인: 'Indirect Resource',
+  정인: 'Direct Resource',
   일간: 'Day Master',
 };
 export const GROUP_EN: Record<TenGodGroup, string> = {

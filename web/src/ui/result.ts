@@ -54,14 +54,20 @@ export function initialResultState(snapshot: Snapshot, archiveId: string | null 
   };
 }
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmtSolar = (b: NormalizedBirth) => {
+  if (EN) {
+    const d = `${MONTH_ABBR[b.solar.month - 1]} ${b.solar.day}, ${b.solar.year}`;
+    return b.timeUnknown || !b.clock ? `${d}, time unknown` : `${d}, ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
+  }
   const d = `${b.solar.year}.${pad2(b.solar.month)}.${pad2(b.solar.day)}`;
-  return b.timeUnknown || !b.clock ? `${d} ${tr('시간 모름', 'time unknown')}` : `${d} ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
+  return b.timeUnknown || !b.clock ? `${d} 시간 모름` : `${d} ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
 };
 /** 명반이 있으면 명반에 쓴 음력 날짜(해외 출생은 보정 날짜 기준일 수 있음)를 보여 줍니다. */
 const fmtLunar = (b: NormalizedBirth, chart?: JamidusuChart | null) => {
   const l = chart?.lunar ?? b.lunar;
-  return `${tr('음력', 'Lunar')} ${l.year}.${l.leap ? tr('윤', 'leap ') : ''}${pad2(l.month)}.${pad2(l.day)}`;
+  if (EN) return `Lunar ${l.year}, ${l.leap ? 'leap ' : ''}month ${l.month}, day ${l.day}`;
+  return `음력 ${l.year}.${l.leap ? '윤' : ''}${pad2(l.month)}.${pad2(l.day)}`;
 };
 const displayName = (b: NormalizedBirth) => b.input.name?.trim() || tr('이름 없음', 'No name');
 const utcText = (m: number) => `UTC${m < 0 ? '−' : '+'}${Math.floor(Math.abs(m) / 60)}${Math.abs(m) % 60 ? `:${pad2(Math.abs(m) % 60)}` : ''}`;
@@ -78,11 +84,11 @@ function profileCard(st: ResultState) {
     : birth.utcOffset !== undefined
       ? tr(
           `보정 ${at} (${utcText(birth.utcOffset)}${c.dst ? `, 서머타임 ${c.dst}분` : ''}${c.longitude ? `, 현지 태양시 ${signed(c.longitude)}분` : ''})`,
-          `adjusted ${at} (${utcText(birth.utcOffset)}${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, local solar time ${signed(c.longitude)} min` : ''})`,
+          `adjusted to ${at} (${utcText(birth.utcOffset)}${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, local solar time ${signed(c.longitude)} min` : ''})`,
         )
       : tr(
           `보정 ${at} (자오선 ${c.meridian}분${c.dst ? `, 서머타임 ${c.dst}분` : ''}${c.longitude ? `, 경도 ${c.longitude}분` : ''})`,
-          `adjusted ${at} (meridian ${c.meridian} min${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, longitude ${c.longitude} min` : ''})`,
+          `adjusted to ${at} (standard meridian ${c.meridian} min${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, longitude ${c.longitude} min` : ''})`,
         );
   const stale = st.archiveId && saju.basis !== CALCULATION_BASIS;
   return `<div class="card">
@@ -95,17 +101,17 @@ function profileCard(st: ResultState) {
       </div>
       <div class="result-actions" data-no-export>
         <button type="button" class="icon-btn" data-action="edit">${tr('편집', 'Edit')}</button>
-        <a class="icon-btn" href="#/archive" style="text-decoration:none;color:inherit">${tr('보관함', 'My list')}</a>
+        <a class="icon-btn" href="#/archive" style="text-decoration:none;color:inherit">${tr('보관함', 'Saved charts')}</a>
         <button type="button" class="icon-btn" data-action="save">${st.archiveId ? tr('저장됨', 'Saved ✓') : tr('저장', 'Save')}</button>
       </div>
     </div>
     ${birth.utcOffset !== undefined && birth.solar.year < 1970 ? `<p class="small muted" style="margin-top:10px">${tr(
       `1970년 이전 해외 출생은 지역에 따라 당시 시간대 기록이 부정확할 수 있어요. 위의 ${utcText(birth.utcOffset)}가 출생 당시 그 지역 시각과 맞는지 확인해 주세요. 다르면 같은 오프셋을 쓰는 가까운 도시를 고르면 돼요.`,
-      `For births outside Korea before 1970, historical time zone records can be off in some places. Please check that ${utcText(birth.utcOffset)} above matches local clock time at your birth. If not, choose a nearby city that used the right offset.`,
+      `For births outside Korea before 1970, historical time zone records can be wrong for some places. Check that ${utcText(birth.utcOffset)} above matches the local clock time when you were born. If it doesn't, choose a nearby city that used the correct offset.`,
     )}</p>` : ''}
     ${st.archiveId ? `<div class="notice" style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <span style="flex:1">${tr('보관함에 저장된 결과예요', 'This is a saved chart')} (${tr('계산 기준', 'method')} ${esc(saju.basis)}).${stale ? tr(' 지금 기준과 달라요.', ' The current method has changed.') : ''}</span>
-        <button type="button" class="btn small" data-action="recalc">${tr('현재 기준으로 새로 계산', 'Recalculate with the current method')}</button></div>` : ''}
+        <span style="flex:1">${tr('보관함에 저장된 결과예요', 'This is a saved chart')} (${tr('계산 기준', 'method')} ${esc(saju.basis)}).${stale ? tr(' 지금 기준과 달라요.', ' The calculation method has been updated since.') : ''}</span>
+        <button type="button" class="btn small" data-action="recalc">${tr('현재 기준으로 새로 계산', 'Recalculate with latest method')}</button></div>` : ''}
   </div>`;
 }
 
@@ -325,7 +331,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const b = st.snapshot.birth;
       const base = `${displayName(b)}_${b.solar.year}${pad2(b.solar.month)}${pad2(b.solar.day)}`.replace(/[\\/:*?"<>|\s]+/g, '_');
       if (save.dataset.saveImage === 'wonguk') {
-        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_${tr('사주원국', 'saju-chart')}.png`, width: 640, caption: tr('사주팔자 원국', 'Saju chart') });
+        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_${tr('사주원국', 'saju-chart')}.png`, width: 640, caption: tr('사주팔자 원국', 'Saju Four Pillars chart') });
       } else {
         void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_${tr('자미두수명반', 'ziwei-chart')}.png`, width: 820, caption: tr('자미두수 명반', 'Zi Wei Dou Shu chart') });
       }
@@ -336,8 +342,8 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const sheet = document.createElement('div');
       sheet.className = 'zoom-sheet';
       sheet.setAttribute('role', 'dialog');
-      sheet.setAttribute('aria-label', tr('명반 크게 보기', 'Large chart'));
-      sheet.innerHTML = `<div class="zoom-bar"><b>${tr('명반 크게 보기', 'Large chart')}</b><button type="button" class="btn small" data-close>${tr('닫기', 'Close')}</button></div>${wrap.outerHTML}`;
+      sheet.setAttribute('aria-label', tr('명반 크게 보기', 'Enlarged chart'));
+      sheet.innerHTML = `<div class="zoom-bar"><b>${tr('명반 크게 보기', 'Enlarged chart')}</b><button type="button" class="btn small" data-close>${tr('닫기', 'Close')}</button></div>${wrap.outerHTML}`;
       sheet.addEventListener('click', (ev) => {
         if ((ev.target as HTMLElement).closest('[data-close]')) sheet.remove();
       });
@@ -348,7 +354,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     if (action === 'edit') cb.onEdit();
     if (action === 'recalc') cb.onRecalc(st);
     if (action === 'save') {
-      if (st.archiveId) return toast(tr('이미 보관함에 있어요.', 'Already saved.'));
+      if (st.archiveId) return toast(tr('이미 보관함에 있어요.', 'Already in Saved charts.'));
       const saved = archive.save({
         name: displayName(st.snapshot.birth),
         input: st.snapshot.birth.input,
@@ -358,7 +364,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       if (!saved) return toast(tr('브라우저 저장 공간을 쓸 수 없어 저장하지 못했어요.', "Couldn't save: browser storage is unavailable."));
       st.archiveId = saved.id;
       paint.profile();
-      toast(tr('보관함에 저장했어요. 이 브라우저에만 보관돼요.', 'Saved. It stays in this browser only.'));
+      toast(tr('보관함에 저장했어요. 이 브라우저에만 보관돼요.', 'Added to Saved charts (kept in this browser only).'));
     }
   };
 

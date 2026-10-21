@@ -82,10 +82,10 @@ function palaceView(chart: JamidusuChart, branch: number, name: PalaceName, over
 const nicks = (names: string[]) =>
   names
     .filter((n) => STARS[n])
-    .map((n) => `the '${STARS[n].nick}'`)
+    .map((n) => `the ${STARS[n].nick}`)
     .join(' and ');
 const headlineOf = (v: PalaceView) =>
-  v.borrowed ? `${cap(area(v.name))} is empty, so it borrows ${nicks(v.names)} from across the chart` : `${cap(area(v.name))} holds ${nicks(v.names)}`;
+  v.borrowed ? `${cap(area(v.name))} has no main star of its own, so it borrows ${nicks(v.names)} from the opposite area` : `${cap(area(v.name))} holds ${nicks(v.names)}`;
 
 export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): ReadingSection[] {
   const names: PalaceName[] = overlay ? overlay.names : chart.palaces.map((p) => p.name);
@@ -105,7 +105,7 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
     sections.push({
       key: 'now',
       title: 'This period',
-      headline: { label: when, text: `During this period, ${field(center.name)} tends to become the central theme of your life` },
+      headline: { label: when, text: `In this period, life tends to revolve around ${area(center.name)}` },
       keywords: centerMains.filter((s) => STARS[s.name]).map((s) => STARS[s.name].keywords[0]),
       paragraphs: [...centerMains.filter((s) => STARS[s.name]).map((s) => STARS[s.name].flow), ...overlay.sihwa.map((s) => `${cap(area(names[s.branch]))}: ${JAMI_EXTRA.sihwa[s.sihwa].period}`)],
       facts: sihwaFacts,
@@ -137,13 +137,13 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
     const all = [b, (b + 6) % 12, (b + 4) % 12, (b + 8) % 12].map((x) => chart.palaces[x]);
     const good = all.flatMap((p) => p.stars.filter((x) => (x.kind === 'aux' && JAMI_EXTRA.aux[x.name]) || (x.sihwa && x.sihwa !== '기' && x.kind !== 'minor'))).length;
     const bad = all.flatMap((p) => p.stars.filter((x) => x.kind === 'sal' || (x.sihwa === '기' && x.kind !== 'minor'))).length;
-    if (good >= bad + 2) return 'The areas linked to this one carry plenty of supportive energy too. Rather than pushing on alone, lean on the help around you and you can grow this part of life much further.';
-    if (bad >= good + 2) return 'The areas linked to this one carry a fair amount of friction. Instead of toughing it out alone, share the load with people you trust, and that friction can turn into drive.';
-    return 'The areas linked to this one hold an even mix of support and friction. Build on it steadily and this part of life grows without much strain.';
+    if (good >= bad + 2) return 'The areas connected to this one are rich in support as well. Rather than pushing on alone, lean on the help around you, and this part of your life can grow much further.';
+    if (bad >= good + 2) return 'The areas connected to this one carry a fair amount of friction. Instead of toughing it out alone, share the load with people you trust, and that friction can turn into drive.';
+    return 'The areas connected to this one hold an even mix of support and friction. Keep building steadily, and this part of your life grows without much strain.';
   };
   const single = (key: string, title: string, n: PalaceName, selfField: Field): ReadingSection => {
     const v = view(n);
-    const lens = mingStar && !v.names.includes(mingStar) ? `The '${STARS[mingStar].nick}' in your self area also colors this part of life. ${firstSentences(STARS[mingStar][selfField], 2)}` : null;
+    const lens = mingStar && !v.names.includes(mingStar) ? `The ${STARS[mingStar].nick} in your self area also colors this part of your life. ${firstSentences(STARS[mingStar][selfField], 2)}` : null;
     return {
       key,
       title,
@@ -185,17 +185,17 @@ const GROUP_TO_FIELDS: Record<TenGodGroup, PalaceName[]> = {
   관성: ['관록궁', '부모궁'],
   인성: ['부모궁', '복덕궁', '전택궁'],
 };
-const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: 'your own strength & peers', 식상: 'expression & talent', 재성: 'money & practical sense', 관성: 'work & responsibility', 인성: 'learning & support' };
+const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: 'self-reliance & peers', 식상: 'expression & talent', 재성: 'money & practical sense', 관성: 'work & responsibility', 인성: 'learning & support' };
 const SELF_SYNTH: Record<string, string> = {
-  'strong/bright': 'Your chart carries strong energy and the star lighting up your self area shines brightly too. You have a clear color of your own, and your presence shows naturally wherever you go.',
-  'strong/dim': 'Your chart carries strong energy, while the star lighting you is soft. Rather than showing it off, you hold firm on the inside. The better people know you, the more they trust you.',
-  'strong/mid': 'Your chart gives you the strength to push forward on your own, and the star in your self area backs that strength steadily. You are someone who makes your own path.',
-  'weak/bright': 'Your chart energy is on the gentle side, but the star lighting you is bright. Your strengths come alive around other people, and you grow by giving and receiving support.',
-  'weak/dim': 'Both your chart energy and your starlight are soft. The more patiently you stack up experience, the stronger you get. You bloom late and last long.',
-  'weak/mid': 'Your chart energy is gentle, so good people around you lift you up, and the star in your self area supports that flow steadily.',
-  'mid/bright': 'Your chart energy is balanced and the star lighting you is bright. Your strengths stand out clearly within that steady balance.',
-  'mid/dim': 'Your chart energy is balanced and your starlight is soft. You quietly do your part without fuss, and people feel at ease around you.',
-  'mid/mid': 'Both your chart energy and your starlight are evenly mixed. You have a knack for finding balance, so you fit in comfortably almost anywhere.',
+  'strong/bright': 'Your saju chart carries strong energy, and the star in your self area shines brightly too. You have a clear color of your own, and your presence comes through naturally wherever you go.',
+  'strong/dim': 'Your saju chart carries strong energy, while the star shining over you glows softly. Rather than showing your strength off, you hold firm on the inside, and the better people know you, the more they trust you.',
+  'strong/mid': 'Your saju chart gives you the strength to push forward on your own, and the star in your self area steadily backs that strength up. You can carve out a path even when you go it alone.',
+  'weak/bright': 'The energy in your saju chart is on the gentle side, but the star shining over you is bright. Your strengths really come alive around other people, and you grow by giving and receiving support.',
+  'weak/dim': 'Both the energy in your saju chart and your starlight are soft. The more patiently you stack up experience, the stronger you get: you bloom late and last long.',
+  'weak/mid': 'The energy in your saju chart is gentle, so you draw strength from good people around you, and the star in your self area steadily supports that flow.',
+  'mid/bright': 'The energy in your saju chart is balanced, and the star shining over you is bright. Within that steady balance, your strengths stand out clearly.',
+  'mid/dim': 'The energy in your saju chart is balanced, and your starlight is soft. You quietly do your part without any fuss, and people feel at ease around you.',
+  'mid/mid': 'The energy in your saju chart and your starlight are both evenly mixed. You have a knack for keeping your balance as things change, so you fit in comfortably almost anywhere.',
 };
 
 export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new Date()): ReadingSection[] {
@@ -214,11 +214,11 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
   out.push({
     key: 'self',
     title: 'Your true self',
-    headline: { label: 'What your saju chart and star chart draw together', text: dm.title },
+    headline: { label: 'Your saju and star charts, read together', text: dm.title },
     keywords: [...new Set([dm.keywords[0], dm.keywords[1], ...(mingStar ? [STARS[mingStar].keywords[0]] : [])])],
     paragraphs: [
       firstSentences(dm.core[0], 2),
-      ...(mingStar ? [`In your star chart, the star lighting you up is the '${STARS[mingStar].nick}'. ${firstSentences(STARS[mingStar].self, 2)}`] : []),
+      ...(mingStar ? [`In your star chart, the star shining over you is the ${STARS[mingStar].nick}. ${firstSentences(STARS[mingStar].self, 2)}`] : []),
       SELF_SYNTH[`${r.yongsin ? sk : 'mid'}/${bright}`],
     ],
     basis: [`Day Master ${stemLabelEn(r.dayMaster)} · Strength ${r.strengthText ? STRENGTH_EN[r.strengthText] : '-'}`, self.basis],
@@ -237,10 +237,10 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
     keywords: [GROUP_MANY[top].keyword],
     paragraphs: [
       shared
-        ? `The '${GROUP_PLAIN[top]}' energy in your saju chart and the good fortune in your star chart both point to ${field(shared)}. Where the two readings overlap, focused effort tends to pay off big.`
-        : `Your saju chart draws strength from ${GROUP_PLAIN[top]}, while your star chart puts good fortune in ${field(lu.palace)} and extra influence in ${field(quan.palace)}. Make the most of both.`,
+        ? `Your saju chart's strength in ${GROUP_PLAIN[top]} and the good fortune in your star chart both point to ${area(shared)}. Where the two readings overlap, focused effort tends to pay off in a big way.`
+        : `Your saju chart draws its strength from ${GROUP_PLAIN[top]}, while your star chart places good fortune in ${area(lu.palace)} and extra weight in ${area(quan.palace)}. Put both to work and you get the best of each.`,
       firstSentences(GROUP_MANY[top].work, 2),
-      ...(workStar ? [`The work & career area of your star chart holds the '${STARS[workStar].nick}'. ${firstSentences(STARS[workStar].work, 2)}`] : []),
+      ...(workStar ? [`The work & career area of your star chart holds the ${STARS[workStar].nick}. ${firstSentences(STARS[workStar].work, 2)}`] : []),
     ],
     chips: { label: 'Work that suits you', items: [...new Set([...dm.jobs.slice(0, 4), ...GROUP_MANY[top].jobs.slice(0, 4)])] },
     basis: [`Dominant Ten God group: ${GROUP_EN[top]}`, `Structure: ${geukEn(r.geukgukLabel)}`, `Hua Lu ${starEn({ name: lu.star })} (${palaceTerm(lu.palace)}) · Hua Quan ${starEn({ name: quan.star })} (${palaceTerm(quan.palace)})`, work.basis],
@@ -254,9 +254,9 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
   const nowParas: string[] = [];
   if (big && r.yongsin) {
     const favor = favorOfScore(fortuneScore(r, big));
-    nowParas.push(`You are now in the 10-year cycle that began at age ${big.startAge}. ${BIG_FAVOR[favor][0]}`, firstSentences(BIG[big.stemTenGod as TenGodName].overview, 3));
+    nowParas.push(`You're now in the 10-year cycle that began at age ${big.startAge}. ${BIG_FAVOR[favor][0]}`, firstSentences(BIG[big.stemTenGod as TenGodName].overview, 3));
   }
-  nowParas.push(`In your star chart, ${field(dhCenter.name)} tends to become the central theme of life between ages ${dh.range!.start} and ${dh.range!.end}.`, ...dhMains.map((s) => STARS[s.name].flow));
+  nowParas.push(`In your star chart, life between ages ${dh.range!.start} and ${dh.range!.end} tends to revolve around ${area(dhCenter.name)}.`, ...dhMains.map((s) => STARS[s.name].flow));
   out.push({
     key: 'now',
     title: 'Where you are now',
@@ -279,7 +279,7 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
     paragraphs: [
       r.yongsin ? WEALTH_AMOUNT[g['재성'] >= 25 ? 'many' : g['재성'] < 10 ? 'few' : 'normal'] : firstSentences(dm.money, 2),
       firstSentences(dm.money, 2),
-      ...(moneyStar ? [`The money area of your star chart holds the '${STARS[moneyStar].nick}'. ${firstSentences(STARS[moneyStar].money, 2)}`] : []),
+      ...(moneyStar ? [`The money area of your star chart holds the ${STARS[moneyStar].nick}. ${firstSentences(STARS[moneyStar].money, 2)}`] : []),
     ],
     basis: [`Wealth group ${Math.round(g['재성'])}%`, money.basis],
   });
@@ -289,7 +289,7 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
     key: 'fill',
     title: 'What to build up',
     keywords: [],
-    paragraphs: [`In your star chart, ${field(ji.palace)} is the area that asks for extra care. ${JAMI_EXTRA.sihwa['기'].natal}`],
+    paragraphs: [`In your star chart, ${area(ji.palace)} is the one to handle with extra care. ${JAMI_EXTRA.sihwa['기'].natal}`],
     basis: [`Hua Ji ${starEn({ name: ji.star })}: ${palaceTerm(ji.palace)}`],
   };
   if (r.yongsin && r.elementRatios) {

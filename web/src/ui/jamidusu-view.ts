@@ -10,7 +10,7 @@ const brightLabel = (b: string) => (EN ? (BRIGHTNESS_HANJA[b] ?? b) : b);
 const spirit = (kind: keyof typeof SPIRIT_NAMES, name: string) => (EN ? (SPIRIT_HANJA[kind][SPIRIT_NAMES[kind].indexOf(name)] ?? name) : name);
 const palaceLabel = (n: PalaceName) => (EN ? PALACE_EN[n] : n.replace('궁', ''));
 const overlayBadge = (o: { sihwa: keyof typeof SIHWA_HANJA; label: string }, overlay: OverlayChart) => (EN ? `${overlay.kind === 'daehan' ? '大' : '年'}${SIHWA_HANJA[o.sihwa]}` : o.label);
-export const overlayTitle = (o: OverlayChart) => (EN ? (o.kind === 'daehan' ? `Decade chart, ages ${o.range!.start}–${o.range!.end}` : `Year chart ${o.year}`) : o.label);
+export const overlayTitle = (o: OverlayChart) => (EN ? (o.kind === 'daehan' ? `Decade chart, ages ${o.range!.start}–${o.range!.end}` : `Yearly chart, ${o.year}`) : o.label);
 import { esc } from './dom';
 
 /** 지지 → [행, 열] (사오미신 / 진··유 / 묘··술 / 인축자해) */
@@ -106,7 +106,7 @@ export function boardView(chart: JamidusuChart, o: BoardOptions) {
           ${EN
             ? `<div><span class="gz">${chart.yearGanzhi}</span> · Year of the ${ZODIAC_EN[chart.yearBranch]} · ${chart.gender === 'M' ? 'Male' : 'Female'}</div>
           <div><b>${gukEn(chart.guk.name)}</b> · decades run ${chart.forward ? 'forward' : 'backward'}</div>
-          <div>Life <span class="gz">${mingP.ganzhi}</span> · Body: ${PALACE_EN[shenName]}</div>`
+          <div>Life palace <span class="gz">${mingP.ganzhi}</span> · Body in ${PALACE_EN[shenName]}</div>`
             : `<div><span class="gz">${chart.yearGanzhi}</span>년 ${ZODIAC_KO[chart.yearBranch]}띠 · ${chart.gender === 'M' ? '남' : '여'}</div>
           <div><b>${chart.guk.name}</b> · 대한 ${chart.forward ? '순행' : '역행'}</div>
           <div>명궁 <span class="gz">${mingP.ganzhi}</span> · 신궁 ${shenName.replace('궁', '')}궁</div>`}
@@ -115,7 +115,7 @@ export function boardView(chart: JamidusuChart, o: BoardOptions) {
       </div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">${tr('금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.', 'Gold lines: Life → Wealth & Career. Blue: Life → Travel. Tap a palace to see star names and details.')}</p><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="icon-btn" data-zoom>${tr('크게 보기', 'Enlarge')}</button><button type="button" class="icon-btn" data-save-image="board">${tr('이미지로 저장', 'Save as image')}</button></span></div>`;
+  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">${tr('금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.', 'Gold lines: Life → Wealth and Career. Blue line: Life → Travel. Tap a palace for star names and details.')}</p><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="icon-btn" data-zoom>${tr('크게 보기', 'Enlarge')}</button><button type="button" class="icon-btn" data-save-image="board">${tr('이미지로 저장', 'Save as image')}</button></span></div>`;
 }
 
 export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayChart) {
@@ -134,7 +134,7 @@ export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayC
     <ul>
       ${p.stars.length ? p.stars
         .map((s) => `<li><span><b class="hanja">${s.hanja}</b> ${EN ? starEn(s) : s.name} <span class="muted small">${EN ? KIND_EN[s.kind] : KIND_LABEL[s.kind]}</span></span><span>${[EN ? (BRIGHTNESS_EN[s.brightness] ?? s.brightness) : s.brightness, sihwaText(s)].filter(Boolean).join(' · ')}</span></li>`)
-        .join('') : `<li>${tr('별이 없어요. 맞은편 궁의 주성을 빌려 봐요.', 'No stars here. Read it with the main stars of the opposite palace.')}</li>`}
+        .join('') : `<li>${tr('별이 없어요. 맞은편 궁의 주성을 빌려 봐요.', 'No stars here. Read this palace through the main stars of the opposite palace.')}</li>`}
     </ul>
     <p class="small" style="margin-top:10px">${EN ? `Life cycle ${spirit('changsheng', p.changsheng)} · Doctor ${spirit('boshi', p.boshi)} · Year spirit ${spirit('suiqian', p.suiqian)} · General ${spirit('jiangqian', p.jiangqian)}` : `장생 ${p.changsheng} · 박사 ${p.boshi} · 태세 ${p.suiqian} · 장성 ${p.jiangqian}`}</p>
   </div>`;
