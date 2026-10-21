@@ -450,4 +450,19 @@ export function spokenSummary(chart: JamidusuChart, branch: number, names?: Pala
   return `${parts.join(', ')}, 두 번 탭하면 상세 보기`;
 }
 
+/** 명주: 명궁 지지로 정하는 별 */
+const MING_ZHU = ['탐랑', '거문', '녹존', '문곡', '염정', '무곡', '파군', '무곡', '염정', '문곡', '녹존', '거문'];
+/** 신주: 생년 지지로 정하는 별 */
+const SHEN_ZHU = ['화성', '천상', '천량', '천동', '문창', '천기', '화성', '천상', '천량', '천동', '문창', '천기'];
+export const mingZhu = (chart: JamidusuChart) => MING_ZHU[chart.mingBranch];
+export const shenZhu = (chart: JamidusuChart) => SHEN_ZHU[chart.yearBranch];
+
+/** 그 궁의 천간이 일으키는 사화가 어느 궁으로 들어가는지 (궁간 사화·자화) */
+export function palaceSihwa(chart: JamidusuChart, branch: number) {
+  return sihwaOf(chart.palaces[branch].stem).map(({ star, sihwa }) => {
+    const to = chart.palaces.find((pl) => pl.stars.some((s) => s.name === star && s.kind !== 'minor'));
+    return { star, sihwa, toBranch: to?.branch ?? -1, self: to?.branch === branch };
+  });
+}
+
 export { STAR_BY_KEY, STAR_BY_NAME };

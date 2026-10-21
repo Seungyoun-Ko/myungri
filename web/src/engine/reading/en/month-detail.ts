@@ -36,7 +36,7 @@ export const MONTH_DETAIL: Record<TenGodName, MonthDetail> = {
   },
   편재: {
     overview:
-      'Your circle widens and your messages pick up this month. An acquaintance you haven\'t heard from in a while might reach out with a job offer, or you might pick up useful information at an unfamiliar gathering. The more you move around, the more opportunities stick to you. Starting too many things at once can blur how they end, though. Pick just three things you must finish this month, and you\'ll have results to match how busy you were.',
+      'Your circle widens and your messages pick up this month. An acquaintance you haven\'t heard from in a while might reach out with a job offer, or you might pick up useful information at an unfamiliar gathering. The more you move around, the more opportunities come your way. Starting too many things at once can blur how they end, though. Pick just three things you must finish this month, and you\'ll have results to match how busy you were.',
     work: 'Outside meetings and client calls carry extra weight this month. When offers come in, write down the income and the time each would take side by side before choosing, and you\'ll make fewer mistakes.',
     money: 'Both the money coming in and the money going out can grow this month. Keep a separate eye on transportation and social spending, and avoid moving large sums based only on what someone else tells you.',
     love: 'Chances to meet new people increase this month. If you\'re in a relationship, walking somewhere new together, even close to home, brings fresh life to your conversations.',
@@ -45,7 +45,7 @@ export const MONTH_DETAIL: Record<TenGodName, MonthDetail> = {
   정재: {
     overview:
       'This month you\'ll want to put your life neatly in order. Going over your card statement carefully, clearing out the fridge and closet, or drawing up a fresh budget for the month all suit you well. The care you put in comes back to you honestly. Small differences in amounts can set your nerves on edge, though, so loosen up the accounting a little with the people close to you.',
-    work: 'This month, you earn trust by handling deadlines and numbers without mistakes. So you don\'t lose track of the team\'s flow while holding on to your own tasks, share short progress updates often.',
+    work: 'This month, you earn trust by handling deadlines and numbers without mistakes. So you don\'t lose sight of how the team is doing while you\'re heads-down on your own tasks, share short progress updates often.',
     money: 'A good month to firm up your saving habits. Having a fixed amount leave your account right on payday makes it easy. Just don\'t skimp on what you truly need, like medical bills or money for learning.',
     love: 'Small actions show your feelings better than words this month. It\'s also a fine time to comfortably bring up practical topics, like how you split the cost of dates.',
     health: 'This is a good month to get a scattered daily rhythm back on track. It\'s easy to skimp on breaks while you work through your to-do list, so after lunch, close your eyes and rest for ten minutes.',
@@ -63,7 +63,7 @@ export const MONTH_DETAIL: Record<TenGodName, MonthDetail> = {
       'Your polished, capable side shows in your role this month. You might be handed an important report, see your name on an event lineup, or have someone recommend you. Your habit of keeping promises and following procedures carries straight into how you\'re evaluated. The feeling that you mustn\'t slip up can make you hard on yourself, though, so be sure to leave time to unwind after work.',
     work: 'Formal occasions like one-on-ones or reviews are likely to come up this month. Prepare documents in the required format, and clarify any vague instructions on the spot.',
     money: 'Your regular income keeps flowing in steadily this month. Gifts or social spending done to keep up appearances can grow, though, so set an amount that\'s just enough to show you care.',
-    love: 'Your heart leans toward a serious, trustworthy relationship this month. Connections are likely to form through introductions, and if you\'re dating, talk about each other\'s families or your future may come up naturally.',
+    love: 'You\'re in the mood for something serious and trustworthy this month. Connections are likely to form through introductions, and if you\'re dating, talk about each other\'s families or your future may come up naturally.',
     health: 'Your routine tends to fall neatly into place this month, making it a good time to set regular workout times. If tension builds from trying to meet others\' expectations, soak in a warm bath to let it go.',
   },
   편인: {
@@ -78,8 +78,8 @@ export const MONTH_DETAIL: Record<TenGodName, MonthDetail> = {
     overview:
       'Help and encouragement from the people around you gather naturally this month. A mentor might offer advice before you ask, family might send over some home-cooked food, or paperwork that was stuck might move along smoothly. It\'s also a good fit for picking your studies back up. Relying on that comfort can loosen the plans you set for yourself, though, so do even a small amount on your own every day.',
     work: 'Efforts to build your skills, like training or certification study, get a boost this month. Ask experienced people about anything you\'re stuck on, and put what you learn to work right away.',
-    money: 'This month brings a calm flow without big swings. A fresh look at long-standing contracts, like insurance or your phone plan, may reveal places to save.',
-    love: 'Your heart leans toward someone who looks after you warmly this month. Say thank you in words whenever you feel it, and this time, be the first to look after your partner\'s day.',
+    money: 'Money stays calm this month, without big swings. A fresh look at long-standing contracts, like insurance or your phone plan, may reveal places to save.',
+    love: 'This month, you warm to people who look after you with care. Say thank you in words whenever you feel it, and this time, be the first to look after your partner\'s day.',
     health: 'Feeling at ease can make you sluggish this month. Instead of lying around all weekend, wake your body up with some light stretching, and keep your bedtime consistent.',
   },
 };

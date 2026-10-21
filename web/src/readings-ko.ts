@@ -1,4 +1,4 @@
-import { sajuReading, yearReading } from './engine/reading';
+import { sajuReading, todayReading, yearReading } from './engine/reading';
 import { bigReading, lifeGraph, monthReading } from './engine/reading/flow';
 import { combinedReading, jamiReading } from './engine/reading/jami';
 import { MATCH_A } from './engine/reading/match-a';
@@ -21,5 +21,6 @@ export const fns: ReadingFns = {
   jami: jamiReading,
   combined: combinedReading,
   disclaimer: DISCLAIMER,
+  today: todayReading,
   match: { pairs: { ...MATCH_A, ...MATCH_B }, branch: MATCH_BRANCH },
 };

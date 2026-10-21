@@ -139,10 +139,10 @@ export const PALACE_FIELD_EN: Record<PalaceName, string> = {
   명궁: 'your sense of self',
   형제궁: 'siblings & peers',
   부처궁: 'partner & love',
-  자녀궁: 'children & juniors',
+  자녀궁: 'children & the people you mentor',
   재백궁: 'money',
   질액궁: 'health',
-  천이궁: 'going out & travel',
+  천이궁: 'travel & life away from home',
   노복궁: 'friends & network',
   관록궁: 'work & career',
   전택궁: 'home & property',
@@ -172,4 +172,26 @@ export const SIHWA_MEANING_EN: Record<Sihwa, string> = { 록: 'Prosperity', 권:
 export const gukEn = (name: string) => {
   const el = ['목', '화', '토', '금', '수'].indexOf(name[0]);
   return `${ELEMENT_EN[el] ?? name[0]} ${name.replace(/\D/g, '')} Bureau`;
+};
+
+// ---------------------------------------------------------------- 신살 · 지지 관계 (v1.2)
+export const SHINSAL_EN: Record<string, string> = {
+  역마: 'Traveling Horse',
+  도화: 'Peach Blossom',
+  화개: 'Canopy',
+  천을귀인: 'Nobleman',
+  문창귀인: 'Literary Star',
+  양인: 'Yang Blade',
+  백호: 'White Tiger',
+  괴강: 'Kui Gang',
+  공망: 'Void',
+};
+export const BRANCH_REL_EN: Record<string, string> = {
+  삼합: 'Three Harmony',
+  반합: 'Half Harmony',
+  방합: 'Seasonal Combination',
+  형: 'Punishment',
+  파: 'Destruction',
+  해: 'Harm',
+  원진: 'Resentment',
 };

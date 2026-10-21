@@ -660,3 +660,5 @@ main.article .news-title { margin: 0; }
 .hero-card .hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .hero-card .hero-actions .btn { text-decoration: none; }
 .article ol, .article ul { padding-left: 1.4em; }
+
+.board-wrap.hide-minor .minor, .board-wrap.hide-minor .shin { display: none; }

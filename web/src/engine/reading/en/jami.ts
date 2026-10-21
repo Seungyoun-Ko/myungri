@@ -15,8 +15,9 @@ import { STARS_A } from './jami-stars-a';
 import { STARS_B } from './jami-stars-b';
 import { JAMI_EXTRA, PALACES } from './jami-palaces';
 import { JAMI_EXTRA2 } from './jami-extra2';
+import { JAMI_PATTERNS, PAIR_STARS } from './jami-pairs';
 import { PALACE_STARS } from './jami-palace-stars';
-import { PALACE_FIELD_OF, brightClass, sihwaLines } from '../jami-build';
+import { PALACE_FIELD_OF, brightClass, sihwaLines, pairKey, detectJamiPatterns, JAMI_PATTERN_NAME_EN } from '../jami-build';
 import { ELEMENT_LACK, GEUK, LUCKY } from './elements';
 import { GROUP_MANY } from './groups';
 import { WEALTH_AMOUNT } from './love';
@@ -127,15 +128,23 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
   const self = palaceView(chart, chart.mingBranch, '명궁');
   const mingStars = self.names.filter((n) => STARS[n]);
   const shen = chart.palaces[chart.shenBranch];
+  const pk = self.borrowed ? null : pairKey(mingStars);
+  const pair = pk ? PAIR_STARS[pk] : undefined;
+  const patterns = overlay ? [] : detectJamiPatterns(chart);
   sections.push({
     key: 'general',
     title: 'Yourself',
     headline: mingStars.length ? { label: headlineOf(self), text: STARS[mingStars[0]].title } : undefined,
     keywords: [...new Set(mingStars.flatMap((n) => STARS[n].keywords))].slice(0, 4),
-    paragraphs: [...mingStars.map((n) => STARS[n].nature), ...self.paragraphs, shen.isMing ? JAMI_EXTRA.shenSame : JAMI_EXTRA.shen.replace('{field}', field(shen.name))],
+    // 한 자리에 주성 둘이면 두 별을 따로 풀지 않고 조합 풀이 하나로
+    paragraphs: [...(pair ? [pair.text] : mingStars.map((n) => STARS[n].nature)), ...self.paragraphs, shen.isMing ? JAMI_EXTRA.shenSame : JAMI_EXTRA.shen.replace('{field}', field(shen.name))],
     facts: overlay ? undefined : sihwaFacts,
+    blocks: patterns.length ? patterns.map((k) => ({ title: `Chart pattern · ${JAMI_PATTERNS[k].title}`, paragraphs: [JAMI_PATTERNS[k].text] })) : undefined,
+
     basis: [
       self.basis,
+      ...(patterns.length ? [`Patterns: ${patterns.map((k) => JAMI_PATTERN_NAME_EN[k]).join(', ')}`] : []),
+      ...(pk && pair ? [`Paired stars: ${pk.split('+').map((n) => starEn({ name: n })).join(' + ')}`] : []),
       `Body palace: ${palaceTerm(shen.name)} (${BRANCH_EN[shen.branch]})`,
       `Five-element bureau: ${gukEn(chart.guk.name)}`,
       `Birth-year transformations: ${chart.sihwa.map((s) => `${sihwaTerm(s.sihwa)} ${starEn({ name: s.star })} (${palaceTerm(s.palace)})`).join(' · ')}`,
@@ -268,7 +277,7 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
   const dhMains = (dhCenter.stars.some((s) => s.kind === 'main') ? dhCenter : chart.palaces[(dh.mingBranch + 6) % 12]).stars.filter((s) => s.kind === 'main' && STARS[s.name]);
   const nowParas: string[] = [];
   if (big && r.yongsin) {
-    const favor = favorOfScore(fortuneScore(r, big));
+    const favor = favorOfScore(fortuneScore(r, big, 0.6));
     nowParas.push(`You're now in the 10-year cycle that began at age ${big.startAge}. ${BIG_FAVOR[favor][0]}`, firstSentences(BIG[big.stemTenGod as TenGodName].overview, 3));
   }
   nowParas.push(`In your star chart, life between ages ${dh.range!.start} and ${dh.range!.end} tends to revolve around ${area(dhCenter.name)}.`, ...dhMains.map((s) => STARS[s.name].flow));

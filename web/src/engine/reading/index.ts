@@ -8,6 +8,15 @@ import { BRANCH_CHUNG, BRANCH_HAP, TEN_GOD_GROUPS, TEN_GODS, monthFortunesOf, pa
 import { ELEMENT_JOBS, HEALTH_DISCLAIMER, SEASON_HEALTH } from '../tongbyeon-data';
 import type { AmountKey, DayMasterReading, FavorKey, StrengthKey, TenGodName } from './types';
 import { conflictPicker, tagIndex } from './conflict';
+import { SHINSAL } from './shinsal';
+import { findBranchRelations, findShinsal } from '../shinsal';
+import { STRUCTURES } from './structures';
+import { detectStructures, STRUCTURE_NAME_KO } from './structure-detect';
+import { BRANCH_ELEMENT as BRANCH_EL, BRANCHES_HANJA as BRANCHES_HANJA_LIST, STEM_ELEMENT as STEM_EL, STEMS_HANJA as STEMS_HANJA_LIST } from '../constants';
+import { DAY_LINE } from './day-line';
+import { JOHU } from './johu';
+import { dayPillars } from '../calendar';
+import { calcTenGod } from '../saju';
 import { DAY_MASTER_A } from './day-master-a';
 import { DAY_MASTER_B } from './day-master-b';
 import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
@@ -122,7 +131,25 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
   const dayCombos = r.combinations.filter((c) => c.positions.includes('day') && c.kind !== '천간합');
   const hap = dayCombos.some((c) => c.kind === '지지육합');
   const chung = dayCombos.some((c) => c.kind === '지지육충');
-  const peach = r.pillars.some((p) => (p.key === 'day' || p.key === 'year') && [0, 3, 6, 9].includes(p.branch.index));
+  // 신살·지지 관계 (v1.2): 도화는 삼합 기준으로 봅니다.
+  const hits = findShinsal(r.pillars);
+  const has = (k: string) => hits.some((h) => h.key === k);
+  const rels = findBranchRelations(r.pillars);
+  const relHas = (k: string) => rels.some((x) => x.kind === k && x.where.includes('day'));
+  const peach = has('dohwa');
+  const structs = detectStructures(r);
+  // 조후(궁통보감): 태어난 계절의 균형으로 필요한 기운. 억부 용신과 같으면 확신을 더해 줍니다.
+  const johu = JOHU[r.dayMaster.index][r.pillars.find((p) => p.key === 'month')!.branch.index];
+  const johuMatch = johu.need[0] === y.yong;
+  const johuLine = johuMatch
+    ? `태어난 계절로 봐도 ${EL[y.yong]} 기운이 필요해, 이 기운을 채우는 생활이 특히 잘 맞아요. ${johu.note}`
+    : `태어난 계절의 균형으로 보면 ${EL[johu.need[0]]} 기운도 중요해요. ${johu.note}`;
+  const johuBasis = `조후(궁통보감): ${johu.need.map((e) => EL_TERM[e]).join('·')}${johuMatch ? ' — 억부 용신과 일치' : ''}`;
+  const PK: Record<string, string> = { hour: '시', day: '일', month: '월', year: '년' };
+  const shinsalBasis = [
+    ...(hits.length ? [`${'신살'}: ${hits.map((h) => `${h.name} ${h.hanja}(${h.where.map((w) => PK[w]).join('·')})`).join(', ')}`] : []),
+    ...(rels.length ? [`${'지지 관계'}: ${rels.map((x) => `${x.kind} ${x.branches.map((b) => BRANCHES_HANJA[b]).join('')}`).join(', ')}`] : []),
+  ];
   const monthBranch = r.pillars.find((p) => p.key === 'month')!.branch.index;
   const season = [2, 3, 4].includes(monthBranch) ? 'spring' : [5, 6, 7].includes(monthBranch) ? 'summer' : [8, 9, 10].includes(monthBranch) ? 'autumn' : 'winter';
   const firstNone = none[0];
@@ -146,7 +173,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '나는 어떤 사람',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro, johuLine]),
     facts: [
       { label: '나에게 필요한 기운', value: `${EL[y.yong]} 기운` },
       { label: '힘이 되는 색', value: lucky.colors.join(', ') },
@@ -155,15 +182,16 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
       { label: '힘이 나는 계절', value: lucky.season },
       { label: '머물면 좋은 곳', value: lucky.places.join(', ') },
     ],
-    tips: [...lucky.activities],
-    basis: [dmBasis, `강약: ${r.strengthText}`, `격국: ${r.geukgukLabel ?? '-'}`, yongText, `오행 비율: ${ratioText}`],
+    blocks: structs.map((k) => ({ title: `이런 구조예요 · ${STRUCTURES[k].title}`, paragraphs: [STRUCTURES[k].text] })),
+    tips: [...lucky.activities, ...structs.map((k) => STRUCTURES[k].tip)],
+    basis: [dmBasis, `강약: ${r.strengthText}`, `격국: ${r.geukgukLabel ?? '-'}`, yongText, `오행 비율: ${ratioText}`, ...(structs.length ? [`구조: ${structs.map((k) => STRUCTURE_NAME_KO[k]).join(', ')}`] : []), johuBasis, ...shinsalBasis],
   };
 
   const personality: ReadingSection = {
     key: 'personality',
     title: '성격',
     keywords: [...dm.keywords],
-    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
+    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, has('hwagae') && SHINSAL.hwagae, (has('goegang') && SHINSAL.goegang) || (has('yangin') && SHINSAL.yangin) || (has('baekho') && SHINSAL.baekho), dm.stress]),
     energize: uniq([...dm.energize, GROUP_MANY[top].energize]),
     drain: uniq([...dm.drain, GROUP_MANY[top].drain]),
     tips: [...dm.tips],
@@ -176,7 +204,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '일과 적성',
     headline: geuk ? { label: '타고난 무기', text: geuk.weapon } : undefined,
     keywords: uniq([GROUP_MANY[top].keyword, dm.keywords[0]]),
-    paragraphs: pick([dm.work, GROUP_MANY[top].work, second && also(GROUP_MANY[second].work), geuk?.work, st.work, workNone && GROUP_NONE[workNone].work, `나에게 필요한 ${EL[y.yong]} 기운과 맞닿은 ${ELEMENT_JOBS[y.yong]}도 잘 어울려요. 필요한 기운을 일로 채우는 셈이라 오래 해도 덜 지쳐요.`]),
+    paragraphs: pick([dm.work, GROUP_MANY[top].work, second && also(GROUP_MANY[second].work), geuk?.work, st.work, workNone && GROUP_NONE[workNone].work, has('yeokma') && SHINSAL.yeokma, has('munchang') && SHINSAL.munchang, `나에게 필요한 ${EL[y.yong]} 기운과 맞닿은 ${ELEMENT_JOBS[y.yong]}도 잘 어울려요. 필요한 기운을 일로 채우는 셈이라 오래 해도 덜 지쳐요.`]),
     chips: { label: '잘 어울리는 일', items: uniq([...dm.jobs, ...GROUP_MANY[top].jobs, ...(second ? GROUP_MANY[second].jobs.slice(0, 2) : [])]).slice(0, 12) },
     timing: { label: '일에서 힘이 붙는 시기', items: mergedAges([['관성', '맡는 역할과 책임이 커지기 쉬운 때'], ['식상', '재능과 아이디어를 펼치기 좋은 때']]) },
     tips: uniq([st.tip, workNone && GROUP_NONE[workNone].tip]),
@@ -238,7 +266,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     key: 'relations',
     title: '사람 관계',
     keywords: uniq([dm.keywords[2], GROUP_PLAIN[top]]),
-    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
+    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations, has('cheoneul') && SHINSAL.cheoneul, rels.some((x) => x.kind === '삼합') && SHINSAL.samhap, (relHas('원진') && SHINSAL.wonjin) || (relHas('형') && SHINSAL.hyeong)]),
     tips: uniq([relNone && GROUP_NONE[relNone].tip, dm.tips[2]]),
     basis: [dmBasis, `가장 많은 십신 무리: ${top}`, `비겁 ${Math.round(g['비겁'])}% · 인성 ${Math.round(g['인성'])}%`, ...(comboText ? [`일지 합충: ${comboText}`] : [])],
   };
@@ -321,3 +349,14 @@ export function yearReading(r: SajuResult, year: number): YearReadingView | null
   };
 }
 
+
+/** 오늘의 나: 그날 일진의 기운(천간 십신)과 나에게 맞는 정도로 한 줄 조언 */
+export function todayReading(r: SajuResult, date = new Date()): { ganzhi: string; favor: FavorKey; text: string } | null {
+  if (!r.yongsin) return null;
+  const gz = dayPillars(date.getFullYear(), date.getMonth() + 1, date.getDate()).day;
+  const stem = (STEMS_HANJA_LIST as readonly string[]).indexOf(gz[0]);
+  const branch = (BRANCHES_HANJA_LIST as readonly string[]).indexOf(gz[1]);
+  const favor = fortuneFavor(r, { stem: { element: STEM_EL[stem] }, branch: { element: BRANCH_EL[branch], index: branch } });
+  const tg = calcTenGod(r.dayMaster.index, stem) as TenGodName;
+  return { ganzhi: gz, favor, text: DAY_LINE[tg][favor] };
+}

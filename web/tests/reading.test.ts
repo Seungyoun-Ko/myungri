@@ -126,7 +126,7 @@ it('자미두수·종합 풀이: 300명 × 선천·대한·유년 본문에 전�
     const overlays = [undefined, daehanChart(chart, 40), yunyeonChart(chart, 2026)];
     for (const ov of overlays) {
       const sections = jamiReading(chart, ov);
-      const covered = sections.filter((x) => x.key !== 'now').reduce((n, x) => n + (x.blocks?.length ?? 1), 0);
+      const covered = sections.filter((x) => x.key !== 'now').reduce((n, x) => n + (x.key === 'general' ? 1 : (x.blocks?.length ?? 1)), 0);
       expect(covered).toBe(12);
       for (const s of sections) for (const t of bodyTexts(s)) {
         const p = problemsOf(t);

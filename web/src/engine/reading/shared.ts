@@ -3,6 +3,8 @@ import type { Element } from '../constants';
 import type { SajuResult, TenGod, TenGodGroup } from '../saju';
 import { TEN_GOD_GROUPS, TEN_GODS, tenGodGroup } from '../saju';
 import type { FavorKey, StrengthKey } from './types';
+import { HIDDEN_STEMS, STEM_ELEMENT } from '../constants';
+import { triadWithChart } from '../shinsal';
 
 export const uniq = <T>(xs: (T | null | undefined | false)[]) => [...new Set(xs.filter(Boolean) as T[])];
 export function groupRatios(r: SajuResult): Record<TenGodGroup, number> {
@@ -53,14 +55,24 @@ export function elementFavor(r: SajuResult, e: Element): number {
 export const favorOf = (score: number): FavorKey => (score >= 1 ? 'good' : score <= -1 ? 'caution' : 'normal');
 
 /** 해와 달의 기운이 나에게 맞는 정도 (천간 + 지지) */
-export function fortuneFavor(r: SajuResult, f: { stem: { element: number }; branch: { element: number } }): FavorKey {
-  return favorOf(elementFavor(r, f.stem.element as Element) + elementFavor(r, f.branch.element as Element));
+export function fortuneFavor(r: SajuResult, f: { stem: { element: number }; branch: { element: number; index?: number } }): FavorKey {
+  return favorOfScore(fortuneScore(r, f));
 }
 
-
-/** 그 운의 천간·지지 오행이 나에게 맞는 정도: -2 ~ +2 */
-export function fortuneScore(r: SajuResult, f: { stem: { element: number }; branch: { element: number } }): number {
-  return elementFavor(r, f.stem.element as Element) + elementFavor(r, f.branch.element as Element);
+export function fortuneScore(r: SajuResult, f: { stem: { element: number }; branch: { element: number; index?: number } }, branchWeight = 0.5): number {
+  const stem = elementFavor(r, f.stem.element as Element);
+  let branch = elementFavor(r, f.branch.element as Element);
+  if (f.branch.index !== undefined) {
+    const hidden = HIDDEN_STEMS[f.branch.index];
+    const share = hidden.length === 3 ? [0.1, 0.3, 0.6] : hidden.length === 2 ? [0.3, 0.7] : [1];
+    branch = hidden.reduce((sum, h, i) => sum + share[i] * elementFavor(r, STEM_ELEMENT[h] as Element), 0);
+  }
+  let score = 2 * ((1 - branchWeight) * stem + branchWeight * branch);
+  if (f.branch.index !== undefined) {
+    const t = triadWithChart(r.pillars.map((p) => p.branch.index), f.branch.index);
+    if (t !== null) score += 0.5 * elementFavor(r, t as Element);
+  }
+  return Math.max(-2, Math.min(2, Math.round(score * 10) / 10));
 }
 export const favorOfScore = (n: number): FavorKey => (n >= 1 ? 'good' : n <= -1 ? 'caution' : 'normal');
 

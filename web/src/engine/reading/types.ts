@@ -275,3 +275,50 @@ export interface NewYearIntro {
   /** 모두에게 주는 조언 3개 (각 30~70자) */
   tips: [string, string, string];
 }
+
+// ---------------------------------------------------------------- v1.2 추가
+
+/** 사주 구조 풀이 (예: 관살혼잡, 식상생재). 앱이 십신 비율로 감지해 '나는 어떤 사람'·'일과 적성' 등에 붙입니다. */
+export type StructureKey =
+  | 'gwansalHonjap' | 'jaedaSinyak' | 'siksinJesal' | 'sanggwanGyeongwan' | 'gungeopJaengjae' | 'insuGwada' | 'siksangSaengjae'
+  | 'salinSangsaeng' | 'jaesaengGwan' | 'sanggwanPaein' | 'siksangGwada' | 'gwansalGwada' | 'bigeopGwada' | 'jaegwanSsangmi';
+export interface StructureReading {
+  /** 그 구조를 쉬운 말로 부른 이름 (8~20자, 전문 용어 없이) */
+  title: string;
+  /** 그 구조가 삶에서 드러나는 모습 (150~230자) */
+  text: string;
+  /** 다루는 법 (30~70자) */
+  tip: string;
+}
+
+/** 신살·지지 관계를 쉬운 말로 (각 80~140자) */
+export type ShinsalKey = 'yeokma' | 'hwagae' | 'cheoneul' | 'munchang' | 'yangin' | 'baekho' | 'goegang' | 'gongmang' | 'wonjin' | 'hyeong' | 'samhap';
+
+/** 조후: 일간(0~9) × 태어난 달 지지(0~11)에 필요한 계절 균형 기운. need = 오행 번호(0 나무 1 불 2 흙 3 쇠 4 물), 우선순위 순 1~2개 */
+export interface JohuCell {
+  need: number[];
+  /** 왜 그 기운이 필요한지 쉬운 말 한두 문장 (50~100자) */
+  note: string;
+}
+
+/** 오늘의 운 한 줄: 그날 기운(십신) × 나에게 맞는 정도 (각 25~55자) */
+export type DayLineTable = Record<string, Record<'good' | 'normal' | 'caution', string>>;
+
+/** 자미두수 쌍성(한 자리에 주성 둘) 조합 풀이: 키 '자미+천부'처럼 주성 순서(자미 천기 태양 무곡 천동 염정 천부 태음 탐랑 거문 천상 천량 칠살 파군)대로 */
+export interface PairStarReading {
+  /** 조합의 별명 (6~16자) */
+  title: string;
+  /** 두 별이 함께일 때의 성향 (140~210자) */
+  text: string;
+}
+
+/** 자미두수 격국(명반 구조) 풀이 */
+export type JamiPatternKey =
+  | 'salPaRang' | 'giWolDongRyang' | 'jaBuYeomMuSang' | 'myeongjuChulhae' | 'ilwolByeongmyeong' | 'seokjungEunok'
+  | 'jwauHyeopmyeong' | 'changgokHyeopmyeong' | 'yangtaHyeopgi' | 'nokmaGyochi' | 'hwatam' | 'ssangnok' | 'ilwolBanbae' | 'muguiGyeok';
+export interface JamiPatternReading {
+  /** 쉬운 이름 (6~18자) */
+  title: string;
+  /** 이 구조가 삶에서 드러나는 모습 (140~220자) */
+  text: string;
+}

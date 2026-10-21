@@ -177,3 +177,12 @@ Cloudflare Pages 프로젝트 설정:
 - **자미두수 보강 문장**: `reading/jami-palace-stars.ts`(육친·생활 자리), `jami-extra2.ts`(건강·밝기·차성·사화 겹침), 조립 도우미 `jami-build.ts`.
 - **신년운세 페이지**: `scripts/gen-newyear.ts`가 `2027/index.html`, `en/2027/index.html`을 만듭니다(`npm run pages`). 문장은 `reading/newyear-2027.ts`(+ `en/`).
 - **입력 옵션**: `BirthInput.jasi`('next' 기본 / 'same' 야자시), `BirthInput.leapMode`('mid' 기본 / 'same' / 'next').
+
+## v1.2에서 더한 구조
+
+- **신살·지지 관계**: `src/engine/shinsal.ts` (`findShinsal`, `findBranchRelations`, `triadWithChart`). 문장은 `reading/shinsal.ts`(+ `en/`).
+- **운 점수**: `reading/shared.ts`의 `fortuneScore` — 지장간 비율, 대운 지지 60%, 삼합 보정.
+- **조후**: `reading/johu.ts`(+ `en/`) 120칸 표.
+- **구조 풀이**: 감지는 `reading/structure-detect.ts`, 문장은 `reading/structures.ts`(+ `en/`).
+- **오늘의 나**: `todayReading`(`reading/index.ts`, 영어 `todayReadingEn`), 문장은 `reading/day-line.ts`.
+- **자미두수 쌍성·격국**: 감지는 `reading/jami-build.ts`(`pairKey`, `detectJamiPatterns`), 문장은 `reading/jami-pairs.ts`(+ `en/`). 명주·신주·궁간 사화는 `engine/jamidusu.ts`(`mingZhu`, `shenZhu`, `palaceSihwa`).

@@ -1,6 +1,6 @@
 // 자미두수 명반 화면 (기획서 2.4, 3.4)
 import { ZODIAC_KO } from '../engine/constants';
-import { type JamidusuChart, type OverlayChart, type PalaceName, type PlacedStar, SPIRIT_HANJA, SPIRIT_NAMES, spokenSummary } from '../engine/jamidusu';
+import { type JamidusuChart, type OverlayChart, type PalaceName, type PlacedStar, SPIRIT_HANJA, SPIRIT_NAMES, mingZhu, palaceSihwa, shenZhu, spokenSummary } from '../engine/jamidusu';
 import { EN, tr } from '../i18n';
 import { BRANCH_EN, BRIGHTNESS_EN, BRIGHTNESS_HANJA, KIND_EN, PALACE_EN, PALACE_HANJA, SIHWA_EN, SIHWA_HANJA, SIHWA_MEANING_EN, ZODIAC_EN, gukEn, starEn } from '../engine/en-labels';
 
@@ -26,10 +26,12 @@ const KIND_LABEL = { main: '주성', aux: '보좌성', sal: '살성', minor: '�
 
 export type ChartMode = 'natal' | 'daehan' | 'yunyeon';
 
-function badges(star: PlacedStar, overlay?: OverlayChart) {
+function badges(star: PlacedStar, overlay?: OverlayChart, overlay2?: OverlayChart) {
   let out = star.sihwa ? `<span class="badge ${star.sihwa}" title="${EN ? `Hua ${SIHWA_EN[star.sihwa]}` : `화${star.sihwa}`}">${EN ? SIHWA_HANJA[star.sihwa] : star.sihwa}</span>` : '';
-  const o = overlay?.sihwa.find((s) => s.star === star.name && star.kind !== 'minor');
-  if (o && overlay) out += `<span class="badge ${o.sihwa}" title="${overlayBadge(o, overlay)}">${overlayBadge(o, overlay)}</span>`;
+  for (const ov of [overlay2, overlay]) {
+    const o = ov?.sihwa.find((s) => s.star === star.name && star.kind !== 'minor');
+    if (o && ov) out += `<span class="badge ${o.sihwa}" title="${overlayBadge(o, ov)}">${overlayBadge(o, ov)}</span>`;
+  }
   return out;
 }
 
@@ -37,7 +39,7 @@ function namesOf(chart: JamidusuChart, overlay?: OverlayChart): PalaceName[] {
   return overlay ? overlay.names : chart.palaces.map((p) => p.name);
 }
 
-function palaceCell(chart: JamidusuChart, b: number, overlay: OverlayChart | undefined, selected: number) {
+function palaceCell(chart: JamidusuChart, b: number, overlay: OverlayChart | undefined, selected: number, overlay2?: OverlayChart) {
   const p = chart.palaces[b];
   const names = namesOf(chart, overlay);
   const [r, c] = POS[b];
@@ -51,11 +53,11 @@ function palaceCell(chart: JamidusuChart, b: number, overlay: OverlayChart | und
     <div class="left">
       <span class="pname">${label}</span>
       <span class="mains">${mains
-        .map((s) => `<span class="star-v"><span class="nm">${starLabel(s)}</span><span class="br">${brightLabel(s.brightness)}</span>${badges(s, overlay)}</span>`)
+        .map((s) => `<span class="star-v"><span class="nm">${starLabel(s)}</span><span class="br">${brightLabel(s.brightness)}</span>${badges(s, overlay, overlay2)}</span>`)
         .join('')}</span>
     </div>
     <div class="right">
-      ${aux.map((s) => `<span class="aux ${GOOD_AUX.has(s.name) ? 'good' : 'sal'}">${starLabel(s)}${s.brightness ? `<span class="muted" style="font-weight:400">${brightLabel(s.brightness)}</span>` : ''}${badges(s, overlay)}</span>`).join('')}
+      ${aux.map((s) => `<span class="aux ${GOOD_AUX.has(s.name) ? 'good' : 'sal'}">${starLabel(s)}${s.brightness ? `<span class="muted" style="font-weight:400">${brightLabel(s.brightness)}</span>` : ''}${badges(s, overlay, overlay2)}</span>`).join('')}
       ${minor.map((s) => `<span class="minor">${starLabel(s)}</span>`).join('')}
     </div>
     <div class="bottom">
@@ -87,14 +89,18 @@ export interface BoardOptions {
   solarText: string;
   lunarText: string;
   overlay?: OverlayChart;
+  /** 유년을 볼 때 함께 겹쳐 보는 그해의 대한 */
+  overlay2?: OverlayChart;
   selected: number;
+  /** 잡성·12신 보이기 */
+  showMinor?: boolean;
 }
 
 export function boardView(chart: JamidusuChart, o: BoardOptions) {
-  const cells = Object.keys(POS).map((b) => palaceCell(chart, Number(b), o.overlay, o.selected)).join('');
+  const cells = Object.keys(POS).map((b) => palaceCell(chart, Number(b), o.overlay, o.selected, o.overlay2)).join('');
   const shenName = chart.palaces[chart.shenBranch].name;
   const mingP = chart.palaces[chart.mingBranch];
-  return `<div class="board-wrap">
+  return `<div class="board-wrap${o.showMinor === false ? ' hide-minor' : ''}">
     ${linesSvg(chart, o.overlay)}
     <div class="board" role="group" aria-label="${tr('자미두수 명반', 'Zi Wei Dou Shu chart')}">
       ${cells}
@@ -109,13 +115,14 @@ export function boardView(chart: JamidusuChart, o: BoardOptions) {
           <div>Life palace <span class="gz">${mingP.ganzhi}</span> · Body in ${PALACE_EN[shenName]}</div>`
             : `<div><span class="gz">${chart.yearGanzhi}</span>년 ${ZODIAC_KO[chart.yearBranch]}띠 · ${chart.gender === 'M' ? '남' : '여'}</div>
           <div><b>${chart.guk.name}</b> · 대한 ${chart.forward ? '순행' : '역행'}</div>
-          <div>명궁 <span class="gz">${mingP.ganzhi}</span> · 신궁 ${shenName.replace('궁', '')}궁</div>`}
+          <div>명궁 <span class="gz">${mingP.ganzhi}</span> · 신궁 ${shenName.replace('궁', '')}궁</div>
+          <div class="small">명주 ${mingZhu(chart)} · 신주 ${shenZhu(chart)}</div>`}
           <div style="margin-top:2px;color:var(--primary);font-weight:800">${o.overlay ? esc(overlayTitle(o.overlay)) : tr('선천 명반', 'Natal chart')}</div>
         </div>
       </div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">${tr('금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.', 'Gold lines: Life → Wealth and Career. Blue line: Life → Travel. Tap a palace for star names and details.')}</p><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="icon-btn" data-zoom>${tr('크게 보기', 'Enlarge')}</button><button type="button" class="icon-btn" data-save-image="board">${tr('이미지로 저장', 'Save as image')}</button></span></div>`;
+  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px"><p class="small muted" style="flex:1">${tr('금색 선: 명궁 → 재백궁·관록궁, 청색 선: 명궁 → 천이궁. 궁을 누르면 자세히 볼 수 있어요.', 'Gold lines: Life → Wealth and Career. Blue line: Life → Travel. Tap a palace for star names and details.')}</p><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="icon-btn" data-toggle-minor aria-pressed="${o.showMinor !== false}">${tr('잡성·12신', 'Minor stars')}</button><button type="button" class="icon-btn" data-zoom>${tr('크게 보기', 'Enlarge')}</button><button type="button" class="icon-btn" data-save-image="board">${tr('이미지로 저장', 'Save as image')}</button></span></div>`;
 }
 
 export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayChart) {
@@ -137,6 +144,9 @@ export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayC
         .join('') : `<li>${tr('별이 없어요.', 'No stars here.')}</li>`}
     </ul>
     ${p.stars.some((s) => s.kind === 'main') ? '' : `<p class="small muted" style="margin-top:8px">${tr(`주성이 없는 자리라 맞은편 ${chart.palaces[(b + 6) % 12].name}의 주성을 빌려 은은하게 봐요.`, `No main star here, so this palace is read, more softly, through the main stars of the opposite ${PALACE_EN[chart.palaces[(b + 6) % 12].name]} palace.`)}</p>`}
+    <p class="small" style="margin-top:10px"><b>${tr('이 궁의 사화', "This palace's transformations")}</b> <span class="muted">(${tr('궁 천간', 'palace stem')} <span class="hanja">${p.ganzhi[0]}</span>)</span><br>${palaceSihwa(chart, b)
+      .map((h) => `${EN ? `${SIHWA_HANJA[h.sihwa]} ${SIHWA_EN[h.sihwa]}` : `화${h.sihwa}`} ${EN ? starEn({ name: h.star }) : h.star} → ${h.toBranch < 0 ? '-' : EN ? PALACE_EN[names[h.toBranch]] : names[h.toBranch]}${h.self ? tr(' (자화)', ' (self)') : ''}`)
+      .join(' · ')}</p>
     <p class="small" style="margin-top:10px">${EN ? `Life cycle ${spirit('changsheng', p.changsheng)} · Doctor ${spirit('boshi', p.boshi)} · Year spirit ${spirit('suiqian', p.suiqian)} · General ${spirit('jiangqian', p.jiangqian)}` : `장생 ${p.changsheng} · 박사 ${p.boshi} · 태세 ${p.suiqian} · 장성 ${p.jiangqian}`}</p>
   </div>`;
 }

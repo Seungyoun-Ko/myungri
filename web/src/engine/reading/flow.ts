@@ -34,7 +34,7 @@ export interface PeriodReadingView {
 export function bigReading(r: SajuResult, index: number): PeriodReadingView | null {
   const b = r.bigFortunes[index];
   if (!b || !r.yongsin) return null;
-  const favor = favorOfScore(fortuneScore(r, b));
+  const favor = favorOfScore(fortuneScore(r, b, 0.6));
   const stemTg = b.stemTenGod as TenGodName;
   const branchTg = b.branchTenGod as TenGodName;
   const main = BIG[stemTg];
@@ -97,7 +97,7 @@ export interface LifePoint {
 export function lifeGraph(r: SajuResult): LifePoint[] {
   if (!r.yongsin) return [];
   return r.bigFortunes.map((b, i) => {
-    const score = fortuneScore(r, b);
+    const score = fortuneScore(r, b, 0.6);
     return { index: i, startAge: b.startAge, startYear: b.startYear, ganzhi: gzKo(b), score, favor: favorOfScore(score), current: i === r.currentBigFortuneIndex, title: BIG[b.stemTenGod as TenGodName].title };
   });
 }

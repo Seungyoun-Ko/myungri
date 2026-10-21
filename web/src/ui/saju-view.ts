@@ -5,9 +5,11 @@ import { lifeGraphView, periodView, yearView } from './reading-view';
 import { R } from './readings';
 import { EN, tr } from '../i18n';
 import { BRANCH_EN, ELEMENT_EN, GROWTH_EN, PILLAR_EN, SOLAR_TERM_EN, STEM_EN, STRENGTH_EN, TEN_GOD_EN, TEN_GOD_SHORT, combinationEn, ganzhiEn, geukEn } from '../engine/en-labels';
-import { stemIndex, branchIndex } from '../engine/constants';
+import { stemIndex, branchIndex, BRANCHES_HANJA } from '../engine/constants';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
+import { findBranchRelations, findShinsal } from '../engine/shinsal';
+import { BRANCH_REL_EN, SHINSAL_EN } from '../engine/en-labels';
 
 const charCell = (hanja: string, korean: string, el: number, extra = '', roman = '') =>
   `<div class="char bg-${el} el-${el} ${extra}"><span class="hanja">${hanja}</span><small>${EN ? `${roman} · ${ELEMENT_EN[el]}` : `${korean}·${ELEMENTS_KO[el]}`}</small></div>`;
@@ -57,6 +59,22 @@ function boundaryTable(s: SajuResult) {
     </table>`;
 }
 
+const PK = (k: string) => (EN ? PILLAR_EN[k as keyof typeof PILLAR_EN] : ({ hour: '시', day: '일', month: '월', year: '년' } as Record<string, string>)[k]);
+
+/** 신살과 지지 관계 (떨어진 기둥 포함) */
+function shinsalBlock(s: SajuResult) {
+  const hits = findShinsal(s.pillars);
+  const rels = findBranchRelations(s.pillars);
+  const hitText = hits.length
+    ? hits.map((h) => `<span class="chip"><b>${EN ? SHINSAL_EN[h.name] : h.name}</b> <span class="hanja muted">${h.hanja}</span> <span class="muted small">${h.where.map(PK).join('·')}</span></span>`).join('')
+    : `<span class="muted small">${tr('두드러진 신살 없음', 'None of note')}</span>`;
+  const relText = rels.length
+    ? rels.map((r) => `${EN ? BRANCH_REL_EN[r.kind] : r.kind} ${r.branches.map((b) => BRANCHES_HANJA[b]).join('')} (${r.where.map(PK).join('·')})`).join(', ')
+    : tr('없음', 'None');
+  return `<h3 style="margin-top:14px">${tr('신살', 'Symbolic stars')}</h3><div class="yong">${hitText}</div>
+    <h3 style="margin-top:14px">${tr('지지 관계', 'Branch relations')}</h3><p class="small">${esc(relText)}</p>`;
+}
+
 const elChip = (e: number, label: string) => `<span class="chip"><span class="muted">${label}</span> <b class="el-${e}">${EN ? `${ELEMENT_EN[e]} ` : ELEMENTS_KO[e]}<span class="hanja">${ELEMENTS_HANJA[e]}</span></b></span>`;
 
 export function summaryCard(s: SajuResult) {
@@ -74,6 +92,7 @@ export function summaryCard(s: SajuResult) {
     <div class="summary-grid">${items.map(([k, v]) => `<div class="item"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
     ${s.yongsin ? `<h3 style="margin-top:14px">${tr('용신 · 희신 · 기신 · 구신', 'Helpful &amp; unhelpful elements')}</h3><div class="yong">${elChip(s.yongsin.yong, tr('용신', 'Useful'))}${elChip(s.yongsin.hee, tr('희신', 'Favorable'))}${elChip(s.yongsin.gi, tr('기신', 'Unfavorable'))}${elChip(s.yongsin.gu, tr('구신', 'Harmful'))}</div>` : ''}
     <h3 style="margin-top:14px">${tr('합충', 'Combinations & clashes')}</h3><p class="small">${combos}</p>
+    ${shinsalBlock(s)}
   </div>`;
 }
 

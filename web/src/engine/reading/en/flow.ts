@@ -16,7 +16,7 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 export function bigReadingEn(r: SajuResult, index: number): PeriodReadingView | null {
   const b = r.bigFortunes[index];
   if (!b || !r.yongsin) return null;
-  const favor = favorOfScore(fortuneScore(r, b));
+  const favor = favorOfScore(fortuneScore(r, b, 0.6));
   const stemTg = b.stemTenGod as TenGodName;
   const branchTg = b.branchTenGod as TenGodName;
   const main = BIG[stemTg];
@@ -65,7 +65,7 @@ export function monthReadingEn(r: SajuResult, month: number): PeriodReadingView 
 export function lifeGraphEn(r: SajuResult): LifePoint[] {
   if (!r.yongsin) return [];
   return r.bigFortunes.map((b, i) => {
-    const score = fortuneScore(r, b);
+    const score = fortuneScore(r, b, 0.6);
     return { index: i, startAge: b.startAge, startYear: b.startYear, ganzhi: gz(b).split(' ')[1], score, favor: favorOfScore(score), current: i === r.currentBigFortuneIndex, title: BIG[b.stemTenGod as TenGodName].title };
   });
 }
