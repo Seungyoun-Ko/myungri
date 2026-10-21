@@ -20,7 +20,7 @@ export const STARS_B: Record<string, StarReading> = {
     health:
       `Your state of mind tends to show directly in your body, so it matters to look after your sleep and your mood together. This star has traditionally been linked with the kidneys, the eyes and coldness in the body. Keep your hands and feet warm and keep a regular bedtime. If discomfort continues, don't put it off; see a doctor.`,
     relations:
-      `Among family and friends, you easily become the one who quietly keeps the household running. You show affection by remembering birthdays and bringing soup to someone who's sick. Your bond with the elders who took you in and raised you tends to stay especially deep. But if you only ever give and forget how to lean on others, the relationship tilts to one side. Now and then, be the first to ask for help yourself.`,
+      `Among family and friends, you easily become the one who quietly keeps the household running. You show affection by remembering birthdays and bringing soup to someone who's sick. Your bond with the elders who nurtured and raised you tends to stay especially deep. But if you only ever give and forget how to lean on others, the relationship tilts to one side. Now and then, be the first to ask for help yourself.`,
     life:
       `You draw strength from familiar, cozy places more than from noisy crowds. Even somewhere new, you settle in quickly once you've made your room feel like your own. Hobbies that feed your senses suit you well, like night walks, strolls by the water, photography or drawing, and listening to music. Put quiet time alone into your schedule on purpose.`,
     flow:

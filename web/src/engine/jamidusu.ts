@@ -1,7 +1,7 @@
 // 자미두수 명반 엔진 (기획서 5장)
 // 지지 인덱스: 자0 축1 인2 묘3 진4 사5 오6 미7 신8 유9 술10 해11
 import { BRANCHES_HANJA, BRANCHES_KO, STEMS_HANJA, STEMS_KO, mod } from './constants';
-import type { NormalizedBirth } from './birth';
+import { type NormalizedBirth, toSolarDate } from './birth';
 
 export type StarKind = 'main' | 'aux' | 'sal' | 'minor';
 export type Sihwa = '록' | '권' | '과' | '기';
@@ -225,11 +225,28 @@ export function ziweiBranch(lunarDay: number, guk: number) {
 
 export class JamidusuUnavailableError extends Error {}
 
+/**
+ * 명반에 쓰는 음력 날짜. 기본은 시계 날짜(현지 양력)의 음력입니다.
+ * 해외 출생은 서머타임·경도 보정이 1시간을 넘을 수 있어, 보정 시각이 자정을 넘어 자시(23~1시) 밖의
+ * 시지(해시·축시 등)에 떨어지면 시계 날짜와 시지가 하루 어긋납니다. 이때만 보정된 날짜의 음력을 씁니다.
+ * 한국 도시(utcOffset 없음)는 언제나 예전 그대로입니다.
+ */
+function chartLunar(birth: NormalizedBirth) {
+  const c = birth.corrected!;
+  const k = birth.clock;
+  if (birth.utcOffset === undefined || !k || (c.year === k.year && c.month === k.month && c.day === k.day) || c.hour === 23 || c.hour === 0) return birth.lunar;
+  try {
+    return toSolarDate({ ...birth.input, calendar: 'solar', year: c.year, month: c.month, day: c.day }).lunar;
+  } catch {
+    return birth.lunar; // 음력표 범위 밖(1900년 1월 1일 이전 등)
+  }
+}
+
 export function computeJamidusu(birth: NormalizedBirth): JamidusuChart {
   if (birth.timeUnknown || !birth.corrected) {
     throw new JamidusuUnavailableError('출생시간을 입력해야 명반을 완성 시킬 수 있습니다.');
   }
-  const lunar = birth.lunar;
+  const lunar = chartLunar(birth);
   const month = lunar.month;
   const day = lunar.day;
   const yearIdx = mod(lunar.year - 4, 60);

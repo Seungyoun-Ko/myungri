@@ -93,14 +93,15 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
   const view = (n: PalaceName) => palaceView(chart, branchOf(n), n, overlay);
   const sihwaList = overlay ? overlay.sihwa.map((s) => ({ kind: s.sihwa, branch: s.branch, star: s.star })) : chart.sihwa.map((s) => ({ kind: s.sihwa, branch: s.branch, star: s.star }));
   const sihwaFacts = sihwaList.map((s) => ({ label: SIHWA_PLAIN[s.kind], value: cap(field(names[s.branch])) }));
-  const sihwaBasis = sihwaList.map((s) => `${sihwaTerm(s.kind)} ${starEn({ name: s.star })}: ${palaceTerm(names[s.branch])}`).join(' · ');
+  const layer = overlay ? (overlay.kind === 'daehan' ? 'Decade ' : 'Year ') : '';
+  const sihwaBasis = sihwaList.map((s) => `${layer}${sihwaTerm(s.kind)} ${starEn({ name: s.star })}: ${palaceTerm(names[s.branch])}`).join(' · ');
 
   const sections: ReadingSection[] = [];
 
   if (overlay) {
     const center = chart.palaces[overlay.mingBranch];
     const centerMains = (center.stars.some((s) => s.kind === 'main') ? center : chart.palaces[(overlay.mingBranch + 6) % 12]).stars.filter((s) => s.kind === 'main');
-    const when = overlay.kind === 'daehan' ? `Ages ${overlay.range!.start}–${overlay.range!.end}` : `The year ${overlay.year}`;
+    const when = overlay.kind === 'daehan' ? `Ages ${overlay.range!.start}–${overlay.range!.end}, East Asian count` : `The year ${overlay.year}`;
     sections.push({
       key: 'now',
       title: 'This period',
@@ -108,7 +109,7 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
       keywords: centerMains.filter((s) => STARS[s.name]).map((s) => STARS[s.name].keywords[0]),
       paragraphs: [...centerMains.filter((s) => STARS[s.name]).map((s) => STARS[s.name].flow), ...overlay.sihwa.map((s) => `${cap(area(names[s.branch]))}: ${JAMI_EXTRA.sihwa[s.sihwa].period}`)],
       facts: sihwaFacts,
-      basis: [`${overlay.kind === 'daehan' ? `Decade chart ${overlay.range!.start}–${overlay.range!.end}` : `Annual chart ${overlay.year}`}: Life palace at ${BRANCH_EN[center.branch]} (natal ${palaceTerm(center.name)})`, sihwaBasis],
+      basis: [`${overlay.kind === 'daehan' ? `Decade chart ${overlay.range!.start}–${overlay.range!.end} (East Asian age)` : `Year chart ${overlay.year}`}: Life palace at ${BRANCH_EN[center.branch]} (natal ${palaceTerm(center.name)})`, sihwaBasis],
     });
   }
 
@@ -125,7 +126,7 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
     basis: [
       self.basis,
       `Body palace: ${palaceTerm(shen.name)} (${BRANCH_EN[shen.branch]})`,
-      `Element bureau: ${gukEn(chart.guk.name)}`,
+      `Five-element bureau: ${gukEn(chart.guk.name)}`,
       `Birth-year transformations: ${chart.sihwa.map((s) => `${sihwaTerm(s.sihwa)} ${starEn({ name: s.star })} (${palaceTerm(s.palace)})`).join(' · ')}`,
     ],
   });
@@ -149,7 +150,7 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
       headline: { label: cap(n === '명궁' ? 'self' : field(n)) + ' area', text: headlineOf(v) },
       keywords: [...new Set(v.names.filter((x) => STARS[x]).map((x) => STARS[x].keywords[0]))],
       paragraphs: [PALACES[n].intro, ...v.paragraphs, ...(lens ? [lens] : []), connected(n)],
-      basis: [v.basis, `Three directions and opposite: ${[0, 6, 4, 8].map((d) => PALACE_EN[chart.palaces[(branchOf(n) + d) % 12].name]).join(' · ')}`],
+      basis: [v.basis, `Linked palaces, triad and opposite: ${[0, 6, 4, 8].map((d) => PALACE_EN[chart.palaces[(branchOf(n) + d) % 12].name]).join(' · ')}`],
       note: n === '질액궁' ? HEALTH_DISCLAIMER : undefined,
     };
   };

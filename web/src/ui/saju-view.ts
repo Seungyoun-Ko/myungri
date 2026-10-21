@@ -4,7 +4,7 @@ import { type Fortune, type Pillar, type PillarKey, type SajuResult, TEN_GODS, t
 import { lifeGraphView, periodView, yearView } from './reading-view';
 import { R } from './readings';
 import { EN, tr } from '../i18n';
-import { BRANCH_EN, ELEMENT_EN, GROWTH_EN, PILLAR_EN, STEM_EN, STRENGTH_EN, TEN_GOD_EN, TEN_GOD_SHORT, combinationEn, ganzhiEn, geukEn } from '../engine/en-labels';
+import { BRANCH_EN, ELEMENT_EN, GROWTH_EN, PILLAR_EN, SOLAR_TERM_EN, STEM_EN, STRENGTH_EN, TEN_GOD_EN, TEN_GOD_SHORT, combinationEn, ganzhiEn, geukEn } from '../engine/en-labels';
 import { stemIndex, branchIndex } from '../engine/constants';
 import { esc, pad2 } from './dom';
 import { iljuSlug } from '../engine/ilju-data';
@@ -29,8 +29,8 @@ export function wongukTable(s: SajuResult) {
       ${row(tr('천간', 'Stem'), (p) => charCell(p.stem.hanja, p.stem.korean, p.stem.element, unc.has(p.key) ? 'uncertain' : '', STEM_EN[p.stem.index]))}
       ${row(tr('지지', 'Branch'), (p) => charCell(p.branch.hanja, p.branch.korean, p.branch.element, unc.has(p.key) ? 'uncertain' : '', BRANCH_EN[p.branch.index]))}
       ${row(tr('십신', 'Ten God'), (p) => tg(p.branchTenGod))}
-      ${row(tr('지장간', 'Hidden'), (p) => `<span class="hidden-stems">${p.hiddenStems.map((h) => `<span class="el-${h.element}">${h.hanja}</span>`).join('')}</span>`)}
-      ${row(tr('12운성', 'Stage'), (p) => growth(p.growthPhase))}
+      ${row(tr('지장간', 'Hidden stems'), (p) => `<span class="hidden-stems">${p.hiddenStems.map((h) => `<span class="el-${h.element}">${h.hanja}</span>`).join('')}</span>`)}
+      ${row(tr('12운성', 'Life stage'), (p) => growth(p.growthPhase))}
     </tbody>
   </table>`;
 }
@@ -43,7 +43,7 @@ function boundaryTable(s: SajuResult) {
   return `<div class="notice" style="margin-top:12px">
       ${tr(
         `<b>${b.name} ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}</b>에 절기가 바뀌는 날이에요. 태어난 시각에 따라 ${yearDiff ? '월주와 년주가' : '월주가'} 달라져요.`,
-        `A new solar term begins at <b>${pad2(b.clock.hour)}:${pad2(b.clock.minute)}</b> local time on this day, so your ${yearDiff ? 'month and year pillars depend' : 'month pillar depends'} on your birth time.`,
+        `A new solar month begins on this day: <b>${SOLAR_TERM_EN[b.name] ?? b.name} at ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}</b> local time, so your ${yearDiff ? 'month and year pillars depend' : 'month pillar depends'} on your birth time.`,
       )}
     </div>
     <table class="wonguk" style="margin-top:8px" aria-label="${tr('절입 전후 기둥', 'Pillars before and after the solar term')}">

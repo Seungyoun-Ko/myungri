@@ -2,7 +2,7 @@
 import { ZODIAC_KO } from '../engine/constants';
 import { type JamidusuChart, type OverlayChart, type PalaceName, type PlacedStar, SPIRIT_HANJA, SPIRIT_NAMES, spokenSummary } from '../engine/jamidusu';
 import { EN, tr } from '../i18n';
-import { BRANCH_EN, BRIGHTNESS_EN, BRIGHTNESS_HANJA, KIND_EN, PALACE_EN, SIHWA_EN, SIHWA_HANJA, SIHWA_MEANING_EN, ZODIAC_EN, gukEn, starEn } from '../engine/en-labels';
+import { BRANCH_EN, BRIGHTNESS_EN, BRIGHTNESS_HANJA, KIND_EN, PALACE_EN, PALACE_HANJA, SIHWA_EN, SIHWA_HANJA, SIHWA_MEANING_EN, ZODIAC_EN, gukEn, starEn } from '../engine/en-labels';
 
 /** 영어 화면의 명반 칸은 한자로 보여 줍니다(영어 이름은 칸에 들어가지 않아서). */
 const starLabel = (s: PlacedStar) => (EN ? s.hanja : s.name);
@@ -129,8 +129,8 @@ export function palaceDetail(chart: JamidusuChart, b: number, overlay?: OverlayC
     return parts.join(' · ');
   };
   return `<div class="palace-detail">
-    <h3>${EN ? `${PALACE_EN[names[b]]} palace` : names[b]}${overlay ? ` <span class="small muted">(${tr('선천', 'natal')} ${EN ? PALACE_EN[p.name] : p.name})</span>` : ''} · <span class="hanja">${p.ganzhi}</span></h3>
-    <p class="small muted">${tr(`대한 ${p.daehan.start}-${p.daehan.end}세`, `Decade: ages ${p.daehan.start}–${p.daehan.end}`)}${p.isShen ? tr(' · 신궁', ' · Body palace') : ''}</p>
+    <h3>${EN ? `${PALACE_EN[names[b]]} palace <span class="hanja small muted">${PALACE_HANJA[names[b]]}</span>` : names[b]}${overlay ? ` <span class="small muted">(${tr('선천', 'natal')} ${EN ? PALACE_EN[p.name] : p.name})</span>` : ''} · <span class="hanja">${p.ganzhi}</span></h3>
+    <p class="small muted">${tr(`대한 ${p.daehan.start}-${p.daehan.end}세`, `Decade: ages ${p.daehan.start}–${p.daehan.end} (East Asian age, 1 at birth)`)}${p.isShen ? tr(' · 신궁', ' · Body palace') : ''}</p>
     <ul>
       ${p.stars.length ? p.stars
         .map((s) => `<li><span><b class="hanja">${s.hanja}</b> ${EN ? starEn(s) : s.name} <span class="muted small">${EN ? KIND_EN[s.kind] : KIND_LABEL[s.kind]}</span></span><span>${[EN ? (BRIGHTNESS_EN[s.brightness] ?? s.brightness) : s.brightness, sihwaText(s)].filter(Boolean).join(' · ')}</span></li>`)

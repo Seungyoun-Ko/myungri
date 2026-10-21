@@ -5,15 +5,9 @@ import { calcTenGod } from '../engine/saju';
 import { archive } from '../archive';
 import { esc, pad2 } from './dom';
 import { EN, tr } from '../i18n';
-import { TEN_GOD_EN, ganzhiEn } from '../engine/en-labels';
+import { SOLAR_TERM_EN, TEN_GOD_EN, ganzhiEn } from '../engine/en-labels';
 
-const TERM_EN: Record<string, string> = {
-  입춘: 'Start of Spring', 우수: 'Rain Water', 경칩: 'Insects Awaken', 춘분: 'Spring Equinox', 청명: 'Clear and Bright', 곡우: 'Grain Rain',
-  입하: 'Start of Summer', 소만: 'Grain Buds', 망종: 'Grain in Ear', 하지: 'Summer Solstice', 소서: 'Minor Heat', 대서: 'Major Heat',
-  입추: 'Start of Autumn', 처서: 'End of Heat', 백로: 'White Dew', 추분: 'Autumn Equinox', 한로: 'Cold Dew', 상강: 'Frost Descent',
-  입동: 'Start of Winter', 소설: 'Minor Snow', 대설: 'Major Snow', 동지: 'Winter Solstice', 소한: 'Minor Cold', 대한: 'Major Cold',
-};
-const termName = (n: string) => (EN ? (TERM_EN[n] ?? n) : n);
+const termName = (n: string) => (EN ? (SOLAR_TERM_EN[n] ?? n) : n);
 const DOW = EN ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['일', '월', '화', '수', '목', '금', '토'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const gzText = (gz: string) => (EN ? ganzhiEn(stemIndex(gz[0]), branchIndex(gz[1])) : gz);

@@ -34,9 +34,9 @@ const SEASON_HEALTH = {
 };
 
 const EL = ELEMENT_EN;
-const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: 'your own camp & rivals', 식상: 'expression & talent', 재성: 'money', 관성: 'work & responsibility', 인성: 'learning & support' };
+const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: 'Allies & rivals', 식상: 'Expression & talent', 재성: 'Money', 관성: 'Work & responsibility', 인성: 'Learning & support' };
 
-/** Lowercase the first letter so a fragment can follow "On the other hand, " */
+/** Lowercase the first letter so a fragment can follow "At the same time, " */
 const lowerFirst = (t: string) => t.replace(/^(\W*)(\w)/, (_, p, c) => p + c.toLowerCase());
 const favorWord = (f: FavorKey) => (f === 'good' ? 'helps' : f === 'caution' ? 'weighs on you' : 'neutral');
 
@@ -62,7 +62,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F'): ReadingSection[
   const ranked = rankedGroups(r);
   const top = ranked[0];
   const second = g[ranked[1]] >= 18 ? ranked[1] : null;
-  const also = (text: string | undefined | null) => (text ? `On the other hand, ${lowerFirst(text)}` : null);
+  const also = (text: string | undefined | null) => (text ? `At the same time, ${lowerFirst(text)}` : null);
   const none = TEN_GOD_GROUPS.filter((x) => g[x] < 4);
   const sk = strengthKey(r);
   const st = STRENGTH[sk];

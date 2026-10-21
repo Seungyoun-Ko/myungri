@@ -52,7 +52,7 @@ export const GROUP_EN: Record<TenGodGroup, string> = {
   비겁: 'Companion',
   식상: 'Output',
   재성: 'Wealth',
-  관성: 'Power',
+  관성: 'Officer',
   인성: 'Resource',
 };
 export const GROWTH_EN: Record<string, string> = {
@@ -95,6 +95,13 @@ export const geukEn = (label: string | null) => {
   return `${GEUK_EN[name] ?? name}${label.includes('전왕격') ? ' (possible Dominant structure)' : ''}`;
 };
 export const PILLAR_EN: Record<PillarKey, string> = { hour: 'Hour', day: 'Day', month: 'Month', year: 'Year' };
+/** The 24 solar terms (Korean name → English) */
+export const SOLAR_TERM_EN: Record<string, string> = {
+  입춘: 'Start of Spring', 우수: 'Rain Water', 경칩: 'Insects Awaken', 춘분: 'Spring Equinox', 청명: 'Clear and Bright', 곡우: 'Grain Rain',
+  입하: 'Start of Summer', 소만: 'Grain Buds', 망종: 'Grain in Ear', 하지: 'Summer Solstice', 소서: 'Minor Heat', 대서: 'Major Heat',
+  입추: 'Start of Autumn', 처서: 'End of Heat', 백로: 'White Dew', 추분: 'Autumn Equinox', 한로: 'Cold Dew', 상강: 'Frost Descent',
+  입동: 'Start of Winter', 소설: 'Minor Snow', 대설: 'Major Snow', 동지: 'Winter Solstice', 소한: 'Minor Cold', 대한: 'Major Cold',
+};
 
 export const combinationEn = (c: Combination) => {
   const [a, b] = c.positions;
@@ -106,6 +113,11 @@ export const combinationEn = (c: Combination) => {
 void PILLAR_TITLES;
 
 // ---------------------------------------------------------------- Zi Wei Dou Shu
+/** Classical names, shown next to the English name in the palace detail (e.g. Mind = 福德 Fortune & Virtue) */
+export const PALACE_HANJA: Record<PalaceName, string> = {
+  명궁: '命宮', 형제궁: '兄弟宮', 부처궁: '夫妻宮', 자녀궁: '子女宮', 재백궁: '財帛宮', 질액궁: '疾厄宮',
+  천이궁: '遷移宮', 노복궁: '奴僕宮', 관록궁: '官祿宮', 전택궁: '田宅宮', 복덕궁: '福德宮', 부모궁: '父母宮',
+};
 export const PALACE_EN: Record<PalaceName, string> = {
   명궁: 'Life',
   형제궁: 'Siblings',
@@ -154,8 +166,8 @@ export const BRIGHTNESS_HANJA: Record<string, string> = { 묘: '廟', 왕: '旺'
 export const SIHWA_EN: Record<Sihwa, string> = { 록: 'Lu', 권: 'Quan', 과: 'Ke', 기: 'Ji' };
 export const SIHWA_HANJA: Record<Sihwa, string> = { 록: '祿', 권: '權', 과: '科', 기: '忌' };
 export const SIHWA_MEANING_EN: Record<Sihwa, string> = { 록: 'Prosperity', 권: 'Power', 과: 'Fame', 기: 'Obstacle' };
-/** "수2국" → "Water 2 bureau" */
+/** "수2국" → "Water 2 Bureau" (the five-element bureau, 五行局) */
 export const gukEn = (name: string) => {
   const el = ['목', '화', '토', '금', '수'].indexOf(name[0]);
-  return `${ELEMENT_EN[el] ?? name[0]} ${name.replace(/\D/g, '')} bureau`;
+  return `${ELEMENT_EN[el] ?? name[0]} ${name.replace(/\D/g, '')} Bureau`;
 };

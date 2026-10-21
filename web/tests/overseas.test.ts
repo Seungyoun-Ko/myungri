@@ -56,6 +56,21 @@ describe('해외 출생지', () => {
     }
   });
 
+  it('자미두수: 보정 시각이 자정을 넘어 자시 밖(해시)에 떨어지면 보정된 날짜의 음력을 씀', () => {
+    // 마드리드 서머타임 00:30 → 현지 태양시 전날 22:15(해시). 시계 날짜 7/10 = 음력 6/13, 전날 7/9 = 음력 6/12
+    const b = normalizeBirth({ ...base, year: 1995, month: 7, day: 10, hour: 0, minute: 30, cityId: 'es-madrid' });
+    expect(b.corrected).toEqual({ year: 1995, month: 7, day: 9, hour: 22, minute: 15 });
+    const j = computeJamidusu(b);
+    expect(j.hourBranch).toBe(11);
+    expect(j.lunar).toEqual({ year: 1995, month: 6, day: 12, leap: false });
+    // 보정 후에도 자시(23~1시)에 머물면 한국 도시처럼 시계 날짜를 그대로 씀
+    const z = normalizeBirth({ ...base, year: 1995, month: 7, day: 10, hour: 1, minute: 30, cityId: 'es-madrid' });
+    expect(z.corrected!.day).toBe(9);
+    expect(computeJamidusu(z).lunar).toEqual({ year: 1995, month: 6, day: 13, leap: false });
+    // 한국 도시: 00:10 → 전날 23:40이어도 시계 날짜
+    expect(computeJamidusu(normalizeBirth({ ...base, year: 1995, month: 7, day: 10, hour: 0, minute: 10, cityId: 'seoul' })).lunar.day).toBe(13);
+  });
+
   it('한국 도시는 예전과 같은 규칙', () => {
     const b = normalizeBirth({ ...base, year: 1988, month: 7, day: 1, hour: 10, minute: 0, cityId: 'seoul' });
     expect(b.corrections).toEqual({ meridian: -30, dst: -60, longitude: 0 });

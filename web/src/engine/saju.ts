@@ -481,7 +481,9 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
   const ec = eightCharOf(pillarClock);
   const termEc = eightCharOf(birth.termClock!);
   const useTerm = termEc.getYear() !== ec.getYear() || termEc.getMonth() !== ec.getMonth();
-  const yunSource = useTerm ? termEc : ec;
+  // 대운 시작 나이는 출생 순간과 절입 순간(UTC+8)의 간격으로 셉니다. 해외 출생은 현지 태양시와 UTC+8이
+  // 반나절 넘게 어긋날 수 있어 언제나 UTC+8 실제 순간(termClock)을 씁니다. 한국 도시는 예전 그대로입니다.
+  const yunSource = useTerm || birth.utcOffset !== undefined ? termEc : ec;
 
   const dayStem = stemIndex(ec.getDay()[0]);
   const pillars: Pillar[] = [
