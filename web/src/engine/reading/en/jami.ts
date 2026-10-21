@@ -147,7 +147,7 @@ export function jamiReadingEn(chart: JamidusuChart, overlay?: OverlayChart): Rea
     return {
       key,
       title,
-      headline: { label: cap(n === '명궁' ? 'self' : field(n)) + ' area', text: headlineOf(v) },
+      headline: { text: headlineOf(v) },
       keywords: [...new Set(v.names.filter((x) => STARS[x]).map((x) => STARS[x].keywords[0]))],
       paragraphs: [PALACES[n].intro, ...v.paragraphs, ...(lens ? [lens] : []), connected(n)],
       basis: [v.basis, `Linked palaces, triad and opposite: ${[0, 6, 4, 8].map((d) => PALACE_EN[chart.palaces[(branchOf(n) + d) % 12].name]).join(' · ')}`],

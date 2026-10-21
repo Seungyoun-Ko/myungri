@@ -56,7 +56,7 @@ export function adSlot(name: AdSlotName): string {
   if (import.meta.env.VITE_NO_ADS === '1') return '';
   const d: AdSlotDef = AD_SLOTS[name];
   if (adPreview()) {
-    return `<aside class="ad-slot" aria-label="광고 자리 미리보기">
+    return `<aside class="ad-slot" aria-label="${AD_LABEL === 'Ad' ? 'Ad slot preview' : '광고 자리 미리보기'}">
       <div class="ad-label">${AD_LABEL}</div>
       <div class="ad-box preview" style="${sizeVars(d)}">
         <b>${d.label}</b>
