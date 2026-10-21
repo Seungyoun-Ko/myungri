@@ -7,6 +7,7 @@ import type { SajuResult, TenGod, TenGodGroup, YearFortune } from '../saju';
 import { BRANCH_CHUNG, BRANCH_HAP, TEN_GOD_GROUPS, TEN_GODS, monthFortunesOf, pairKey, tenGodGroup } from '../saju';
 import { ELEMENT_JOBS, HEALTH_DISCLAIMER, SEASON_HEALTH } from '../tongbyeon-data';
 import type { AmountKey, DayMasterReading, FavorKey, StrengthKey, TenGodName } from './types';
+import { conflictPicker, tagIndex } from './conflict';
 import { DAY_MASTER_A } from './day-master-a';
 import { DAY_MASTER_B } from './day-master-b';
 import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
@@ -89,7 +90,10 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
   const top = ranked[0];
   // 두 번째로 많은 기운도 넉넉하면(18% 이상) 그 문단을 '또 한편으로는'으로 이어 붙입니다.
   const second = g[ranked[1]] >= 18 ? ranked[1] : null;
-  const also = (text: string | undefined | null) => (text ? `또 한편으로는 ${text}` : null);
+  // 모순 거르개: 일간 문장을 바탕으로, 서로 반대되는 성향의 조각은 뺍니다(tags.ts).
+  const filter = conflictPicker(tagIndex({ DAY_MASTER, STRENGTH, GROUP_MANY, GROUP_NONE, ELEMENT_EXCESS, ELEMENT_LACK, GEUK, LUCKY, SPOUSE_PALACE, SPOUSE_AMOUNT, DAY_PHASE, DAY_COMBO, CHARM, WEALTH_AMOUNT }), [dm.core[0], dm.core[1], dm.work, dm.love, dm.money, dm.relations, dm.health], { social: '처음과 달리, 가까워지고 나면 다른 모습도 드러나요. ', other: '상황에 따라서는 이런 모습도 나와요. ' });
+  const pick = filter.pick;
+  const also = (text: string | undefined | null) => (text ? filter.alias(`또 한편으로는 ${text}`, text) : null);
   const none = TEN_GOD_GROUPS.filter((x) => g[x] < 4);
   const sk = strengthKey(r);
   const st = STRENGTH[sk];
@@ -104,7 +108,8 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
   const lack = ratios[least] < 5;
   // 건강은 조금만 치우쳐도 관리법을 알려 드립니다.
   const healthExcess = ratios[most] >= 30;
-  const healthLack = ratios[least] < 12;
+  // 지장간을 나눠 세면서 비율이 고르게 나오는 경우가 많아, 넘치는 기운이 없으면 가장 적은 기운의 관리법을 알려 드립니다.
+  const healthLack = ratios[least] < 12 || ratios[most] < 30;
   const BALANCED = '다섯 기운이 한쪽으로 크게 치우치지 않고 고르게 섞여 있어요. 어느 환경에 가도 크게 흔들리지 않고 적응하는 편이에요. 다만 뚜렷한 색이 덜 드러날 수 있으니, 내가 정말 좋아하는 것을 하나 정해 깊게 파고들면 개성이 살아나요.';
   const y = r.yongsin;
   const geukName = (r.geukgukLabel ?? '').split(' ')[0];
@@ -141,7 +146,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '나는 어떤 사람',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
     facts: [
       { label: '나에게 필요한 기운', value: `${EL[y.yong]} 기운` },
       { label: '힘이 되는 색', value: lucky.colors.join(', ') },
@@ -158,7 +163,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     key: 'personality',
     title: '성격',
     keywords: [...dm.keywords],
-    paragraphs: uniq([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
+    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
     energize: uniq([...dm.energize, GROUP_MANY[top].energize]),
     drain: uniq([...dm.drain, GROUP_MANY[top].drain]),
     tips: [...dm.tips],
@@ -171,7 +176,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '일과 적성',
     headline: geuk ? { label: '타고난 무기', text: geuk.weapon } : undefined,
     keywords: uniq([GROUP_MANY[top].keyword, dm.keywords[0]]),
-    paragraphs: uniq([dm.work, GROUP_MANY[top].work, second && also(GROUP_MANY[second].work), geuk?.work, st.work, workNone && GROUP_NONE[workNone].work, `나에게 필요한 ${EL[y.yong]} 기운과 맞닿은 ${ELEMENT_JOBS[y.yong]}도 잘 어울려요. 필요한 기운을 일로 채우는 셈이라 오래 해도 덜 지쳐요.`]),
+    paragraphs: pick([dm.work, GROUP_MANY[top].work, second && also(GROUP_MANY[second].work), geuk?.work, st.work, workNone && GROUP_NONE[workNone].work, `나에게 필요한 ${EL[y.yong]} 기운과 맞닿은 ${ELEMENT_JOBS[y.yong]}도 잘 어울려요. 필요한 기운을 일로 채우는 셈이라 오래 해도 덜 지쳐요.`]),
     chips: { label: '잘 어울리는 일', items: uniq([...dm.jobs, ...GROUP_MANY[top].jobs, ...(second ? GROUP_MANY[second].jobs.slice(0, 2) : [])]).slice(0, 12) },
     timing: { label: '일에서 힘이 붙는 시기', items: mergedAges([['관성', '맡는 역할과 책임이 커지기 쉬운 때'], ['식상', '재능과 아이디어를 펼치기 좋은 때']]) },
     tips: uniq([st.tip, workNone && GROUP_NONE[workNone].tip]),
@@ -184,7 +189,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     title: '연애·결혼',
     headline: { label: '이런 사람에게 끌려요', text: spouse.attract },
     keywords: uniq([dm.keywords[2], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([
+    paragraphs: pick([
       dm.love,
       spouse.love,
       SPOUSE_AMOUNT[amount(g[spouseGroup], 25, 8)],
@@ -204,7 +209,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     key: 'wealth',
     title: '재물',
     keywords: uniq([dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([
+    paragraphs: pick([
       dm.money,
       WEALTH_AMOUNT[amount(g['재성'], 25, 10)],
       GROUP_MANY[top].money,
@@ -222,7 +227,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     key: 'health',
     title: '건강',
     keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && least !== y.yong && `${EL[least]} 기운 보충`, healthExcess && most !== y.yong && `${EL[most]} 기운 다스리기`]),
-    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
+    paragraphs: pick([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,
     basis: [dmBasis, `오행 비율: ${ratioText}`, `월지: ${charLabel(r.pillars.find((p) => p.key === 'month')!.branch)}`, yongText],
@@ -233,7 +238,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?:
     key: 'relations',
     title: '사람 관계',
     keywords: uniq([dm.keywords[2], GROUP_PLAIN[top]]),
-    paragraphs: uniq([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
+    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
     tips: uniq([relNone && GROUP_NONE[relNone].tip, dm.tips[2]]),
     basis: [dmBasis, `가장 많은 십신 무리: ${top}`, `비겁 ${Math.round(g['비겁'])}% · 인성 ${Math.round(g['인성'])}%`, ...(comboText ? [`일지 합충: ${comboText}`] : [])],
   };

@@ -625,3 +625,38 @@ main.article .news-title { margin: 0; }
 :lang(en) .flow { flex-direction: row; }
 :lang(en) .flow.months { direction: ltr; }
 :lang(en) .cal-day .term { white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }
+
+/* ---- 공유 카드 (이미지로만 쓰임, 화면 밖에 그림) ---- */
+.share-card { position: fixed; left: -10000px; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 26px 24px 20px; background: radial-gradient(circle at 85% 10%, #f1e3d6 0, transparent 45%), radial-gradient(circle at 10% 95%, #efe6da 0, transparent 40%), #F7F4EE; color: #1F1B18; font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif; }
+.share-card .sc-head { display: flex; align-items: center; gap: 8px; }
+.share-card .sc-head .seal { width: 30px; height: 30px; }
+.share-card .sc-head b { font-family: var(--serif); font-size: 17px; }
+.share-card .sc-label { font-size: 12px; color: #6b635b; font-weight: 700; letter-spacing: 0.02em; }
+.share-card .sc-type { font-family: var(--serif); font-weight: 900; font-size: 44px; line-height: 1.1; color: #B8352A; margin-top: 4px; }
+.share-card.square .sc-type { font-size: 34px; }
+.share-card .sc-ilju { font-size: 13px; color: #6b635b; margin-top: 6px; }
+.share-card .sc-title { font-family: var(--serif); font-weight: 700; font-size: 19px; line-height: 1.5; margin-top: 18px; }
+.share-card.square .sc-title { font-size: 15px; margin-top: 10px; }
+.share-card .sc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.share-card .sc-tags span { background: #fff; border: 1px solid #e5dfd6; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; color: #4a120c; }
+.share-card .sc-facts { margin-top: 18px; display: grid; gap: 6px; }
+.share-card .sc-facts div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; border-top: 1px solid #e5dfd6; padding-top: 6px; }
+.share-card .sc-facts dt { color: #6b635b; }
+.share-card .sc-facts dd { font-weight: 700; text-align: right; }
+.share-card.square .sc-facts { display: none; }
+.share-card .sc-foot { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.share-card .sc-foot b { color: #B8352A; font-size: 15px; }
+.share-card .sc-foot span { font-size: 11px; color: #6b635b; }
+
+/* ---- 결과 맨 위 한눈에 카드 ---- */
+.hero-card { border-color: var(--primary-container); }
+.hero-card .hero-type { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; color: var(--on-surface-variant); font-size: 0.9rem; }
+.hero-card .hero-type b { font-family: var(--serif); font-size: 1.35rem; color: var(--primary); }
+.hero-card .hero-title { font-family: var(--serif); font-weight: 700; font-size: 1.15rem; line-height: 1.55; margin-top: 8px; }
+.hero-card .hero-facts { display: grid; gap: 8px; margin-top: 12px; }
+.hero-card .hero-facts div { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.hero-card .hero-facts dt { font-size: 0.8rem; color: var(--on-surface-variant); font-weight: 700; min-width: 5.5em; }
+.hero-card .hero-facts dd { font-size: 0.95rem; }
+.hero-card .hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.hero-card .hero-actions .btn { text-decoration: none; }
+.article ol, .article ul { padding-left: 1.4em; }

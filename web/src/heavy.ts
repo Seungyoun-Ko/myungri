@@ -19,3 +19,5 @@ export const readingsReady = (EN ? import('./readings-en') : import('./readings-
 
 export { initialResultState, renderResult } from './ui/result';
 export { renderCalendar } from './ui/calendar-view';
+export { renderMatch, parseCode } from './ui/match-view';
+export { decodeInput } from './ui/share-link';

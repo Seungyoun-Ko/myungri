@@ -76,6 +76,16 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
         </div>
         <label class="check"><input id="f-unknown" type="checkbox" ${v.timeUnknown ? 'checked' : ''}> ${tr('출생시간 모름', "I don't know my birth time")}</label>
       </div>
+      <div class="field" id="jasi-field" hidden>
+        <span class="label">${tr('자시(밤 11시~새벽 1시) 기준', 'Births around 11 pm to 1 am')}</span>
+        <p class="small muted" style="margin-bottom:6px">${tr('밤 11시대 출생은 학파에 따라 날짜를 다르게 봐요. 잘 모르면 기본값(다음 날)을 두세요.', 'Schools differ on which day an 11 pm birth belongs to. If unsure, keep the default (next day).')}</p>
+        ${seg('jasi', v.jasi ?? 'next', [['next', tr('다음 날로 (기본)', 'Next day (default)')], ['same', tr('당일로 (야자시)', 'Same day')]])}
+      </div>
+      <div class="field" id="leap-field" hidden>
+        <span class="label">${tr('윤달 출생 · 자미두수 달 기준', 'Leap-month birth · Zi Wei month')}</span>
+        <p class="small muted" style="margin-bottom:6px">${tr('윤달을 어느 달로 볼지 자미두수 학파마다 달라요. 잘 모르면 기본값을 두세요.', 'Zi Wei schools differ on how to count a lunar leap month. If unsure, keep the default.')}</p>
+        ${seg('leapMode', v.leapMode ?? 'mid', [['mid', tr('15일 기준 (기본)', 'Split at day 15 (default)')], ['same', tr('같은 달', 'Same month')], ['next', tr('다음 달', 'Next month')]])}
+      </div>
       <div class="field" id="fold-field" hidden>
         <span class="label">${tr('같은 시각이 두 번 있어요', 'This time occurred twice')}</span>
         <p class="small muted" style="margin-bottom:6px">${tr('서머타임이 끝나며 시계를 한 시간 되돌린 날이에요. 어느 쪽이었는지 골라 주세요.', 'Clocks were set back an hour that day as daylight saving time ended. Which one was your birth time?')}</p>
@@ -94,7 +104,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
     </form>`;
 
   const form = $<HTMLFormElement>('form', root);
-  const state = { gender: v.gender, calendar: v.calendar, fold: v.fold ?? 'first' } as Pick<BirthInput, 'gender' | 'calendar' | 'fold'>;
+  const state = { gender: v.gender, calendar: v.calendar, fold: v.fold ?? 'first', jasi: v.jasi ?? 'next', leapMode: v.leapMode ?? 'mid' } as Pick<BirthInput, 'gender' | 'calendar' | 'fold' | 'jasi' | 'leapMode'>;
 
   $$('[data-seg]', form).forEach((group) => {
     group.addEventListener('click', (e) => {
@@ -127,6 +137,8 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
     cityId: $<HTMLSelectElement>('#f-city', form).value,
     useLongitude: $<HTMLInputElement>('#f-longitude', form).checked,
     fold: state.fold,
+    jasi: state.jasi,
+    leapMode: state.leapMode,
     solarTime: $<HTMLInputElement>('#f-solar', form).checked,
   });
 
@@ -144,6 +156,18 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
       }
     }
     $('#fold-field', form).hidden = !inFold;
+    // 밤 11시대·자정 무렵 출생이면 자시 기준, 윤달 출생이면 윤달 기준을 보여 줍니다.
+    const hourVal = $<HTMLInputElement>('#f-hour', form).value.trim();
+    $('#jasi-field', form).hidden = unknown.checked || !(hourVal === '23' || hourVal === '0' || hourVal === '00');
+    let leap = state.calendar === 'lunarLeap';
+    if (!leap && state.calendar === 'solar') {
+      try {
+        leap = toSolarDate(collect()).lunar.leap;
+      } catch {
+        leap = false;
+      }
+    }
+    $('#leap-field', form).hidden = !leap || unknown.checked;
     const overseas = !!cityById($<HTMLSelectElement>('#f-city', form).value).tz;
     $('#kr-longitude', form).hidden = overseas;
     $('#world-solar', form).hidden = !overseas;

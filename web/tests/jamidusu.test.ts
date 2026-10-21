@@ -59,9 +59,26 @@ it('출생시간 모름이면 명반을 만들지 않음', () => {
   expect(() => computeJamidusu(n)).toThrow(JamidusuUnavailableError);
 });
 
-it('윤달은 같은 번호의 달로 배치 (1987-08-12 = 윤6월 18일)', () => {
-  const a = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'solar', year: 1987, month: 8, day: 12, hour: 10 }));
-  const b = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'lunarLeap', year: 1987, month: 6, day: 18, hour: 10 }));
-  expect(b.palaces).toEqual(a.palaces);
-  expect(a.lunar.month).toBe(6);
+it('윤달 처리: same = 같은 달, mid(기본) = 16일부터 다음 달, next = 다음 달 (1987-08-12 = 윤6월 18일)', () => {
+  const same = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'solar', year: 1987, month: 8, day: 12, hour: 10, leapMode: 'same' }));
+  const sameLunarInput = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'lunarLeap', year: 1987, month: 6, day: 18, hour: 10, leapMode: 'same' }));
+  expect(sameLunarInput.palaces).toEqual(same.palaces);
+  expect(same.lunar.month).toBe(6);
+  const mid = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'solar', year: 1987, month: 8, day: 12, hour: 10 }));
+  const july = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'lunar', year: 1987, month: 7, day: 18, hour: 10 }));
+  // 18일이라 다음 달(7월)로 배치: 명궁·신궁 위치가 음력 7월 18일생과 같음
+  expect(mid.mingBranch).toBe(july.mingBranch);
+  expect(mid.shenBranch).toBe(july.shenBranch);
+  expect(mid.mingBranch).not.toBe(same.mingBranch);
+  const early = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'lunarLeap', year: 1987, month: 6, day: 10, hour: 10 }));
+  const earlySame = computeJamidusu(normalizeBirth({ gender: 'M', calendar: 'lunarLeap', year: 1987, month: 6, day: 10, hour: 10, leapMode: 'same' }));
+  expect(early.mingBranch).toBe(earlySame.mingBranch); // 15일까지는 이번 달
+});
+
+it('23시대 자시: 기본은 다음 날 음력, 야자시(same)는 당일 음력', () => {
+  const next = computeJamidusu(normalizeBirth({ gender: 'F', calendar: 'solar', year: 1995, month: 3, day: 15, hour: 23, minute: 50 }));
+  const same = computeJamidusu(normalizeBirth({ gender: 'F', calendar: 'solar', year: 1995, month: 3, day: 15, hour: 23, minute: 50, jasi: 'same' }));
+  expect(next.lunar.day).toBe(same.lunar.day + 1);
+  expect(next.hourBranch).toBe(0);
+  expect(same.hourBranch).toBe(0);
 });

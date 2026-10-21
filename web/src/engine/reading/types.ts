@@ -206,3 +206,72 @@ export interface JamiExtraReading {
   /** 신궁이 나 자신의 자리와 같을 때 (60~100자) */
   shenSame: string;
 }
+
+// ---------------------------------------------------------------- v1.1 추가
+
+/** 두 사람의 일간 궁합 (키: 작은 일간 번호-큰 일간 번호, 예: '0-6' = 갑-경). 연인·친구·동료 어느 관계에도 읽히게 씁니다. */
+export interface MatchPairReading {
+  /** 두 기운을 그린 비유 제목 (15~35자) */
+  title: string;
+  /** 두 사람이 만났을 때의 전체 그림 (160~230자) */
+  summary: string;
+  /** 잘 맞는 점, 서로에게 주는 것 (130~200자) */
+  together: string;
+  /** 부딪치기 쉬운 점과 그 장면 (130~200자) */
+  friction: string;
+  /** 둘이 함께 해 보면 좋은 것 2개 (각 30~70자) */
+  tips: [string, string];
+}
+
+/** 자미두수 육친·생활 자리에서 그 주성이 그리는 모습. 육친 자리는 '그 상대'를, 생활 자리는 '그 분야'를 그립니다. */
+export type PalaceFieldKey = 'parents' | 'siblings' | 'children' | 'friends' | 'property' | 'travel' | 'inner';
+export type PalaceStarReading = Record<PalaceFieldKey, string>; // 각 110~190자
+
+/** 자미두수 보강 문장 */
+export interface JamiExtra2Reading {
+  /** 건강 자리 전용: 보좌성 8개 (키: 좌보·우필·문창·문곡·천괴·천월·녹존·천마), 각 50~100자 */
+  healthAux: Record<string, string>;
+  /** 건강 자리 전용: 살성 6개 (키: 경양·타라·화성·영성·지공·지겁), 각 50~100자 */
+  healthSal: Record<string, string>;
+  /** 건강 자리 전용 사화 (키: 록·권·과·기), natal = 타고난 것, period = 대한·유년 */
+  healthSihwa: Record<string, { natal: string; period: string }>;
+  /** 주성 14개의 밝기별 보정 한두 문장 (키: 주성 이름), 각 50~100자. strong = 묘·왕, mid = 득·리·평, weak = 불·함 */
+  bright: Record<string, { strong: string; mid: string; weak: string }>;
+  /** 주성이 없어 맞은편 별을 빌려 볼 때 앞에 붙이는 완충 문장 2개 (각 50~90자) */
+  borrowed: [string, string];
+  /** 같은 자리에 사화가 겹칠 때 (각 70~130자) */
+  combos: {
+    /** 화록 + 화기: 얻고 잃음이 함께 */
+    luJi: string;
+    /** 화과 + 화기: 평판은 나되 실속 관리 */
+    keJi: string;
+    /** 화권 + 화기: 힘이 실리지만 무리 조심 */
+    quanJi: string;
+    /** 타고난 화기 + 시기의 화기가 같은 자리 (쌍기) */
+    doubleJi: string;
+    /** 타고난 화록 + 시기의 화록 (쌍록) */
+    doubleLu: string;
+  };
+}
+
+/** 띠별 신년운세 (키: 지지 번호 0=쥐 … 11=돼지) */
+export interface NewYearZodiacReading {
+  /** 한 줄 제목 (15~35자) */
+  title: string;
+  /** 그 해 전체 흐름 (220~320자) */
+  overview: string;
+  work: string; // 90~150자
+  money: string; // 90~150자
+  love: string; // 90~150자
+  health: string; // 80~130자
+  /** 실천 팁 (30~70자) */
+  tip: string;
+}
+export interface NewYearIntro {
+  /** 그 해를 소개하는 제목 (15~35자) */
+  title: string;
+  /** 그 해 기운 소개 (250~350자) */
+  intro: string;
+  /** 모두에게 주는 조언 3개 (각 30~70자) */
+  tips: [string, string, string];
+}

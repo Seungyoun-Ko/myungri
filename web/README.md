@@ -167,3 +167,13 @@ Cloudflare Pages 프로젝트 설정:
 - `src/engine/cities.ts`의 해외 도시(`tz` 있음)는 브라우저의 시간대 자료(IANA)로 그 시각의 UTC 오프셋과 서머타임을 구합니다. 한국 도시는 예전처럼 한국 시각 규칙을 씁니다.
 - 절기 비교는 실제 출생 순간(UTC+8), 시주·일주는 기본으로 도시 경도 기준 현지 태양시(끄면 현지 표준시)입니다.
 - 서머타임 시작으로 없는 시각은 막고, 끝나서 두 번 있는 시각은 앞/뒤를 고르게 합니다. 검사: `tests/overseas.test.ts`.
+
+## v1.1에서 더한 구조
+
+- **모순 거르기**: `src/engine/reading/tags.ts`(문장 조각의 성향 태그)와 `conflict.ts`(거르개). 새 문장 조각을 더하면 태그도 함께 달아 주세요.
+- **궁합**: `src/ui/match-view.ts`(화면, `#/match`), 문장은 `reading/match-a.ts`·`match-b.ts`(+ `en/`). 초대 링크는 `#/match?a=<천간>-<지지>`.
+- **결과 링크**: `src/ui/share-link.ts` — 입력값을 `#/r/<코드>`에 담습니다(서버 미전송, 이름 제외).
+- **공유 카드**: `src/ui/share-image.ts`의 `saveShareCard`.
+- **자미두수 보강 문장**: `reading/jami-palace-stars.ts`(육친·생활 자리), `jami-extra2.ts`(건강·밝기·차성·사화 겹침), 조립 도우미 `jami-build.ts`.
+- **신년운세 페이지**: `scripts/gen-newyear.ts`가 `2027/index.html`, `en/2027/index.html`을 만듭니다(`npm run pages`). 문장은 `reading/newyear-2027.ts`(+ `en/`).
+- **입력 옵션**: `BirthInput.jasi`('next' 기본 / 'same' 야자시), `BirthInput.leapMode`('mid' 기본 / 'same' / 'next').

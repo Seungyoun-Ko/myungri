@@ -226,20 +226,30 @@ export function ziweiBranch(lunarDay: number, guk: number) {
 export class JamidusuUnavailableError extends Error {}
 
 /**
- * 명반에 쓰는 음력 날짜. 기본은 시계 날짜(현지 양력)의 음력입니다.
- * 해외 출생은 서머타임·경도 보정이 1시간을 넘을 수 있어, 보정 시각이 자정을 넘어 자시(23~1시) 밖의
- * 시지(해시·축시 등)에 떨어지면 시계 날짜와 시지가 하루 어긋납니다. 이때만 보정된 날짜의 음력을 씁니다.
- * 한국 도시(utcOffset 없음)는 언제나 예전 그대로입니다.
+ * 명반에 쓰는 음력 날짜 = 보정 시각의 날짜(현지 양력)의 음력.
+ * 보정 시각이 23시대면, 자시 기준이 '다음 날'(기본, 사주의 일주와 같은 기준)일 때 다음 날의 음력을 씁니다.
+ * (v1.0까지 한국 도시는 시계 날짜를 그대로 썼습니다. 23:30~24:00 출생만 달라집니다.)
  */
 function chartLunar(birth: NormalizedBirth) {
   const c = birth.corrected!;
-  const k = birth.clock;
-  if (birth.utcOffset === undefined || !k || (c.year === k.year && c.month === k.month && c.day === k.day) || c.hour === 23 || c.hour === 0) return birth.lunar;
+  let base = { year: c.year, month: c.month, day: c.day };
+  if (c.hour === 23 && birth.input.jasi !== 'same') {
+    const d = new Date(Date.UTC(c.year, c.month - 1, c.day + 1));
+    base = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+  }
+  const s = birth.solar;
+  if (base.year === s.year && base.month === s.month && base.day === s.day) return birth.lunar;
   try {
-    return toSolarDate({ ...birth.input, calendar: 'solar', year: c.year, month: c.month, day: c.day }).lunar;
+    return toSolarDate({ ...birth.input, calendar: 'solar', ...base }).lunar;
   } catch {
     return birth.lunar; // 음력표 범위 밖(1900년 1월 1일 이전 등)
   }
+}
+
+/** 윤달 출생의 명반용 달: mid(기본) = 15일까지 이번 달·16일부터 다음 달 */
+function chartMonth(lunar: { month: number; day: number; leap: boolean }, mode: 'same' | 'mid' | 'next' = 'mid') {
+  if (!lunar.leap || mode === 'same' || (mode === 'mid' && lunar.day <= 15)) return lunar.month;
+  return (lunar.month % 12) + 1;
 }
 
 export function computeJamidusu(birth: NormalizedBirth): JamidusuChart {
@@ -247,7 +257,7 @@ export function computeJamidusu(birth: NormalizedBirth): JamidusuChart {
     throw new JamidusuUnavailableError('출생시간을 입력해야 명반을 완성 시킬 수 있습니다.');
   }
   const lunar = chartLunar(birth);
-  const month = lunar.month;
+  const month = chartMonth(lunar, birth.input.leapMode);
   const day = lunar.day;
   const yearIdx = mod(lunar.year - 4, 60);
   const yearStem = yearIdx % 10;

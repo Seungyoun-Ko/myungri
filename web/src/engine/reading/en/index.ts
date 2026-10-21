@@ -5,6 +5,7 @@ import type { AmountKey, DayMasterReading, FavorKey, TenGodName } from '../types
 import type { MonthLine, ReadingSection, YearReadingView } from '../index';
 import { fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges, pickMonthText, firstSentence } from '../shared';
 import { BRANCH_EN, ELEMENT_EN, GROUP_EN, GROWTH_EN, STRENGTH_EN, TEN_GOD_EN, branchLabelEn, combinationEn, ganzhiFull, geukEn, stemLabelEn } from '../../en-labels';
+import { conflictPicker, tagIndex } from '../conflict';
 import { DAY_MASTER_A } from './day-master-a';
 import { DAY_MASTER_B } from './day-master-b';
 import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
@@ -64,7 +65,10 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
   const ranked = rankedGroups(r);
   const top = ranked[0];
   const second = g[ranked[1]] >= 18 ? ranked[1] : null;
-  const also = (text: string | undefined | null) => (text ? `At the same time, ${lowerFirst(text)}` : null);
+  // 모순 거르개: 일간 문장을 바탕으로, 서로 반대되는 성향의 조각은 뺍니다(tags.ts).
+  const filter = conflictPicker(tagIndex({ DAY_MASTER, STRENGTH, GROUP_MANY, GROUP_NONE, ELEMENT_EXCESS, ELEMENT_LACK, GEUK, LUCKY, SPOUSE_PALACE, SPOUSE_AMOUNT, DAY_PHASE, DAY_COMBO, CHARM, WEALTH_AMOUNT }), [dm.core[0], dm.core[1], dm.work, dm.love, dm.money, dm.relations, dm.health], { social: 'Once people get to know you, another side comes out: ', other: 'Depending on the situation, ', lowerFirst: true });
+  const pick = filter.pick;
+  const also = (text: string | undefined | null) => (text ? filter.alias(`At the same time, ${lowerFirst(text)}`, text) : null);
   const none = TEN_GOD_GROUPS.filter((x) => g[x] < 4);
   const sk = strengthKey(r);
   const st = STRENGTH[sk];
@@ -78,7 +82,8 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
   const excess = ratios[most] >= 35;
   const lack = ratios[least] < 5;
   const healthExcess = ratios[most] >= 30;
-  const healthLack = ratios[least] < 12;
+  // 지장간을 나눠 세면서 비율이 고르게 나오는 경우가 많아, 넘치는 기운이 없으면 가장 적은 기운의 관리법을 알려 드립니다.
+  const healthLack = ratios[least] < 12 || ratios[most] < 30;
   const BALANCED =
     "The five energies in your chart are mixed fairly evenly, without leaning hard in one direction. You tend to adapt wherever you go without being thrown off balance. The flip side is that your true colors may not stand out as boldly, so pick one thing you truly love and dig deep into it. That's where your individuality comes alive.";
   const y = r.yongsin;
@@ -116,7 +121,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     title: 'Who you are',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
     facts: [
       { label: 'The energy you need most', value: `${EL[y.yong]} energy` },
       { label: 'Colors that help', value: lucky.colors.join(', ') },
@@ -133,7 +138,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     key: 'personality',
     title: 'Personality',
     keywords: [...dm.keywords],
-    paragraphs: uniq([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
+    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
     energize: uniq([...dm.energize, GROUP_MANY[top].energize]),
     drain: uniq([...dm.drain, GROUP_MANY[top].drain]),
     tips: [...dm.tips],
@@ -152,7 +157,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     title: 'Work & talents',
     headline: geuk ? { label: 'Your natural edge', text: geuk.weapon } : undefined,
     keywords: uniq([GROUP_MANY[top].keyword, dm.keywords[0]]),
-    paragraphs: uniq([
+    paragraphs: pick([
       dm.work,
       GROUP_MANY[top].work,
       second && also(GROUP_MANY[second].work),
@@ -173,7 +178,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     title: 'Love & partnership',
     headline: { label: "You're drawn to", text: spouse.attract },
     keywords: uniq([dm.keywords[2], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([dm.love, spouse.love, SPOUSE_AMOUNT[amount(g[spouseGroup], 25, 8)], hap && DAY_COMBO.hap.love, chung && DAY_COMBO.chung.love, top !== tenGodGroup(dayTg) && GROUP_MANY[top].love, st.love, peach && CHARM]),
+    paragraphs: pick([dm.love, spouse.love, SPOUSE_AMOUNT[amount(g[spouseGroup], 25, 8)], hap && DAY_COMBO.hap.love, chung && DAY_COMBO.chung.love, top !== tenGodGroup(dayTg) && GROUP_MANY[top].love, st.love, peach && CHARM]),
     caution: spouse.caution,
     timing: { label: 'When relationships tend to deepen', items: ageItems(spouseGroup, 'good connections tend to come along, or a relationship deepens') },
     basis: [
@@ -190,7 +195,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     key: 'wealth',
     title: 'Money',
     keywords: uniq([dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: uniq([
+    paragraphs: pick([
       dm.money,
       WEALTH_AMOUNT[amount(g['재성'], 25, 10)],
       GROUP_MANY[top].money,
@@ -213,7 +218,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     key: 'health',
     title: 'Health',
     keywords: uniq([`Bring in ${EL[y.yong]}`, healthLack && least !== y.yong && `Top up ${EL[least]}`, healthExcess && most !== y.yong && `Calm ${EL[most]}`]),
-    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
+    paragraphs: pick([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,
     basis: [dmBasis, `Element balance: ${ratioText}`, `Month branch: ${branchLabelEn(r.pillars.find((p) => p.key === 'month')!.branch)}`, yongText],
@@ -224,7 +229,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     key: 'relations',
     title: 'Relationships',
     keywords: uniq([dm.keywords[2], GROUP_PLAIN[top]]),
-    paragraphs: uniq([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
+    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
     tips: uniq([relNone && GROUP_NONE[relNone].tip, dm.tips[2]]),
     basis: [dmBasis, `Dominant Ten God group: ${GROUP_EN[top]}`, `Companion ${Math.round(g['비겁'])}% · Resource ${Math.round(g['인성'])}%`, ...(comboText ? [`Day branch interactions: ${comboText}`] : [])],
   };

@@ -22,6 +22,8 @@ export default defineConfig({
         enAbout: resolve(import.meta.dirname, 'en/about.html'),
         enPrivacy: resolve(import.meta.dirname, 'en/privacy.html'),
         enTerms: resolve(import.meta.dirname, 'en/terms.html'),
+        newyear: resolve(import.meta.dirname, '2027/index.html'),
+        enNewyear: resolve(import.meta.dirname, 'en/2027/index.html'),
         ...guide,
       },
     },
