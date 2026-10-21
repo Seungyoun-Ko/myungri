@@ -15,6 +15,8 @@ export interface City {
   longitude: number;
   /** 해외 도시의 IANA 시간대. 없으면 한국 */
   tz?: string;
+  /** 남반구 도시: 절기의 계절(봄·여름…)이 실제 계절과 반대 */
+  south?: boolean;
 }
 
 const KOREA: City[] = [
@@ -164,6 +166,9 @@ const WORLD: City[] = [
   { id: 'nz-auckland', name: '오클랜드', en: 'Auckland', region: '오세아니아', regionEn: 'Oceania', longitude: 174.763, tz: 'Pacific/Auckland' },
   { id: 'gu-guam', name: '괌', en: 'Guam', region: '오세아니아', regionEn: 'Oceania', longitude: 144.794, tz: 'Pacific/Guam' },
 ];
+
+const SOUTH = new Set(['au-sydney', 'au-melbourne', 'au-brisbane', 'au-perth', 'au-adelaide', 'nz-auckland', 'br-sao-paulo', 'ar-buenos-aires', 'cl-santiago', 'pe-lima', 'za-johannesburg', 'id-jakarta', 'id-bali', 'ke-nairobi']);
+for (const c of WORLD) if (SOUTH.has(c.id)) c.south = true;
 
 export const CITIES: City[] = [...KOREA, ...WORLD];
 

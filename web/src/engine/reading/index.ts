@@ -13,6 +13,7 @@ import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
 import { ELEMENT_EXCESS, ELEMENT_LACK, GEUK, LUCKY } from './elements';
 import { CHARM, DAY_COMBO, DAY_PHASE, SPOUSE_AMOUNT, SPOUSE_PALACE, WEALTH_AMOUNT } from './love';
 import { MONTH, YEAR, YEAR_DAY, YEAR_FAVOR } from './fortune';
+import { MONTH_DETAIL } from './month-detail';
 
 export const DAY_MASTER: DayMasterReading[] = [...DAY_MASTER_A, ...DAY_MASTER_B];
 
@@ -52,7 +53,7 @@ export const READING_TABS: [string, string][] = [
   ['relations', '사람 관계'],
 ];
 
-import { elementFavor, favorOf, fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges } from './shared';
+import { elementFavor, favorOf, fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges, pickMonthText, firstSentence } from './shared';
 export { elementFavor, favorOf, fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges };
 
 const EL = ['나무', '불', '흙', '쇠', '물'];
@@ -63,16 +64,17 @@ const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: '내 편과 경쟁', 
 const charLabel = (c: { korean: string; hanja: string; element: number }) => `${c.korean}${EL_TERM[c.element]}(${c.hanja})`;
 
 // ---------------------------------------------------------------- 사주 풀이
-export function sajuReading(r: SajuResult, gender: 'M' | 'F'): ReadingSection[] {
+/** opts.southern: 남반구 출생이면 절기 계절 문장을 넣지 않습니다(실제 계절과 반대라서). */
+export function sajuReading(r: SajuResult, gender: 'M' | 'F', opts: { southern?: boolean } = {}): ReadingSection[] {
   const dm = DAY_MASTER[r.dayMaster.index];
   const dmBasis = `일간: ${charLabel(r.dayMaster)}`;
 
   // 출생시간을 모르면 일간 중심으로만 풀이합니다.
   if (r.incompleteBirthTime || !r.elementRatios || !r.yongsin) {
     const note = '출생시간을 넣으면 힘의 세기, 가장 많은 기운, 필요한 기운까지 더해 훨씬 자세하게 풀이해 드려요.';
-    const base = { keywords: [...dm.keywords], basis: [dmBasis, '출생시간 모름: 일간 중심 풀이'], note };
+    const base = { keywords: [...dm.keywords], basis: [dmBasis, '출생시간 모름: 일간 중심 풀이'] };
     return [
-      { key: 'general', title: '나는 어떤 사람', headline: { text: dm.title }, paragraphs: [dm.core[0]], ...base },
+      { key: 'general', title: '나는 어떤 사람', headline: { text: dm.title }, paragraphs: [dm.core[0]], ...base, note },
       { key: 'personality', title: '성격', paragraphs: [dm.core[1], dm.stress], energize: [...dm.energize], drain: [...dm.drain], tips: [...dm.tips], ...base },
       { key: 'aptitude', title: '일과 적성', paragraphs: [dm.work], chips: { label: '잘 어울리는 일', items: dm.jobs }, ...base },
       { key: 'love', title: '연애·결혼', paragraphs: [dm.love], ...base },
@@ -220,7 +222,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F'): ReadingSection[] 
     key: 'health',
     title: '건강',
     keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && least !== y.yong && `${EL[least]} 기운 보충`, healthExcess && most !== y.yong && `${EL[most]} 기운 다스리기`]),
-    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
+    paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, !opts.southern && SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,
     basis: [dmBasis, `오행 비율: ${ratioText}`, `월지: ${charLabel(r.pillars.find((p) => p.key === 'month')!.branch)}`, yongText],
@@ -281,9 +283,7 @@ export function yearReading(r: SajuResult, year: number): YearReadingView | null
   const used = new Set<string>();
   const months = monthFortunesOf(year, r.dayMaster.index).map((m, i): MonthLine => {
     const mf = fortuneFavor(r, m);
-    let text = MONTH[m.stemTenGod as TenGodName][mf];
-    if (used.has(text)) text = MONTH[m.branchTenGod as TenGodName][mf];
-    used.add(text);
+    const text = pickMonthText(MONTH, m.stemTenGod as TenGodName, m.branchTenGod as TenGodName, mf, used, [firstSentence(MONTH_DETAIL[m.stemTenGod as TenGodName].overview), firstSentence(MONTH_DETAIL[m.branchTenGod as TenGodName].overview)]);
     return { label: SOLAR_LABEL[i], ganzhi: `${m.stem.korean}${m.branch.korean}`, favor: mf, text };
   });
   const pick = (f: FavorKey) => months.filter((m) => m.favor === f).map((m) => m.label);

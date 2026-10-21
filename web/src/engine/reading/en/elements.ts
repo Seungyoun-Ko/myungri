@@ -67,7 +67,7 @@ export const ELEMENT_LACK: ElementBalanceReading[] = [
       "With little Metal energy, you tend to be generous at heart and find it hard to say no. You put people at ease, but when it's time to wrap something up or cut it off, you hesitate, and work or relationships can drag on. If you write down your own standards ahead of time, decisions become much lighter.",
     health:
       "Spending a long time in stuffy air can easily leave you feeling closed in. Open the windows often to let fresh air through, and a few times a day, breathe in deeply and breathe out slowly. Try adding white foods too, such as pears, radishes and cauliflower. If you often get short of breath, see a doctor to be safe.",
-    tip: "Clear out five things you don't use every week. As your space gets tidier, your own standards get clearer too.",
+    tip: "Every week, clear out five things you no longer use. As your space gets tidier, your own standards get clearer too.",
   },
   {
     personality:
@@ -139,6 +139,12 @@ export const GEUK: Record<string, GeukReading> = {
       "Your secret weapon is the independence to carve out your own place without leaning on anyone, and the practical sense to knock out whatever task lands in your hands.",
     work:
       "Even with a brand-new task, you'd rather learn the way by doing it than by hunting for the manual first. You plan your own schedule and deliver results without a boss checking in on every step, so people know you actually do better when left to it. That said, you're not great at asking for help, so you can easily end up carrying everything yourself. When you're short-handed, practice handing pieces off early.",
+  },
+  월겁격: {
+    weapon:
+      "Grit that refuses to lose, the pull to rally people around a shared push, and a competitive streak that makes you sharper the stiffer the competition gets.",
+    work:
+      "You get better with colleagues or rivals around you than working alone. Team up with people chasing a similar goal and your momentum builds; seeing what the person next to you has pulled off spurs you to deliver even more. Because you often end up competing for the same share, though, feelings can get bruised easily. Split roles and credit clearly from day one, and the rivalry turns into real teamwork.",
   },
   양인격: {
     weapon:

@@ -11,8 +11,8 @@ const DEFAULT_INPUT: BirthInput = {
   year: 1990,
   month: 1,
   day: 1,
-  hour: 12,
-  minute: 0,
+  hour: undefined,
+  minute: undefined,
   timeUnknown: false,
   cityId: EN ? 'us-new-york' : DEFAULT_CITY_ID,
   useLongitude: false,
@@ -71,8 +71,8 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
       <div class="field">
         <span class="label">${tr('출생시간', 'Time of birth (24-hour)')}</span>
         <div class="row two">
-          <div class="unit"><input id="f-hour" type="number" inputmode="numeric" min="0" max="23" value="${v.hour ?? 12}" aria-label="${tr('시', 'Hour')}"><span>${tr('시', 'h')}</span></div>
-          <div class="unit"><input id="f-minute" type="number" inputmode="numeric" min="0" max="59" value="${v.minute ?? 0}" aria-label="${tr('분', 'Minute')}"><span>${tr('분', 'min')}</span></div>
+          <div class="unit"><input id="f-hour" type="number" inputmode="numeric" min="0" max="23" value="${v.hour ?? ''}" placeholder="${tr('시', 'hh')}" aria-label="${tr('시', 'Hour')}"><span>${tr('시', 'h')}</span></div>
+          <div class="unit"><input id="f-minute" type="number" inputmode="numeric" min="0" max="59" value="${v.minute ?? ''}" placeholder="${tr('분', 'mm')}" aria-label="${tr('분', 'Minute')}"><span>${tr('분', 'min')}</span></div>
         </div>
         <label class="check"><input id="f-unknown" type="checkbox" ${v.timeUnknown ? 'checked' : ''}> ${tr('출생시간 모름', "I don't know my birth time")}</label>
       </div>
@@ -110,6 +110,7 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
   });
 
   const num = (id: string) => Number(($(`#${id}`, form) as HTMLInputElement).value);
+  const blank = (id: string) => ($(`#${id}`, form) as HTMLInputElement).value.trim() === '';
   const unknown = $<HTMLInputElement>('#f-unknown', form);
 
   const collect = (): BirthInput => ({
@@ -119,8 +120,9 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
     year: num('f-year'),
     month: num('f-month'),
     day: num('f-day'),
-    hour: unknown.checked ? undefined : num('f-hour'),
-    minute: unknown.checked ? undefined : num('f-minute'),
+    hour: unknown.checked || blank('f-hour') ? undefined : num('f-hour'),
+    // 분을 비워 두면 0분으로 봅니다
+    minute: unknown.checked ? undefined : blank('f-minute') ? 0 : num('f-minute'),
     timeUnknown: unknown.checked,
     cityId: $<HTMLSelectElement>('#f-city', form).value,
     useLongitude: $<HTMLInputElement>('#f-longitude', form).checked,
@@ -153,6 +155,12 @@ export function renderInput(root: HTMLElement, initial: BirthInput | null, onSub
     e.preventDefault();
     const err = $('#f-error', form);
     const input = collect();
+    if (!input.timeUnknown && input.hour === undefined) {
+      err.textContent = tr('출생시간을 입력하거나 \'출생시간 모름\'을 선택해 주세요. 시간을 알면 풀이가 훨씬 자세해져요.', "Enter your birth time, or tick \"I don't know my birth time\". Knowing the time makes the reading much more detailed.");
+      err.hidden = false;
+      $<HTMLInputElement>('#f-hour', form).focus();
+      return;
+    }
     const bad = [input.year, input.month, input.day, input.hour ?? 0, input.minute ?? 0].some((n) => !Number.isInteger(n));
     if (bad) {
       err.textContent = tr('숫자를 정확히 입력해 주세요.', 'Please enter whole numbers.');
