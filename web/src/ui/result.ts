@@ -58,7 +58,11 @@ const fmtSolar = (b: NormalizedBirth) => {
   const d = `${b.solar.year}.${pad2(b.solar.month)}.${pad2(b.solar.day)}`;
   return b.timeUnknown || !b.clock ? `${d} ${tr('시간 모름', 'time unknown')}` : `${d} ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
 };
-const fmtLunar = (b: NormalizedBirth) => `${tr('음력', 'Lunar')} ${b.lunar.year}.${b.lunar.leap ? tr('윤', 'leap ') : ''}${pad2(b.lunar.month)}.${pad2(b.lunar.day)}`;
+/** 명반이 있으면 명반에 쓴 음력 날짜(해외 출생은 보정 날짜 기준일 수 있음)를 보여 줍니다. */
+const fmtLunar = (b: NormalizedBirth, chart?: JamidusuChart | null) => {
+  const l = chart?.lunar ?? b.lunar;
+  return `${tr('음력', 'Lunar')} ${l.year}.${l.leap ? tr('윤', 'leap ') : ''}${pad2(l.month)}.${pad2(l.day)}`;
+};
 const displayName = (b: NormalizedBirth) => b.input.name?.trim() || tr('이름 없음', 'No name');
 const utcText = (m: number) => `UTC${m < 0 ? '−' : '+'}${Math.floor(Math.abs(m) / 60)}${Math.abs(m) % 60 ? `:${pad2(Math.abs(m) % 60)}` : ''}`;
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
@@ -86,7 +90,7 @@ function profileCard(st: ResultState) {
       <div class="ilju hanja" aria-label="${tr('일주', 'Day pillar')}">${day.stem.hanja}<br>${day.branch.hanja}</div>
       <div style="min-width:0">
         <div class="name">${esc(displayName(birth))} <span class="small muted">${birth.input.gender === 'M' ? tr('남', 'Male') : tr('여', 'Female')}</span></div>
-        <div class="meta">${tr('양력', 'Born')} ${fmtSolar(birth)} · ${fmtLunar(birth)}</div>
+        <div class="meta">${tr('양력', 'Born')} ${fmtSolar(birth)} · ${fmtLunar(birth, st.snapshot.chart)}</div>
         <div class="meta">${EN ? city.en : city.name}${!city.tz && birth.input.useLongitude ? tr(' · 경도 보정', ' · longitude corrected') : ''}${corr ? ` · ${corr}` : ''}</div>
       </div>
       <div class="result-actions" data-no-export>
@@ -117,7 +121,7 @@ const tabButtons = (group: string, items: [string, string][], current: string) =
 function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChart) {
   if (st.jamiMode === 'daehan') {
     const ranges = [...chart.palaces].sort((a, c) => a.daehan.start - c.daehan.start);
-    return `<div class="age-chips" style="margin-top:10px" aria-label="${tr('대한 선택', 'Choose a decade')}">${ranges
+    return `${EN ? '<p class="small muted" style="margin-top:10px">Ages use the East Asian count, where you are 1 at birth.</p>' : ''}<div class="age-chips" style="margin-top:10px" aria-label="${tr('대한 선택', 'Choose a decade')}">${ranges
       .map((p) => `<button type="button" data-daehan="${p.daehan.start}" aria-pressed="${overlay?.range?.start === p.daehan.start}">${p.daehan.start}-${p.daehan.end}</button>`)
       .join('')}</div>`;
   }
@@ -133,7 +137,7 @@ function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChar
 
 function jamiBoard(st: ResultState, chart: JamidusuChart, wide: boolean, overlay?: OverlayChart) {
   const b = st.snapshot.birth;
-  const board = boardView(chart, { name: displayName(b), solarText: `${tr('양력', 'Born')} ${fmtSolar(b)}`, lunarText: fmtLunar(b), overlay, selected: st.selectedPalace });
+  const board = boardView(chart, { name: displayName(b), solarText: `${tr('양력', 'Born')} ${fmtSolar(b)}`, lunarText: fmtLunar(b, chart), overlay, selected: st.selectedPalace });
   const detail = st.selectedPalace >= 0 && wide ? `<aside class="card">${palaceDetail(chart, st.selectedPalace, overlay)}</aside>` : '';
   return `<div class="board-split" style="margin-top:12px"><div class="card" style="padding:10px">${board}</div>${detail}</div>`;
 }
