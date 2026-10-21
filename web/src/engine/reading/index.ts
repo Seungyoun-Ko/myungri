@@ -52,52 +52,13 @@ export const READING_TABS: [string, string][] = [
   ['relations', '사람 관계'],
 ];
 
+import { elementFavor, favorOf, fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges } from './shared';
+export { elementFavor, favorOf, fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges };
+
 const EL = ['나무', '불', '흙', '쇠', '물'];
 const EL_TERM = ['목', '화', '토', '금', '수'];
 const GROUP_PLAIN: Record<TenGodGroup, string> = { 비겁: '내 편과 경쟁', 식상: '표현과 재능', 재성: '재물', 관성: '일과 책임', 인성: '배움과 도움' };
 
-const uniq = <T>(xs: (T | null | undefined | false)[]) => [...new Set(xs.filter(Boolean) as T[])];
-
-function groupRatios(r: SajuResult): Record<TenGodGroup, number> {
-  const out = Object.fromEntries(TEN_GOD_GROUPS.map((g) => [g, 0])) as Record<TenGodGroup, number>;
-  if (r.tenGodRatios) for (const t of TEN_GODS) out[tenGodGroup(t)] += r.tenGodRatios[t];
-  return out;
-}
-
-/** 십신 무리를 많은 순으로. 비슷하면 태어난 달의 무리를 앞에 둡니다. */
-function rankedGroups(r: SajuResult): TenGodGroup[] {
-  const g = groupRatios(r);
-  const month = r.pillars.find((p) => p.key === 'month');
-  const monthGroup = month ? tenGodGroup(month.branchTenGod as TenGod) : null;
-  return [...TEN_GOD_GROUPS].sort((a, b) => {
-    const diff = g[b] - g[a];
-    if (Math.abs(diff) > 0.05) return diff;
-    return (b === monthGroup ? 1 : 0) - (a === monthGroup ? 1 : 0);
-  });
-}
-
-const strengthKey = (r: SajuResult): StrengthKey =>
-  r.strengthText === '극강' || r.strengthText === '신강' ? 'strong' : r.strengthText === '중화' ? 'mid' : 'weak';
-
-/** 지금 10년 운부터 앞으로, 그 무리가 들어오는 10년 운의 시작 나이 (최대 3개) */
-function upcomingAges(r: SajuResult, g: TenGodGroup): number[] {
-  const from = Math.max(0, r.currentBigFortuneIndex);
-  return r.bigFortunes
-    .slice(from)
-    .filter((b) => tenGodGroup(b.stemTenGod) === g || tenGodGroup(b.branchTenGod) === g)
-    .slice(0, 3)
-    .map((b) => b.startAge);
-}
-
-/** 그 기운이 나에게 얼마나 맞는지: 필요한 기운 +1, 부담 되는 기운 -1 */
-function elementFavor(r: SajuResult, e: Element): number {
-  const y = r.yongsin;
-  if (!y) return 0;
-  if (e === y.yong || e === y.hee) return 1;
-  if (e === y.gi || e === y.gu) return -1;
-  return 0;
-}
-const favorOf = (score: number): FavorKey => (score >= 1 ? 'good' : score <= -1 ? 'caution' : 'normal');
 
 const charLabel = (c: { korean: string; hanja: string; element: number }) => `${c.korean}${EL_TERM[c.element]}(${c.hanja})`;
 
@@ -258,7 +219,7 @@ export function sajuReading(r: SajuResult, gender: 'M' | 'F'): ReadingSection[] 
   const health: ReadingSection = {
     key: 'health',
     title: '건강',
-    keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && `${EL[least]} 기운 보충`, healthExcess && `${EL[most]} 기운 다스리기`]),
+    keywords: uniq([`${EL[y.yong]} 기운 채우기`, healthLack && least !== y.yong && `${EL[least]} 기운 보충`, healthExcess && most !== y.yong && `${EL[most]} 기운 다스리기`]),
     paragraphs: uniq([dm.health, healthLack && ELEMENT_LACK[least].health, healthExcess && ELEMENT_EXCESS[most].health, st.health, SEASON_HEALTH[season as keyof typeof SEASON_HEALTH]]),
     tips: uniq([healthLack && ELEMENT_LACK[least].tip, healthExcess && ELEMENT_EXCESS[most].tip, lucky.activities[0]]),
     note: HEALTH_DISCLAIMER,
@@ -302,11 +263,6 @@ export interface YearReadingView {
 }
 
 const SOLAR_LABEL = ['2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월', '다음 해 1월'];
-
-/** 해와 달의 기운이 나에게 맞는 정도 (천간 + 지지) */
-function fortuneFavor(r: SajuResult, f: { stem: { element: number }; branch: { element: number } }): FavorKey {
-  return favorOf(elementFavor(r, f.stem.element as Element) + elementFavor(r, f.branch.element as Element));
-}
 
 export function yearReading(r: SajuResult, year: number): YearReadingView | null {
   const yf: YearFortune | undefined = r.daewunYearFortunes.flat().find((x) => x.year === year) ?? r.yearFortunes.find((x) => x.year === year);

@@ -2,9 +2,9 @@
 import { cityById } from '../engine/cities';
 import type { NormalizedBirth } from '../engine/birth';
 import { daehanChart, yunyeonChart, type JamidusuChart, type OverlayChart } from '../engine/jamidusu';
-import { sajuReading } from '../engine/reading';
 import { readingView, stackedReadingView } from './reading-view';
-import { combinedReading, jamiReading } from '../engine/reading/jami';
+import { R } from './readings';
+import { EN, tr } from '../i18n';
 import { CALCULATION_BASIS } from '../engine/saju';
 import { archive, type Snapshot } from '../archive';
 import { activateAds, adSlot } from '../ads';
@@ -54,38 +54,64 @@ export function initialResultState(snapshot: Snapshot, archiveId: string | null 
   };
 }
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmtSolar = (b: NormalizedBirth) => {
+  if (EN) {
+    const d = `${MONTH_ABBR[b.solar.month - 1]} ${b.solar.day}, ${b.solar.year}`;
+    return b.timeUnknown || !b.clock ? `${d}, time unknown` : `${d}, ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
+  }
   const d = `${b.solar.year}.${pad2(b.solar.month)}.${pad2(b.solar.day)}`;
   return b.timeUnknown || !b.clock ? `${d} 시간 모름` : `${d} ${pad2(b.clock.hour)}:${pad2(b.clock.minute)}`;
 };
-const fmtLunar = (b: NormalizedBirth) => `음력 ${b.lunar.year}.${b.lunar.leap ? '윤' : ''}${pad2(b.lunar.month)}.${pad2(b.lunar.day)}`;
-const displayName = (b: NormalizedBirth) => b.input.name?.trim() || '이름 없음';
+/** 명반이 있으면 명반에 쓴 음력 날짜(해외 출생은 보정 날짜 기준일 수 있음)를 보여 줍니다. */
+const fmtLunar = (b: NormalizedBirth, chart?: JamidusuChart | null) => {
+  const l = chart?.lunar ?? b.lunar;
+  if (EN) return `Lunar ${l.year}, ${l.leap ? 'leap ' : ''}month ${l.month}, day ${l.day}`;
+  return `음력 ${l.year}.${l.leap ? '윤' : ''}${pad2(l.month)}.${pad2(l.day)}`;
+};
+const displayName = (b: NormalizedBirth) => b.input.name?.trim() || tr('이름 없음', 'No name');
+const utcText = (m: number) => `UTC${m < 0 ? '−' : '+'}${Math.floor(Math.abs(m) / 60)}${Math.abs(m) % 60 ? `:${pad2(Math.abs(m) % 60)}` : ''}`;
+const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 
 function profileCard(st: ResultState) {
   const { birth, saju } = st.snapshot;
   const day = saju.pillars.find((p) => p.key === 'day')!;
   const city = cityById(birth.input.cityId ?? 'seoul');
-  const corr = birth.corrected
-    ? `보정 ${pad2(birth.corrected.hour)}:${pad2(birth.corrected.minute)} (자오선 ${birth.corrections.meridian}분${birth.corrections.dst ? `, 서머타임 ${birth.corrections.dst}분` : ''}${birth.corrections.longitude ? `, 경도 ${birth.corrections.longitude}분` : ''})`
-    : '';
+  const c = birth.corrections;
+  const at = birth.corrected ? `${pad2(birth.corrected.hour)}:${pad2(birth.corrected.minute)}` : '';
+  const corr = !birth.corrected
+    ? ''
+    : birth.utcOffset !== undefined
+      ? tr(
+          `보정 ${at} (${utcText(birth.utcOffset)}${c.dst ? `, 서머타임 ${c.dst}분` : ''}${c.longitude ? `, 현지 태양시 ${signed(c.longitude)}분` : ''})`,
+          `adjusted to ${at} (${utcText(birth.utcOffset)}${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, local solar time ${signed(c.longitude)} min` : ''})`,
+        )
+      : tr(
+          `보정 ${at} (자오선 ${c.meridian}분${c.dst ? `, 서머타임 ${c.dst}분` : ''}${c.longitude ? `, 경도 ${c.longitude}분` : ''})`,
+          `adjusted to ${at} (standard meridian ${c.meridian} min${c.dst ? `, daylight saving ${c.dst} min` : ''}${c.longitude ? `, longitude ${c.longitude} min` : ''})`,
+        );
   const stale = st.archiveId && saju.basis !== CALCULATION_BASIS;
   return `<div class="card">
     <div class="profile">
-      <div class="ilju hanja" aria-label="일주">${day.stem.hanja}<br>${day.branch.hanja}</div>
+      <div class="ilju hanja" aria-label="${tr('일주', 'Day pillar')}">${day.stem.hanja}<br>${day.branch.hanja}</div>
       <div style="min-width:0">
-        <div class="name">${esc(displayName(birth))} <span class="small muted">${birth.input.gender === 'M' ? '남' : '여'}</span></div>
-        <div class="meta">양력 ${fmtSolar(birth)} · ${fmtLunar(birth)}</div>
-        <div class="meta">${city.name}${birth.input.useLongitude ? ' · 경도 보정' : ''}${corr ? ` · ${corr}` : ''}</div>
+        <div class="name">${esc(displayName(birth))} <span class="small muted">${birth.input.gender === 'M' ? tr('남', 'Male') : tr('여', 'Female')}</span></div>
+        <div class="meta">${tr('양력', 'Born')} ${fmtSolar(birth)} · ${fmtLunar(birth, st.snapshot.chart)}</div>
+        <div class="meta">${EN ? city.en : city.name}${!city.tz && birth.input.useLongitude ? tr(' · 경도 보정', ' · longitude corrected') : ''}${corr ? ` · ${corr}` : ''}</div>
       </div>
       <div class="result-actions" data-no-export>
-        <button type="button" class="icon-btn" data-action="edit" aria-label="편집">편집</button>
-        <a class="icon-btn" href="#/archive" aria-label="보관함" style="text-decoration:none;color:inherit">보관함</a>
-        <button type="button" class="icon-btn" data-action="save" aria-label="저장">${st.archiveId ? '저장됨' : '저장'}</button>
+        <button type="button" class="icon-btn" data-action="edit">${tr('편집', 'Edit')}</button>
+        <a class="icon-btn" href="#/archive" style="text-decoration:none;color:inherit">${tr('보관함', 'Saved charts')}</a>
+        <button type="button" class="icon-btn" data-action="save">${st.archiveId ? tr('저장됨', 'Saved ✓') : tr('저장', 'Save')}</button>
       </div>
     </div>
+    ${birth.utcOffset !== undefined && birth.solar.year < 1970 ? `<p class="small muted" style="margin-top:10px">${tr(
+      `1970년 이전 해외 출생은 지역에 따라 당시 시간대 기록이 부정확할 수 있어요. 위의 ${utcText(birth.utcOffset)}가 출생 당시 그 지역 시각과 맞는지 확인해 주세요. 다르면 같은 오프셋을 쓰는 가까운 도시를 고르면 돼요.`,
+      `For births outside Korea before 1970, historical time zone records can be wrong for some places. Check that ${utcText(birth.utcOffset)} above matches the local clock time when you were born. If it doesn't, choose a nearby city that used the correct offset.`,
+    )}</p>` : ''}
     ${st.archiveId ? `<div class="notice" style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <span style="flex:1">보관함에 저장된 결과예요 (계산 기준 ${esc(saju.basis)}).${stale ? ' 지금 기준과 달라요.' : ''}</span>
-        <button type="button" class="btn small" data-action="recalc">현재 기준으로 새로 계산</button></div>` : ''}
+        <span style="flex:1">${tr('보관함에 저장된 결과예요', 'This is a saved chart')} (${tr('계산 기준', 'method')} ${esc(saju.basis)}).${stale ? tr(' 지금 기준과 달라요.', ' The calculation method has been updated since.') : ''}</span>
+        <button type="button" class="btn small" data-action="recalc">${tr('현재 기준으로 새로 계산', 'Recalculate with latest method')}</button></div>` : ''}
   </div>`;
 }
 
@@ -101,15 +127,15 @@ const tabButtons = (group: string, items: [string, string][], current: string) =
 function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChart) {
   if (st.jamiMode === 'daehan') {
     const ranges = [...chart.palaces].sort((a, c) => a.daehan.start - c.daehan.start);
-    return `<div class="age-chips" style="margin-top:10px" aria-label="대한 선택">${ranges
+    return `${EN ? '<p class="small muted" style="margin-top:10px">Ages use the East Asian count, where you are 1 at birth.</p>' : ''}<div class="age-chips" style="margin-top:10px" aria-label="${tr('대한 선택', 'Choose a decade')}">${ranges
       .map((p) => `<button type="button" data-daehan="${p.daehan.start}" aria-pressed="${overlay?.range?.start === p.daehan.start}">${p.daehan.start}-${p.daehan.end}</button>`)
       .join('')}</div>`;
   }
   if (st.jamiMode === 'yunyeon') {
     return `<div class="year-step" style="margin-top:10px">
-      <button type="button" class="icon-btn" data-year-step="-1" aria-label="이전 해">&lt;</button>
-      <input type="number" id="yunyeon-year" data-year-input min="1900" max="2100" value="${st.yunyeonYear}" aria-label="유년 연도">
-      <button type="button" class="icon-btn" data-year-step="1" aria-label="다음 해">&gt;</button>
+      <button type="button" class="icon-btn" data-year-step="-1" aria-label="${tr('이전 해', 'Previous year')}">&lt;</button>
+      <input type="number" id="yunyeon-year" data-year-input min="1900" max="2100" value="${st.yunyeonYear}" aria-label="${tr('유년 연도', 'Year')}">
+      <button type="button" class="icon-btn" data-year-step="1" aria-label="${tr('다음 해', 'Next year')}">&gt;</button>
     </div>`;
   }
   return '';
@@ -117,18 +143,19 @@ function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChar
 
 function jamiBoard(st: ResultState, chart: JamidusuChart, wide: boolean, overlay?: OverlayChart) {
   const b = st.snapshot.birth;
-  const board = boardView(chart, { name: displayName(b), solarText: `양력 ${fmtSolar(b)}`, lunarText: fmtLunar(b), overlay, selected: st.selectedPalace });
+  const board = boardView(chart, { name: displayName(b), solarText: `${tr('양력', 'Born')} ${fmtSolar(b)}`, lunarText: fmtLunar(b, chart), overlay, selected: st.selectedPalace });
   const detail = st.selectedPalace >= 0 && wide ? `<aside class="card">${palaceDetail(chart, st.selectedPalace, overlay)}</aside>` : '';
   return `<div class="board-split" style="margin-top:12px"><div class="card" style="padding:10px">${board}</div>${detail}</div>`;
 }
 
 function combinedHtml(st: ResultState) {
   const { saju, chart } = st.snapshot;
-  if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">출생시간을 입력하면 사주와 자미두수를 함께 본 종합 풀이를 볼 수 있어요.</p></div>`;
-  return stackedReadingView(combinedReading(saju, chart));
+  if (!chart || saju.incompleteBirthTime) return `<div class="card"><p class="notice">${tr('출생시간을 입력하면 사주와 자미두수를 함께 본 종합 풀이를 볼 수 있어요.', 'Add your birth time to see the combined reading of both charts.')}</p></div>`;
+  return stackedReadingView(R.combined(saju, chart));
 }
 
 function appBanner() {
+  if (EN) return '';
   return `<div class="card app-banner" style="margin-top:14px">
     <div class="text"><b>인설명리 앱</b>으로 보관함과 달력을 휴대폰에서 바로 쓰세요.</div>
     <a class="btn small" href="${PLAY_STORE_URL}" target="_blank" rel="noopener">Google Play</a>
@@ -152,10 +179,10 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
   root.innerHTML = `
     <div data-region="profile"></div>
     <div class="segmented primary" role="tablist" data-tabs="main" style="margin-top:14px">
-      ${tabButtons('main', [['saju', '사주팔자'], ['jamidusu', '자미두수 명반'], ['combined', '종합 풀이']], st.mainTab)}
+      ${tabButtons('main', [['saju', tr('사주팔자', 'Saju')], ['jamidusu', tr('자미두수 명반', 'Zi Wei chart')], ['combined', tr('종합 풀이', 'Combined')]], st.mainTab)}
     </div>
     <section data-panel="saju" style="margin-top:14px">
-      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', '원국'], ['flow', '운 흐름'], ['tong', '풀이']], st.sajuTab)}</div>
+      <div class="segmented" role="tablist" data-tabs="saju">${tabButtons('saju', [['wonguk', tr('원국', 'Chart')], ['flow', tr('운 흐름', 'Luck cycles')], ['tong', tr('풀이', 'Reading')]], st.sajuTab)}</div>
       <div data-sub="wonguk" class="stack" style="margin-top:14px">
         <div data-region="wonguk"></div>
         ${adSlot('resultTop')}
@@ -167,12 +194,12 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     </section>
     <section data-panel="jamidusu" style="margin-top:14px">
       ${chart
-        ? `<div class="segmented" role="tablist" data-tabs="jami">${tabButtons('jami', [['natal', '선천 명반'], ['daehan', '대한 명반'], ['yunyeon', '유년 명반']], st.jamiMode)}</div>
+        ? `<div class="segmented" role="tablist" data-tabs="jami">${tabButtons('jami', [['natal', tr('선천 명반', 'Natal')], ['daehan', tr('대한 명반', 'Decade')], ['yunyeon', tr('유년 명반', 'Yearly')]], st.jamiMode)}</div>
            <div data-region="picker"></div>
            <div data-region="board"></div>
            <div data-region="jamiTong" style="margin-top:14px"></div>
            ${adSlot('jamiBottom')}`
-        : `<div class="card"><p class="notice">출생시간을 입력해야 명반을 완성 시킬 수 있습니다.</p></div>`}
+        : `<div class="card"><p class="notice">${tr('출생시간을 입력해야 명반을 완성 시킬 수 있습니다.', 'A birth time is needed to build the Zi Wei chart.')}</p></div>`}
     </section>
     <section data-panel="combined" style="margin-top:14px">
       <div data-region="combined"></div>
@@ -187,13 +214,13 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     summary: () => (region('summary')!.innerHTML = s.incompleteBirthTime ? '' : summaryCard(s)),
     ratio: () => (region('ratio')!.innerHTML = s.incompleteBirthTime ? '' : ratioCard(s, st.ratioMode)),
     flow: () => (region('flow')!.innerHTML = flowView(s, st.selectedBig, st.selectedYear, st.selectedMonth)),
-    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(sajuReading(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
+    sajuTong: () => (region('sajuTong')!.innerHTML = readingView(R.saju(s, st.snapshot.birth.input.gender), st.sajuTong, 'data-saju-tong')),
     jami: () => {
       if (!chart) return;
       const overlay = overlayOf(st, chart);
       region('picker')!.innerHTML = jamiPicker(st, chart, overlay);
       region('board')!.innerHTML = jamiBoard(st, chart, wide, overlay);
-      const jamiSections = jamiReading(chart, overlay);
+      const jamiSections = R.jami(chart, overlay);
       if (!jamiSections.some((x) => x.key === st.jamiTong)) st.jamiTong = jamiSections[0].key;
       region('jamiTong')!.innerHTML = readingView(jamiSections, st.jamiTong, 'data-jami-tong');
     },
@@ -304,9 +331,9 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const b = st.snapshot.birth;
       const base = `${displayName(b)}_${b.solar.year}${pad2(b.solar.month)}${pad2(b.solar.day)}`.replace(/[\\/:*?"<>|\s]+/g, '_');
       if (save.dataset.saveImage === 'wonguk') {
-        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_사주원국.png`, width: 640, caption: '사주팔자 원국' });
+        void saveAsImage([region('profile')!, region('wonguk')!], { fileName: `${base}_${tr('사주원국', 'saju-chart')}.png`, width: 640, caption: tr('사주팔자 원국', 'Saju Four Pillars chart') });
       } else {
-        void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_자미두수명반.png`, width: 820, caption: '자미두수 명반' });
+        void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_${tr('자미두수명반', 'ziwei-chart')}.png`, width: 820, caption: tr('자미두수 명반', 'Zi Wei Dou Shu chart') });
       }
       return;
     }
@@ -315,8 +342,8 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const sheet = document.createElement('div');
       sheet.className = 'zoom-sheet';
       sheet.setAttribute('role', 'dialog');
-      sheet.setAttribute('aria-label', '명반 크게 보기');
-      sheet.innerHTML = `<div class="zoom-bar"><b>명반 크게 보기</b><button type="button" class="btn small" data-close>닫기</button></div>${wrap.outerHTML}`;
+      sheet.setAttribute('aria-label', tr('명반 크게 보기', 'Enlarged chart'));
+      sheet.innerHTML = `<div class="zoom-bar"><b>${tr('명반 크게 보기', 'Enlarged chart')}</b><button type="button" class="btn small" data-close>${tr('닫기', 'Close')}</button></div>${wrap.outerHTML}`;
       sheet.addEventListener('click', (ev) => {
         if ((ev.target as HTMLElement).closest('[data-close]')) sheet.remove();
       });
@@ -327,17 +354,17 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     if (action === 'edit') cb.onEdit();
     if (action === 'recalc') cb.onRecalc(st);
     if (action === 'save') {
-      if (st.archiveId) return toast('이미 보관함에 있어요.');
+      if (st.archiveId) return toast(tr('이미 보관함에 있어요.', 'Already in Saved charts.'));
       const saved = archive.save({
         name: displayName(st.snapshot.birth),
         input: st.snapshot.birth.input,
         basis: s.basis,
         snapshot: st.snapshot,
       });
-      if (!saved) return toast('브라우저 저장 공간을 쓸 수 없어 저장하지 못했어요.');
+      if (!saved) return toast(tr('브라우저 저장 공간을 쓸 수 없어 저장하지 못했어요.', "Couldn't save: browser storage is unavailable."));
       st.archiveId = saved.id;
       paint.profile();
-      toast('보관함에 저장했어요. 이 브라우저에만 보관돼요.');
+      toast(tr('보관함에 저장했어요. 이 브라우저에만 보관돼요.', 'Saved (in this browser only).'));
     }
   };
 
@@ -356,7 +383,7 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
 function openSheet(html: string) {
   const back = document.createElement('div');
   back.className = 'sheet-backdrop';
-  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}<button type="button" class="btn ghost block" style="margin-top:14px" data-close>닫기</button></div>`;
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}<button type="button" class="btn ghost block" style="margin-top:14px" data-close>${tr('닫기', 'Close')}</button></div>`;
   const close = () => back.remove();
   back.addEventListener('click', (e) => {
     if (e.target === back || (e.target as HTMLElement).closest('[data-close]')) close();

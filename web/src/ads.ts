@@ -48,14 +48,16 @@ export function adPreview(): boolean {
 const sizeVars = (d: AdSlotDef) =>
   `--ad-w-m:${d.mobile[0]}px;--ad-h-m:${d.mobile[1]}px;--ad-w-d:${d.desktop[0]}px;--ad-h-d:${d.desktop[1]}px`;
 
+const AD_LABEL = typeof document !== 'undefined' && document.documentElement.lang.startsWith('en') ? 'Ad' : '광고';
+
 /** 광고 자리 HTML. 설정도 미리보기도 아니면 빈 문자열. */
 export function adSlot(name: AdSlotName): string {
   // 미리보기용 빌드(VITE_NO_ADS=1)에서는 광고 자리를 아예 넣지 않습니다.
   if (import.meta.env.VITE_NO_ADS === '1') return '';
   const d: AdSlotDef = AD_SLOTS[name];
   if (adPreview()) {
-    return `<aside class="ad-slot" aria-label="광고 자리 미리보기">
-      <div class="ad-label">광고</div>
+    return `<aside class="ad-slot" aria-label="${AD_LABEL === 'Ad' ? 'Ad slot preview' : '광고 자리 미리보기'}">
+      <div class="ad-label">${AD_LABEL}</div>
       <div class="ad-box preview" style="${sizeVars(d)}">
         <b>${d.label}</b>
         <span>${d.unit}</span>
@@ -69,8 +71,8 @@ export function adSlot(name: AdSlotName): string {
     d.shape === 'in-article'
       ? 'data-ad-format="fluid" data-ad-layout="in-article"'
       : `data-ad-format="${d.shape}" data-full-width-responsive="true"`;
-  return `<aside class="ad-slot" aria-label="광고">
-    <div class="ad-label">광고</div>
+  return `<aside class="ad-slot" aria-label="${AD_LABEL}">
+    <div class="ad-label">${AD_LABEL}</div>
     <div class="ad-box" style="${sizeVars(d)}">
       <ins class="adsbygoogle" style="display:block${d.shape === 'in-article' ? ';text-align:center' : ''}" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${d.id}" ${format} data-ad-pending></ins>
     </div>

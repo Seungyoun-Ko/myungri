@@ -10,14 +10,8 @@ import { MONTH } from './fortune';
 
 const EL_TERM = ['목', '화', '토', '금', '수'];
 
-/** 그 운의 천간·지지 오행이 나에게 맞는 정도: -2 ~ +2 */
-export function fortuneScore(r: SajuResult, f: { stem: { element: number }; branch: { element: number } }): number {
-  const y = r.yongsin;
-  if (!y) return 0;
-  const one = (e: number) => (e === y.yong || e === y.hee ? 1 : e === y.gi || e === y.gu ? -1 : 0);
-  return one(f.stem.element as Element) + one(f.branch.element as Element);
-}
-export const favorOfScore = (n: number): FavorKey => (n >= 1 ? 'good' : n <= -1 ? 'caution' : 'normal');
+import { favorOfScore, fortuneScore } from './shared';
+export { favorOfScore, fortuneScore };
 
 const gzKo = (f: Fortune) => `${f.stem.korean}${f.branch.korean}`;
 const gzHanja = (f: Fortune) => `${STEMS_HANJA[f.stem.index]}${BRANCHES_HANJA[f.branch.index]}`;

@@ -135,7 +135,7 @@ export function jamiReading(chart: JamidusuChart, overlay?: OverlayChart): Readi
     return {
       key,
       title,
-      headline: { label: `${PALACE_FIELD[n]} 자리`, text: headlineOf(v) },
+      headline: { text: headlineOf(v) },
       keywords: [...new Set(v.names.filter((x) => STARS[x]).map((x) => STARS[x].keywords[0]))],
       paragraphs: [PALACES[n].intro, ...v.paragraphs, ...(lens ? [lens] : []), connected(n)],
       basis: [v.basis, `삼방사정: ${[0, 6, 4, 8].map((d) => chart.palaces[(branchOf(n) + d) % 12].name).join('·')}`],

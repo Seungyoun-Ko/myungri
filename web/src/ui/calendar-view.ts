@@ -4,6 +4,13 @@ import { dayPillars, monthDays } from '../engine/calendar';
 import { calcTenGod } from '../engine/saju';
 import { archive } from '../archive';
 import { esc, pad2 } from './dom';
+import { EN, tr } from '../i18n';
+import { SOLAR_TERM_EN, TEN_GOD_EN, ganzhiEn } from '../engine/en-labels';
+
+const termName = (n: string) => (EN ? (SOLAR_TERM_EN[n] ?? n) : n);
+const DOW = EN ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['일', '월', '화', '수', '목', '금', '토'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const gzText = (gz: string) => (EN ? ganzhiEn(stemIndex(gz[0]), branchIndex(gz[1])) : gz);
 
 interface CalState {
   year: number;
@@ -34,9 +41,9 @@ export function renderCalendar(root: HTMLElement) {
       const cls = ['cal-day', d.dow === 0 ? 'sun' : '', d.dow === 6 ? 'sat' : '', isToday(d.day) ? 'today' : '', d.day === state.selected ? 'selected' : '']
         .filter(Boolean)
         .join(' ');
-      const lunar = `${d.lunar.leap ? '윤' : ''}${d.lunar.day === 1 ? `${d.lunar.month}월 1일` : `${d.lunar.month}.${d.lunar.day}`}`;
-      const term = d.terms.map((t) => `${t.name} ${pad2(t.hour)}:${pad2(t.minute)}`).join(' ');
-      return `<button type="button" class="${cls}" data-day="${d.day}" aria-label="${d.month}월 ${d.day}일 ${d.dayGanzhi}일, 음력 ${lunar}${term ? ', ' + term : ''}">
+      const lunar = `${d.lunar.leap ? tr('윤', 'L') : ''}${d.lunar.day === 1 ? tr(`${d.lunar.month}월 1일`, `${d.lunar.month}/1`) : EN ? `${d.lunar.month}/${d.lunar.day}` : `${d.lunar.month}.${d.lunar.day}`}`;
+      const term = d.terms.map((t) => `${termName(t.name)} ${pad2(t.hour)}:${pad2(t.minute)}`).join(' ');
+      return `<button type="button" class="${cls}" data-day="${d.day}" aria-label="${tr(`${d.month}월 ${d.day}일 ${d.dayGanzhi}일, 음력 ${lunar}`, `${MONTHS[d.month - 1]} ${d.day}, ${gzText(d.dayGanzhi)} day, lunar ${lunar}`)}${term ? ', ' + term : ''}">
         <span class="d">${d.day}</span><span class="gz">${gzSpan(d.dayGanzhi)}</span><span class="lunar">${lunar}</span>${term ? `<span class="term">${term}</span>` : ''}
       </button>`;
     }),
@@ -49,38 +56,44 @@ export function renderCalendar(root: HTMLElement) {
     const dm = person.snapshot.saju.dayMaster.index;
     const ds = stemIndex(p.day[0]);
     const db = branchIndex(p.day[1]);
-    tenGod = `<p style="margin-top:8px"><b>${esc(person.name)}</b>님 일간 <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span> 기준: 일진 천간 <b>${calcTenGod(dm, ds)}</b>, 지지 <b>${calcTenGod(dm, mainHiddenStem(db))}</b></p>`;
+    const t1 = calcTenGod(dm, ds);
+    const t2 = calcTenGod(dm, mainHiddenStem(db));
+    tenGod = EN
+      ? `<p style="margin-top:8px">For <b>${esc(person.name)}</b> (Day Master <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span>), this day's stem is <b>${TEN_GOD_EN[t1]}</b> and its branch is <b>${TEN_GOD_EN[t2]}</b>.</p>`
+      : `<p style="margin-top:8px"><b>${esc(person.name)}</b>님 일간 <span class="hanja">${person.snapshot.saju.dayMaster.hanja}</span> 기준: 일진 천간 <b>${t1}</b>, 지지 <b>${t2}</b></p>`;
   }
 
   root.innerHTML = `<div class="layout" style="gap:14px">
     <div class="card">
       <div class="cal-head">
-        <button type="button" class="icon-btn" data-step="-1" aria-label="이전 달">&lt;</button>
-        <div class="title">${state.year}년 ${state.month}월</div>
-        <button type="button" class="icon-btn" data-step="1" aria-label="다음 달">&gt;</button>
+        <button type="button" class="icon-btn" data-step="-1" aria-label="${tr('이전 달', 'Previous month')}">&lt;</button>
+        <div class="title">${tr(`${state.year}년 ${state.month}월`, `${MONTHS[state.month - 1]} ${state.year}`)}</div>
+        <button type="button" class="icon-btn" data-step="1" aria-label="${tr('다음 달', 'Next month')}">&gt;</button>
       </div>
       <div class="cal-grid">
-        ${['일', '월', '화', '수', '목', '금', '토'].map((d, i) => `<div class="dow ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</div>`).join('')}
+        ${DOW.map((d, i) => `<div class="dow ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</div>`).join('')}
         ${cells}
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button type="button" class="btn ghost small" data-today>오늘</button>
-        <input type="month" data-jump value="${state.year}-${pad2(state.month)}" min="1900-01" max="2050-12" style="padding:6px 10px;border-radius:10px;border:1px solid var(--outline-variant);background:var(--surface)" aria-label="연월 이동">
+        <button type="button" class="btn ghost small" data-today>${tr('오늘', 'Today')}</button>
+        <input type="month" data-jump value="${state.year}-${pad2(state.month)}" min="1900-01" max="2050-12" style="padding:6px 10px;border-radius:10px;border:1px solid var(--outline-variant);background:var(--surface)" aria-label="${tr('연월 이동', 'Go to month')}">
       </div>
     </div>
     <div class="card">
-      <h2>${sel.year}년 ${sel.month}월 ${sel.day}일 (${['일', '월', '화', '수', '목', '금', '토'][sel.dow]})</h2>
+      <h2>${tr(`${sel.year}년 ${sel.month}월 ${sel.day}일 (${DOW[sel.dow]})`, `${DOW[sel.dow]}, ${MONTHS[sel.month - 1]} ${sel.day}, ${sel.year}`)}</h2>
       <div class="summary-grid">
-        <div class="item"><div class="k">년</div><div class="v">${gzSpan(p.year)}</div></div>
-        <div class="item"><div class="k">월</div><div class="v">${gzSpan(p.month)}</div></div>
-        <div class="item"><div class="k">일진</div><div class="v">${gzSpan(p.day)}</div></div>
-        <div class="item"><div class="k">음력</div><div class="v">${sel.lunar.leap ? '윤' : ''}${sel.lunar.month}월 ${sel.lunar.day}일</div></div>
+        <div class="item"><div class="k">${tr('년', 'Year')}</div><div class="v">${gzSpan(p.year)}</div></div>
+        <div class="item"><div class="k">${tr('월', 'Month')}</div><div class="v">${gzSpan(p.month)}</div></div>
+        <div class="item"><div class="k">${tr('일진', 'Day')}</div><div class="v">${gzSpan(p.day)}</div></div>
+        <div class="item"><div class="k">${tr('음력', 'Lunar date')}</div><div class="v">${tr(`${sel.lunar.leap ? '윤' : ''}${sel.lunar.month}월 ${sel.lunar.day}일`, `${sel.lunar.leap ? 'Leap month' : 'Month'} ${sel.lunar.month}, day ${sel.lunar.day}`)}</div></div>
       </div>
-      ${sel.terms.length ? `<p class="notice" style="margin-top:10px">${sel.terms.map((t) => `<b>${t.name}</b> ${pad2(t.hour)}:${pad2(t.minute)} (한국 시각)`).join(', ')} — 년·월 간지는 정오 기준이에요.</p>` : ''}
+      ${sel.terms.length ? `<p class="notice" style="margin-top:10px">${EN
+        ? `${sel.terms.map((t) => `<b>${termName(t.name)}</b> begins at ${pad2(t.hour)}:${pad2(t.minute)} Korea time`).join(', ')}. The year and month pillars above are as of noon.`
+        : `${sel.terms.map((t) => `<b>${termName(t.name)}</b> ${pad2(t.hour)}:${pad2(t.minute)} (한국 시각)`).join(', ')} — 년·월 간지는 정오 기준이에요.`}</p>` : ''}
       <div class="field" style="margin-top:14px">
-        <label for="cal-person">보관함 사람 기준 십신 보기</label>
+        <label for="cal-person">${tr('보관함 사람 기준 십신 보기', 'Ten Gods for a saved chart')}</label>
         <select id="cal-person" data-person>
-          <option value="">선택 안 함</option>
+          <option value="">${tr('선택 안 함', 'None')}</option>
           ${people.map((x) => `<option value="${x.id}" ${x.id === state.personId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}
         </select>
       </div>

@@ -336,7 +336,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 16px var(--gutter) 32px; }
 .archive-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--outline-variant); border-radius: 12px; background: var(--surface); }
 .archive-item .info { flex: 1; min-width: 0; cursor: pointer; }
 .archive-item .info .nm { font-weight: 800; }
-.archive-item .info .sub { font-size: 0.84rem; color: var(--on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.archive-item .info .sub { font-size: 0.84rem; color: var(--on-surface-variant); overflow-wrap: anywhere; }
 .archive-item .pin[aria-pressed='true'] { color: var(--primary); border-color: var(--primary); }
 .search { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--outline-variant); background: var(--surface); }
 .toast {
@@ -611,3 +611,17 @@ main.article .news-title { margin: 0; }
 .lg-point { cursor: pointer; }
 .lg-point:focus-visible circle { stroke: var(--on-surface); stroke-width: 3; }
 .lg-point.current .lg-dot { stroke: var(--primary); stroke-width: 3; }
+
+/* ---- 언어 전환 · 영어 첫 화면 소개 ---- */
+.mainnav a.lang-link { font-weight: 700; padding-inline: 10px; }
+.seo-intro { max-width: 1180px; margin: 28px auto 0; padding: 0 16px; color: var(--on-surface-variant); }
+.seo-intro h2 { font-size: 1.05rem; margin-bottom: 6px; color: var(--on-surface); }
+.seo-intro p { font-size: 0.92rem; line-height: 1.65; margin-bottom: 8px; }
+.form .check[hidden] { display: none; }
+
+:lang(en) .flow .cell.now::after { content: 'Now'; white-space: nowrap; }
+
+/* 영어 화면: 운 흐름은 왼쪽→오른쪽(나이 순), 달력 칸의 절기 이름은 줄바꿈 */
+:lang(en) .flow { flex-direction: row; }
+:lang(en) .flow.months { direction: ltr; }
+:lang(en) .cal-day .term { white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }

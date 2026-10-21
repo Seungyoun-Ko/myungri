@@ -20,16 +20,16 @@ import {
 } from './constants';
 import {
   type DateTime,
-  type FoldChoice,
   type NormalizedBirth,
-  dstState,
+  civilFromTermClockAt,
+  clockStateFor,
   fromMinutes,
-  invalidClockReason,
   meridianCorrection,
   dstCorrection,
-  termClockOf,
+  termClockFor,
   toMinutes,
 } from './birth';
+import { type City, cityById } from './cities';
 
 export const CALCULATION_BASIS = 'KR-2026.10-4';
 
@@ -392,12 +392,12 @@ export function civilFromTermClock(t8: DateTime): DateTime {
   return guess;
 }
 
-function boundaryTermOn(date: { year: number; month: number; day: number }): BoundaryTerm | null {
+function boundaryTermOn(date: { year: number; month: number; day: number }, city: City): BoundaryTerm | null {
   const lunar = Solar.fromYmdHms(date.year, date.month, date.day, 0, 0, 0).getLunar();
   for (const jq of [lunar.getPrevJie(), lunar.getNextJie()]) {
     const s = jq.getSolar();
     const t8: DateTime = { year: s.getYear(), month: s.getMonth(), day: s.getDay(), hour: s.getHour(), minute: s.getMinute() };
-    const civil = civilFromTermClock(t8);
+    const civil = city.tz ? civilFromTermClockAt(city, t8) : civilFromTermClock(t8);
     if (civil.year !== date.year || civil.month !== date.month || civil.day !== date.day) continue;
     const m = toMinutes(t8);
     return {
@@ -410,14 +410,16 @@ function boundaryTermOn(date: { year: number; month: number; day: number }): Bou
   return null;
 }
 
-function sampleClocks(date: { year: number; month: number; day: number }) {
-  const out: { clock: DateTime; fold: FoldChoice }[] = [];
+/** 그날 하루를 30분 간격으로 훑은 절기 비교 시각들 (출생시간 모를 때 년·월주가 바뀌는지 보려고) */
+function sampleTermClocks(date: { year: number; month: number; day: number }, city: City): DateTime[] {
+  const out: DateTime[] = [];
   const minutes = [...Array.from({ length: 48 }, (_, i) => i * 30), 23 * 60 + 59];
   for (const mm of minutes) {
     const clock = { ...date, hour: Math.floor(mm / 60), minute: mm % 60 };
-    if (invalidClockReason(clock)) continue;
-    out.push({ clock, fold: 'first' });
-    if (dstState(clock) === 'fold') out.push({ clock, fold: 'second' });
+    const state = clockStateFor(city, clock);
+    if (state === 'gap') continue;
+    out.push(termClockFor(city, clock, 'first')!);
+    if (state === 'fold') out.push(termClockFor(city, clock, 'second')!);
   }
   return out;
 }
@@ -450,13 +452,14 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
     const noon = { ...birth.solar, hour: 12, minute: 0 };
     const dayGz = eightCharOf(noon).getDay();
     const dayStem = stemIndex(dayGz[0]);
-    const sets = sampleClocks(birth.solar).map((s) => yearMonthOf(termClockOf(s.clock, s.fold)));
+    const city = cityById(birth.input.cityId ?? 'seoul');
+    const sets = sampleTermClocks(birth.solar, city).map((t) => yearMonthOf(t));
     const sameYear = sets.every((s) => s.year === sets[0].year);
     const sameMonth = sets.every((s) => s.month === sets[0].month);
     const uncertain: PillarKey[] = ['hour'];
     if (!sameMonth) uncertain.push('month');
     if (!sameYear) uncertain.push('year');
-    const boundary = sameYear && sameMonth ? null : boundaryTermOn(birth.solar);
+    const boundary = sameYear && sameMonth ? null : boundaryTermOn(birth.solar, city);
     const ref = boundary ? boundary.after : sets[0];
     const pillars = [makePillar('day', dayGz, dayStem), makePillar('month', ref.month, dayStem), makePillar('year', ref.year, dayStem)];
     return {
@@ -478,7 +481,9 @@ export function computeSaju(birth: NormalizedBirth, options: SajuOptions = {}): 
   const ec = eightCharOf(pillarClock);
   const termEc = eightCharOf(birth.termClock!);
   const useTerm = termEc.getYear() !== ec.getYear() || termEc.getMonth() !== ec.getMonth();
-  const yunSource = useTerm ? termEc : ec;
+  // 대운 시작 나이는 출생 순간과 절입 순간(UTC+8)의 간격으로 셉니다. 해외 출생은 현지 태양시와 UTC+8이
+  // 반나절 넘게 어긋날 수 있어 언제나 UTC+8 실제 순간(termClock)을 씁니다. 한국 도시는 예전 그대로입니다.
+  const yunSource = useTerm || birth.utcOffset !== undefined ? termEc : ec;
 
   const dayStem = stemIndex(ec.getDay()[0]);
   const pillars: Pillar[] = [

@@ -4,6 +4,8 @@ import { normalizeBirth, type BirthInput } from './engine/birth';
 import { computeSaju } from './engine/saju';
 import { computeJamidusu } from './engine/jamidusu';
 import type { Snapshot } from './archive';
+import { EN } from './i18n';
+import { setReadings } from './ui/readings';
 
 export function calculate(input: BirthInput): Snapshot {
   const birth = normalizeBirth(input);
@@ -11,6 +13,9 @@ export function calculate(input: BirthInput): Snapshot {
   const chart = birth.timeUnknown ? null : computeJamidusu(birth);
   return { birth, saju, chart };
 }
+
+/** 언어에 맞는 풀이 문장 묶음만 내려받습니다. */
+export const readingsReady = (EN ? import('./readings-en') : import('./readings-ko')).then((m) => setReadings(m.fns));
 
 export { initialResultState, renderResult } from './ui/result';
 export { renderCalendar } from './ui/calendar-view';
