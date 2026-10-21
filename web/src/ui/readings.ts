@@ -14,6 +14,8 @@ export interface ReadingFns {
   jami: (chart: JamidusuChart, overlay?: OverlayChart) => ReadingSection[];
   combined: (r: SajuResult, chart: JamidusuChart, now?: Date) => ReadingSection[];
   disclaimer: string;
+  /** 오늘의 나 한 줄 */
+  today: (r: SajuResult, date?: Date) => { ganzhi: string; favor: 'good' | 'normal' | 'caution'; text: string } | null;
   /** 궁합: 일간 쌍 풀이와 일지 관계 문장 */
   match: { pairs: Record<string, MatchPairReading>; branch: { hap: string; chung: string; same: string } };
 }

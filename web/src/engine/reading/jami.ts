@@ -266,7 +266,7 @@ export function combinedReading(r: SajuResult, chart: JamidusuChart, now = new D
   const dhMains = (dhCenter.stars.some((s) => s.kind === 'main') ? dhCenter : chart.palaces[(dh.mingBranch + 6) % 12]).stars.filter((s) => s.kind === 'main' && STARS[s.name]);
   const nowParas: string[] = [];
   if (big && r.yongsin) {
-    const favor = favorOfScore(fortuneScore(r, big));
+    const favor = favorOfScore(fortuneScore(r, big, 0.6));
     nowParas.push(`지금은 ${big.startAge}세부터 이어지는 10년 운 안에 있어요. ${BIG_FAVOR[favor][0]}`, firstSentences(BIG[big.stemTenGod as TenGodName].overview, 3));
   }
   nowParas.push(`명반으로 보면 ${dh.range!.start}~${dh.range!.end}세에는 '${PALACE_FIELD[dhCenter.name]}' 쪽이 삶의 중심 주제가 되기 쉬워요.`, ...dhMains.map((s) => STARS[s.name].flow));

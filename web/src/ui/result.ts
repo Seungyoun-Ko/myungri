@@ -43,7 +43,8 @@ export function initialResultState(snapshot: Snapshot, archiveId: string | null 
     snapshot,
     archiveId,
     mainTab: 'saju',
-    sajuTab: 'wonguk',
+    // v1.2: 첫 화면은 쉬운 말 풀이부터 (원국 표는 '원국' 탭)
+    sajuTab: 'tong',
     ratioMode: 'base',
     selectedBig: bigIndex,
     selectedYear: startYear,
@@ -75,6 +76,8 @@ const fmtLunar = (b: NormalizedBirth, chart?: JamidusuChart | null) => {
 const displayName = (b: NormalizedBirth) => b.input.name?.trim() || tr('이름 없음', 'No name');
 const utcText = (m: number) => `UTC${m < 0 ? '−' : '+'}${Math.floor(Math.abs(m) / 60)}${Math.abs(m) % 60 ? `:${pad2(Math.abs(m) % 60)}` : ''}`;
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+/** 명반의 잡성·12신 보이기: 넓은 화면은 기본으로 보이고, 휴대폰은 기본으로 숨깁니다 */
+let showMinor = typeof window === 'undefined' || window.matchMedia('(min-width: 600px)').matches;
 
 function profileCard(st: ResultState) {
   const { birth, saju } = st.snapshot;
@@ -146,6 +149,8 @@ function heroCard(st: ResultState) {
   const big = s.currentBigFortuneIndex >= 0 ? R.big(s, s.currentBigFortuneIndex) : null;
   const need = general.facts?.[0];
   const facts: [string, string][] = [];
+  const today = R.today(s);
+  if (today) facts.push([tr('오늘의 나', 'Today'), `${today.text} · ${{ good: tr('좋음', 'good'), normal: tr('보통', 'steady'), caution: tr('조심', 'take care') }[today.favor]}`]);
   if (year) facts.push([tr(`${thisYear}년`, `${thisYear}`), `${year.title} · ${FAVOR_WORD[year.favor]}`]);
   if (big) facts.push([tr('지금 10년', 'This decade'), big.title]);
   if (need) facts.push([need.label, need.value]);
@@ -184,7 +189,9 @@ function jamiPicker(st: ResultState, chart: JamidusuChart, overlay?: OverlayChar
 
 function jamiBoard(st: ResultState, chart: JamidusuChart, wide: boolean, overlay?: OverlayChart) {
   const b = st.snapshot.birth;
-  const board = boardView(chart, { name: displayName(b), solarText: `${tr('양력', 'Born')} ${fmtSolar(b)}`, lunarText: fmtLunar(b, chart), overlay, selected: st.selectedPalace });
+  // 유년을 볼 때는 그해의 대한 사화도 함께 겹쳐 보여 줍니다(大·年 두 층).
+  const overlay2 = st.jamiMode === 'yunyeon' ? daehanChart(chart, st.yunyeonYear - chart.lunar.year + 1) : undefined;
+  const board = boardView(chart, { name: displayName(b), solarText: `${tr('양력', 'Born')} ${fmtSolar(b)}`, lunarText: fmtLunar(b, chart), overlay, overlay2, selected: st.selectedPalace, showMinor });
   const detail = st.selectedPalace >= 0 && wide ? `<aside class="card">${palaceDetail(chart, st.selectedPalace, overlay)}</aside>` : '';
   return `<div class="board-split" style="margin-top:12px"><div class="card" style="padding:10px">${board}</div>${detail}</div>`;
 }
@@ -398,6 +405,10 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
         void saveAsImage([root.querySelector<HTMLElement>('.board-wrap')!], { fileName: `${base}_${tr('자미두수명반', 'ziwei-chart')}.png`, width: 820, caption: tr('자미두수 명반', 'Zi Wei Dou Shu chart') });
       }
       return;
+    }
+    if (t.closest('[data-toggle-minor]')) {
+      showMinor = !showMinor;
+      return paint.board();
     }
     if (t.closest('[data-zoom]')) {
       const wrap = root.querySelector('.board-wrap')!;

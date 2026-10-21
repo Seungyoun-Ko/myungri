@@ -268,7 +268,7 @@ export function combinedReadingEn(r: SajuResult, chart: JamidusuChart, now = new
   const dhMains = (dhCenter.stars.some((s) => s.kind === 'main') ? dhCenter : chart.palaces[(dh.mingBranch + 6) % 12]).stars.filter((s) => s.kind === 'main' && STARS[s.name]);
   const nowParas: string[] = [];
   if (big && r.yongsin) {
-    const favor = favorOfScore(fortuneScore(r, big));
+    const favor = favorOfScore(fortuneScore(r, big, 0.6));
     nowParas.push(`You're now in the 10-year cycle that began at age ${big.startAge}. ${BIG_FAVOR[favor][0]}`, firstSentences(BIG[big.stemTenGod as TenGodName].overview, 3));
   }
   nowParas.push(`In your star chart, life between ages ${dh.range!.start} and ${dh.range!.end} tends to revolve around ${area(dhCenter.name)}.`, ...dhMains.map((s) => STARS[s.name].flow));

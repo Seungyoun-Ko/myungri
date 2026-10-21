@@ -46,9 +46,9 @@ export const STRENGTH: Record<StrengthKey, StrengthReading> = {
     love:
       'The gentle way you pick up on a partner\'s feelings and meet them where they are is a big part of your charm. But if you bend too far for someone you like, your own tastes and schedule can quietly disappear. Saying no to what you don\'t want won\'t make the relationship fall apart. You\'ll feel most at ease beside someone who respects you.',
     money:
-      'With money, you can easily get swept along by people\'s requests or the mood of the moment. You might find it hard to say no when someone asks to borrow money, or end up covering the group bill on your own. Decide in advance what your share is, and manage larger sums together with family or someone you trust, so both your heart and your wallet can rest easy.',
+      'With money, you can easily get swept along by people\'s requests or the mood of the moment. You might find it hard to say no when someone asks to borrow money, or end up covering the group bill on your own. Decide in advance what your share is, and manage larger sums together with family or someone you trust, so both your mind and your wallet can rest easy.',
     relations:
-      'You have a way of putting people at ease, so good people tend to gather around you. You fit in better than anyone in cooperative settings, and you draw strength from relationships where people help each other. Long stretches with people who drain you can burn you out fast, so stay close to the ones who leave you feeling lighter.',
+      'You have a way of putting people at ease, so good people tend to gather around you. You fit in better than anyone in cooperative settings, and you draw strength from relationships where people help each other. Long stretches with people who drain you can burn you out fast, so stay close to the ones who lift you up.',
     health:
       'Your energy can run low easily, so recharging habits matter. Rather than stacking plans back to back, leave breathing room in between, and build up your basic stamina with warm meals and plenty of sleep. If fatigue lingers for a long time, it\'s a good idea to get checked by a doctor.',
     tip: 'Keep one day a week completely free of plans as your own personal recharge day.',
@@ -60,7 +60,7 @@ export const GROUP_MANY: Record<GroupKey, GroupManyReading> = {
   비겁: {
     keyword: 'Independence',
     personality:
-      'You like to make your own decisions and take responsibility for them yourself. When someone decides for you, you feel more boxed in than grateful, and when a friend pulls ahead, a competitive "I can do that too" flares up inside you. That drive fuels your growth, but if you treat everything as a matter of winning or losing, your heart gets tired fast.',
+      'You like to make your own decisions and take responsibility for them yourself. When someone decides for you, you feel more boxed in than grateful, and when a friend pulls ahead, a competitive "I can do that too" flares up inside you. That drive fuels your growth, but if you treat everything as a matter of winning or losing, you\'ll wear yourself out fast.',
     work:
       'You find your energy in work that carries your own name, and in standing shoulder to shoulder with colleagues who share the same goal. You\'re especially strong where results are compared in hard numbers, and many people like you dream of going independent or starting a business. In partnerships or joint projects, it\'s wise to put roles and shares in writing from the very start.',
     jobs: ['Small business owner', 'Salesperson', 'Athlete', 'Freelancer', 'Entrepreneur', 'Site manager'],
@@ -99,7 +99,7 @@ export const GROUP_MANY: Record<GroupKey, GroupManyReading> = {
     love:
       'You show love through action and practical care more than words. You make sure your partner has what they need and plan your future together in concrete terms. Sometimes, though, what your partner wants isn\'t a solution but simple empathy. Set the calculations aside for a moment and say "Oh, that must have been tough" first, and you\'ll feel much closer.',
     money:
-      'You have a good feel for how money flows. You quickly notice where it\'s leaking and where it\'s growing, and habits like keeping a budget or splitting your money into separate accounts for different purposes suit you well. Because you see so many opportunities, you can easily take on too much. Deciding ahead of time how much you can handle helps you hold on to what you\'ve saved for the long run.',
+      'You have a good feel for how money moves. You quickly notice where it\'s leaking and where it\'s growing, and habits like keeping a budget or splitting your money into separate accounts for different purposes suit you well. Because you see so many opportunities, you can easily take on too much. Deciding ahead of time how much you can handle helps you hold on to what you\'ve saved for the long run.',
     relations:
       'You keep the give-and-take clear with people, too. When you owe someone a favor, you want to repay it, and when you help, you offer something practical. That can get you misread as weighing relationships by gains and losses. A message just to check in, for no reason at all, adds warmth to your connections.',
     energize: 'Watching your effort turn into real results',
@@ -111,11 +111,11 @@ export const GROUP_MANY: Record<GroupKey, GroupManyReading> = {
       'You take your role seriously, along with the lines you know you shouldn\'t cross. If you\'re running late, you text ahead, and you follow the rules even when nobody\'s watching. You pick up on what people expect of you and work hard to live up to it. The bar you set for yourself is high, so even a small mistake can weigh on your mind for a long time.',
     work:
       'Your skills shine in a well-structured organization. The clearer the roles and the chain of reporting, the more secure you feel, and when you\'re given a position of responsibility, you quietly get it done. You can hold steady under pressure that others find hard to bear. Rather than holding on to every task yourself, practice choosing which work to let go of.',
-    jobs: ['Public servant', 'Military officer', 'Police officer', 'Legal professional', 'Manager', 'Auditor'],
+    jobs: ['Civil service', 'Military officer', 'Police officer', 'Legal professional', 'Manager', 'Auditor'],
     love:
       'You want a serious, committed relationship. Rather than starting things casually, you take your time to see whether someone is trustworthy. Once your mind is made up, you keep your promises and stay by their side for a long time. You might quietly hold your partner to certain standards, though, so try putting each other\'s comfort ahead of getting everything right.',
     money:
-      'You like a steady income and planned spending. Saving bit by bit within a set flow, like a regular paycheck, suits you well. The catch is that keeping up appearances can make spending on things like wedding and funeral gifts or treating people swell quickly. Setting a cap on social expenses as well takes a lot of the pressure off.',
+      'You like a steady income and planned spending. Saving bit by bit within a set rhythm, like a regular paycheck, suits you well. The catch is that keeping up appearances can make spending on things like gifts for weddings and other big occasions or treating people swell quickly. Setting a cap on social expenses as well takes a lot of the pressure off.',
     relations:
       'You\'re polite and respect boundaries, which earns you the trust of people above you. In groups, too, you faithfully handle whatever role you\'re given and come across as dependable. Because you\'re so mindful of how others see you, opening up about your real feelings can be hard. One or two friends you can see casually, without your job title, become a real place of rest.',
     energize: 'Having your effort fairly recognized',
@@ -129,7 +129,7 @@ export const GROUP_MANY: Record<GroupKey, GroupManyReading> = {
       'Your depth shows in studying, researching, and teaching. Fields where official papers like certifications or degrees carry weight suit you, and you\'re strong at organizing material carefully to build a solid case. Waiting until you\'re perfectly prepared can mean missing your chance, so once you\'re about 70 percent ready, go ahead and start.',
     jobs: ['Teacher', 'Researcher', 'Counselor', 'Librarian', 'Translator', 'Nurse'],
     love:
-      'You\'re a warm partner who\'s deeply moved by a single kind word or a small gesture. You try hard to understand your partner and love sharing your heart through conversation. Because you\'re used to being cared for, you can sometimes find yourself leaning on your partner more and more. Giving back as much as you receive, and putting it into words, makes the relationship stronger.',
+      'You\'re a warm partner who\'s deeply moved by a single kind word or a small gesture. You try hard to understand your partner and love opening up to each other through conversation. Because you\'re used to being cared for, you can sometimes find yourself leaning on your partner more and more. Giving back as much as you receive, and putting it into words, makes the relationship stronger.',
     money:
       'You put your effort into building knowledge and credibility before the nuts and bolts of making money. You spend freely on books and courses, but tend to put off the actual steps that would raise your income. Try small experiments that connect what you\'ve learned to income, one at a time, and keep the habit of reading contracts all the way through.',
     relations:
@@ -175,7 +175,7 @@ export const GROUP_NONE: Record<GroupKey, GroupNoneReading> = {
     love:
       'You\'re drawn to people you connect with emotionally more than to their credentials. It\'s easy to push practical planning aside, so talking comfortably about concrete things, like where you\'ll live together or how you\'ll handle living costs, makes the relationship much sturdier.',
     money:
-      'It\'s easy for money to slip out without you noticing quite where it went. Just splitting your accounts by purpose and skimming your spending once a month can start to bring your money flow into clear focus.',
+      'It\'s easy for money to slip out without you noticing quite where it went. Just splitting your accounts by purpose and skimming your spending once a month can start to show you clearly where your money goes.',
     relations:
       'You don\'t size people up by what they can do for you, so anyone feels comfortable approaching you. When a request involves money, though, you may be a soft touch, so setting a lending limit in advance protects both your relationships and your peace of mind.',
     tip: 'Set one day a month to open your budgeting app and sort through your spending.',

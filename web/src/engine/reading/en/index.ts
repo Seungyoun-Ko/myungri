@@ -1,11 +1,21 @@
 // English saju reading. Same logic as the Korean composer (../index.ts); English text and English chart-basis terms.
 import type { SajuResult, TenGodGroup, YearFortune } from '../../saju';
+import { BRANCHES_HANJA } from '../../constants';
 import { BRANCH_CHUNG, BRANCH_HAP, TEN_GOD_GROUPS, monthFortunesOf, pairKey, tenGodGroup } from '../../saju';
 import type { AmountKey, DayMasterReading, FavorKey, TenGodName } from '../types';
 import type { MonthLine, ReadingSection, YearReadingView } from '../index';
 import { fortuneFavor, groupRatios, rankedGroups, strengthKey, uniq, upcomingAges, pickMonthText, firstSentence } from '../shared';
 import { BRANCH_EN, ELEMENT_EN, GROUP_EN, GROWTH_EN, STRENGTH_EN, TEN_GOD_EN, branchLabelEn, combinationEn, ganzhiFull, geukEn, stemLabelEn } from '../../en-labels';
 import { conflictPicker, tagIndex } from '../conflict';
+import { SHINSAL } from './shinsal';
+import { findBranchRelations, findShinsal } from '../../shinsal';
+import { SHINSAL_EN, BRANCH_REL_EN } from '../../en-labels';
+import { STRUCTURES } from './structures';
+import { detectStructures, STRUCTURE_NAME_EN } from '../structure-detect';
+import { BRANCH_ELEMENT as BRANCH_EL, BRANCHES_HANJA as BRANCHES_HANJA_LIST, STEM_ELEMENT as STEM_EL, STEMS_HANJA as STEMS_HANJA_LIST } from '../../constants';
+import { DAY_LINE } from './day-line';
+import { dayPillars } from '../../calendar';
+import { calcTenGod } from '../../saju';
 import { DAY_MASTER_A } from './day-master-a';
 import { DAY_MASTER_B } from './day-master-b';
 import { GROUP_MANY, GROUP_NONE, STRENGTH } from './groups';
@@ -97,7 +107,18 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
   const dayCombos = r.combinations.filter((c) => c.positions.includes('day') && c.kind !== '천간합');
   const hap = dayCombos.some((c) => c.kind === '지지육합');
   const chung = dayCombos.some((c) => c.kind === '지지육충');
-  const peach = r.pillars.some((p) => (p.key === 'day' || p.key === 'year') && [0, 3, 6, 9].includes(p.branch.index));
+  // 신살·지지 관계 (v1.2): 도화는 삼합 기준으로 봅니다.
+  const hits = findShinsal(r.pillars);
+  const has = (k: string) => hits.some((h) => h.key === k);
+  const rels = findBranchRelations(r.pillars);
+  const relHas = (k: string) => rels.some((x) => x.kind === k && x.where.includes('day'));
+  const peach = has('dohwa');
+  const structs = detectStructures(r);
+  const PK: Record<string, string> = { hour: 'hour', day: 'day', month: 'month', year: 'year' };
+  const shinsalBasis = [
+    ...(hits.length ? [`${'Symbolic stars'}: ${hits.map((h) => `${SHINSAL_EN[h.name]} ${h.hanja}(${h.where.map((w) => PK[w]).join('·')})`).join(', ')}`] : []),
+    ...(rels.length ? [`${'Branch relations'}: ${rels.map((x) => `${BRANCH_REL_EN[x.kind]} ${x.branches.map((b) => BRANCHES_HANJA[b]).join('')}`).join(', ')}`] : []),
+  ];
   const monthBranch = r.pillars.find((p) => p.key === 'month')!.branch.index;
   const season = [2, 3, 4].includes(monthBranch) ? 'spring' : [5, 6, 7].includes(monthBranch) ? 'summer' : [8, 9, 10].includes(monthBranch) ? 'autumn' : 'winter';
   const firstNone = none[0];
@@ -121,7 +142,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     title: 'Who you are',
     headline: { text: dm.title },
     keywords: uniq([dm.keywords[0], dm.keywords[1], GROUP_MANY[top].keyword]),
-    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, lucky.intro]),
+    paragraphs: pick([dm.core[0], st.personality, excess && ELEMENT_EXCESS[most].personality, lack && ELEMENT_LACK[least].personality, !excess && !lack && BALANCED, geuk?.weapon, has('gongmang') && SHINSAL.gongmang, lucky.intro]),
     facts: [
       { label: 'The energy you need most', value: `${EL[y.yong]} energy` },
       { label: 'Colors that help', value: lucky.colors.join(', ') },
@@ -130,15 +151,16 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
       { label: 'Your season', value: lucky.season },
       { label: 'Places that recharge you', value: lucky.places.join(', ') },
     ],
-    tips: [...lucky.activities],
-    basis: [dmBasis, `Strength: ${strengthText}`, `Structure: ${geukEn(r.geukgukLabel)}`, yongText, `Element balance: ${ratioText}`],
+    blocks: structs.map((k) => ({ title: `Your chart's shape · ${STRUCTURES[k].title}`, paragraphs: [STRUCTURES[k].text] })),
+    tips: [...lucky.activities, ...structs.map((k) => STRUCTURES[k].tip)],
+    basis: [dmBasis, `Strength: ${strengthText}`, `Structure: ${geukEn(r.geukgukLabel)}`, yongText, `Element balance: ${ratioText}`, ...(structs.length ? [`Patterns: ${structs.map((k) => STRUCTURE_NAME_EN[k]).join(', ')}`] : []), ...shinsalBasis],
   };
 
   const personality: ReadingSection = {
     key: 'personality',
     title: 'Personality',
     keywords: [...dm.keywords],
-    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, dm.stress]),
+    paragraphs: pick([dm.core[1], GROUP_MANY[top].personality, second && also(GROUP_MANY[second].personality), DAY_PHASE[dayPillar.growthPhase], firstNone && GROUP_NONE[firstNone].personality, has('hwagae') && SHINSAL.hwagae, (has('goegang') && SHINSAL.goegang) || (has('yangin') && SHINSAL.yangin) || (has('baekho') && SHINSAL.baekho), dm.stress]),
     energize: uniq([...dm.energize, GROUP_MANY[top].energize]),
     drain: uniq([...dm.drain, GROUP_MANY[top].drain]),
     tips: [...dm.tips],
@@ -186,7 +208,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
       `Day branch (spouse palace): ${branchLabelEn(dayPillar.branch)} · ${TEN_GOD_EN[dayTg]}`,
       `Partner star group (${GROUP_EN[spouseGroup]}) ${Math.round(g[spouseGroup])}%`,
       ...(comboText ? [`Day branch interactions: ${comboText}`] : []),
-      ...(peach ? ['Peach Blossom: year or day branch is Ja, O, Myo or Yu'] : []),
+      ...(peach ? ['Peach Blossom: by the year or day branch triad'] : []),
     ],
   };
 
@@ -229,7 +251,7 @@ export function sajuReadingEn(r: SajuResult, gender: 'M' | 'F', opts: { southern
     key: 'relations',
     title: 'Relationships',
     keywords: uniq([dm.keywords[2], GROUP_PLAIN[top]]),
-    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations]),
+    paragraphs: pick([dm.relations, GROUP_MANY[top].relations, second && also(GROUP_MANY[second].relations), st.relations, hap && DAY_COMBO.hap.relations, chung && DAY_COMBO.chung.relations, relNone && GROUP_NONE[relNone].relations, has('cheoneul') && SHINSAL.cheoneul, rels.some((x) => x.kind === '삼합') && SHINSAL.samhap, (relHas('원진') && SHINSAL.wonjin) || (relHas('형') && SHINSAL.hyeong)]),
     tips: uniq([relNone && GROUP_NONE[relNone].tip, dm.tips[2]]),
     basis: [dmBasis, `Dominant Ten God group: ${GROUP_EN[top]}`, `Companion ${Math.round(g['비겁'])}% · Resource ${Math.round(g['인성'])}%`, ...(comboText ? [`Day branch interactions: ${comboText}`] : [])],
   };
@@ -291,3 +313,14 @@ export function yearReadingEn(r: SajuResult, year: number): YearReadingView | nu
 }
 
 export const YEAR_FAVOR_LABEL_EN: Record<FavorKey, string> = { good: 'A supportive year', normal: 'A steady year', caution: 'A year to pace yourself' };
+
+/** 오늘의 나: 그날 일진의 기운(천간 십신)과 나에게 맞는 정도로 한 줄 조언 */
+export function todayReadingEn(r: SajuResult, date = new Date()): { ganzhi: string; favor: FavorKey; text: string } | null {
+  if (!r.yongsin) return null;
+  const gz = dayPillars(date.getFullYear(), date.getMonth() + 1, date.getDate()).day;
+  const stem = (STEMS_HANJA_LIST as readonly string[]).indexOf(gz[0]);
+  const branch = (BRANCHES_HANJA_LIST as readonly string[]).indexOf(gz[1]);
+  const favor = fortuneFavor(r, { stem: { element: STEM_EL[stem] }, branch: { element: BRANCH_EL[branch], index: branch } });
+  const tg = calcTenGod(r.dayMaster.index, stem) as TenGodName;
+  return { ganzhi: gz, favor, text: DAY_LINE[tg][favor] };
+}
