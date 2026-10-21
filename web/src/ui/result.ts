@@ -95,6 +95,10 @@ function profileCard(st: ResultState) {
         <button type="button" class="icon-btn" data-action="save">${st.archiveId ? tr('저장됨', 'Saved ✓') : tr('저장', 'Save')}</button>
       </div>
     </div>
+    ${birth.utcOffset !== undefined && birth.solar.year < 1970 ? `<p class="small muted" style="margin-top:10px">${tr(
+      `1970년 이전 해외 출생은 지역에 따라 당시 시간대 기록이 부정확할 수 있어요. 위의 ${utcText(birth.utcOffset)}가 출생 당시 그 지역 시각과 맞는지 확인해 주세요. 다르면 같은 오프셋을 쓰는 가까운 도시를 고르면 돼요.`,
+      `For births outside Korea before 1970, historical time zone records can be off in some places. Please check that ${utcText(birth.utcOffset)} above matches local clock time at your birth. If not, choose a nearby city that used the right offset.`,
+    )}</p>` : ''}
     ${st.archiveId ? `<div class="notice" style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <span style="flex:1">${tr('보관함에 저장된 결과예요', 'This is a saved chart')} (${tr('계산 기준', 'method')} ${esc(saju.basis)}).${stale ? tr(' 지금 기준과 달라요.', ' The current method has changed.') : ''}</span>
         <button type="button" class="btn small" data-action="recalc">${tr('현재 기준으로 새로 계산', 'Recalculate with the current method')}</button></div>` : ''}
