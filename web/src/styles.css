@@ -98,7 +98,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 .bottomnav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(4, 1fr);
   background: var(--surface); border-top: 1px solid var(--outline-variant);
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
 }
@@ -662,3 +662,4 @@ main.article .news-title { margin: 0; }
 .article ol, .article ul { padding-left: 1.4em; }
 
 .board-wrap.hide-minor .minor, .board-wrap.hide-minor .shin { display: none; }
+#match-result { scroll-margin-top: 84px; }

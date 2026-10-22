@@ -40,9 +40,9 @@ function dateForm(id: string, title: string) {
       <button type="button" data-value="lunar" aria-selected="false">${tr('음력', 'Lunar')}</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <div class="unit"><input id="${id}-y" type="number" inputmode="numeric" min="1900" max="2050" placeholder="1995" aria-label="${tr('년', 'Year')}"><span>${tr('년', 'Y')}</span></div>
-      <div class="unit"><input id="${id}-m" type="number" inputmode="numeric" min="1" max="12" placeholder="1" aria-label="${tr('월', 'Month')}"><span>${tr('월', 'M')}</span></div>
-      <div class="unit"><input id="${id}-d" type="number" inputmode="numeric" min="1" max="31" placeholder="1" aria-label="${tr('일', 'Day')}"><span>${tr('일', 'D')}</span></div>
+      <div class="unit"><input id="${id}-y" type="number" inputmode="numeric" min="1900" max="2050" placeholder="" aria-label="${tr('년', 'Year')}"><span>${tr('년', 'Y')}</span></div>
+      <div class="unit"><input id="${id}-m" type="number" inputmode="numeric" min="1" max="12" placeholder="" aria-label="${tr('월', 'Month')}"><span>${tr('월', 'M')}</span></div>
+      <div class="unit"><input id="${id}-d" type="number" inputmode="numeric" min="1" max="31" placeholder="" aria-label="${tr('일', 'Day')}"><span>${tr('일', 'D')}</span></div>
     </div>
   </div>`;
 }
@@ -120,10 +120,13 @@ export function renderMatch(root: HTMLElement, inviter: DayPillarCode | null, mi
       err.hidden = true;
       const out = $('#match-result', root);
       out.innerHTML = resultHtml(a, b);
-      if (!window.matchMedia('(min-width: 900px)').matches) out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // 넓은 화면은 입력 옆 오른쪽 칸에, 휴대폰은 아래에 보여 주고, 어느 쪽이든 결과 위치로 이동합니다.
+      root.querySelector('.layout')?.classList.add('with-result');
+      requestAnimationFrame(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch {
-      err.textContent = tr('생년월일을 정확히 입력해 주세요. (1900~2050년)', 'Please enter a valid birth date between 1900 and 2050.');
+      err.textContent = tr('생년월일(년·월·일)을 모두 정확히 입력해 주세요. 1900~2050년까지 볼 수 있어요.', 'Please fill in the full birth date (year, month, day), between 1900 and 2050.');
       err.hidden = false;
+      err.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
   root.querySelector('[data-invite]')?.addEventListener('click', async () => {

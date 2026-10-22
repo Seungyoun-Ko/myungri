@@ -30,7 +30,7 @@ if (bottom) {
       <a href="/en/2027/">2027 forecast</a><a href="/en/about.html">About</a><a href="/en/privacy.html">Privacy</a><a href="/en/terms.html">Terms</a><a href="mailto:${CONTACT_EMAIL}">Contact</a><a href="/" hreflang="ko" lang="ko">한국어</a>
     </nav>
     <p>Readings describe natural tendencies for reflection. They do not predict or guarantee specific events.</p>
-    <p>© Inseol · v1.2</p>
+    <p>© Inseol · v1.2.1</p>
   </footer>`
     : `<footer class="site">
     <nav aria-label="사이트 정보">
@@ -38,7 +38,7 @@ if (bottom) {
       <a href="/contact.html">문의</a><a href="/licenses.html">오픈소스 라이선스</a><a href="/en/" hreflang="en" lang="en">English</a>
     </nav>
     <p>타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
-    <p>© 인설 (인생설계) · v1.2</p>
+    <p>© 인설 (인생설계) · v1.2.1</p>
   </footer>`;
   // 상단 메뉴가 모든 화면 폭에서 보이므로 정적 페이지에는 하단 메뉴를 두지 않습니다
   document.body.classList.add('no-bottomnav');
