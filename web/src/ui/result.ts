@@ -164,7 +164,7 @@ function heroCard(st: ResultState) {
     <div class="hero-type"><b>${esc(type)}</b><span class="hanja">${esc(iljuName)}</span></div>
     <p class="hero-title">${esc(general.headline?.text ?? '')}</p>
     <p class="rd-keywords">${general.keywords.map((k) => `<span>#${esc(k)}</span>`).join('')}</p>
-    ${mbti ? `<details class="hero-mbti"><summary>${tr(`MBTI로 치면 <b>${mbti.code}</b>에 가까워요`, `Closest MBTI type: <b>${mbti.code}</b>`)} <span class="small muted">${tr('재미로 보는 비교 · 왜?', 'just for fun · why?')}</span></summary><ul>${mbti.reasons.map((x) => `<li><b>${x.letter}</b> ${esc(EN ? x.whyEn : x.why)}</li>`).join('')}</ul></details>` : ''}
+    ${mbti ? `<details class="hero-mbti"><summary>${tr(`MBTI로 치면 <b>${mbti.code}</b>에 가까워요`, `Closest MBTI type: <b>${mbti.code}</b>`)} <span class="small muted">${tr('왜?', 'why?')}</span></summary><ul>${mbti.reasons.map((x) => `<li><b>${x.letter}</b> ${esc(EN ? x.whyEn : x.why)}</li>`).join('')}</ul></details>` : ''}
     ${facts.length ? `<dl class="hero-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
     <div class="hero-actions" data-no-export>
       <button type="button" class="btn small" data-share-card="story">${tr('나를 한 줄로 · 카드 저장', 'Save my card')}</button>
