@@ -16,6 +16,10 @@ import { saveAsImage, saveShareCard } from './share-image';
 import { shareResultLink } from './share-link';
 import { KAKAO_SITE, shareKakao } from './kakao';
 import { iljuTypeEn, iljuTypeKo } from '../engine/ilju-type';
+import { mbtiLike } from '../engine/mbti-like';
+
+/** 띠 동물 이모지 (지지 순서) */
+const ANIMAL_EMOJI = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐔', '🐶', '🐷'];
 import { ganzhiEn } from '../engine/en-labels';
 
 export interface ResultState {
@@ -149,6 +153,7 @@ function heroCard(st: ResultState) {
   const year = s.incompleteBirthTime ? null : R.year(s, thisYear);
   const big = s.currentBigFortuneIndex >= 0 ? R.big(s, s.currentBigFortuneIndex) : null;
   const need = general.facts?.[0];
+  const mbti = mbtiLike(s);
   const facts: [string, string][] = [];
   const today = R.today(s);
   if (today) facts.push([tr('오늘의 나', 'Today'), `${today.text} · ${{ good: tr('좋음', 'good'), normal: tr('보통', 'steady'), caution: tr('조심', 'take care') }[today.favor]}`]);
@@ -159,6 +164,7 @@ function heroCard(st: ResultState) {
     <div class="hero-type"><b>${esc(type)}</b><span class="hanja">${esc(iljuName)}</span></div>
     <p class="hero-title">${esc(general.headline?.text ?? '')}</p>
     <p class="rd-keywords">${general.keywords.map((k) => `<span>#${esc(k)}</span>`).join('')}</p>
+    ${mbti ? `<details class="hero-mbti"><summary>${tr(`MBTI로 치면 <b>${mbti.code}</b>에 가까워요`, `Closest MBTI type: <b>${mbti.code}</b>`)} <span class="small muted">${tr('재미로 보는 비교 · 왜?', 'just for fun · why?')}</span></summary><ul>${mbti.reasons.map((x) => `<li><b>${x.letter}</b> ${esc(EN ? x.whyEn : x.why)}</li>`).join('')}</ul><p class="small muted">${tr('사주 계산값으로 가까운 쪽을 고른 재미 요소예요. 공식 MBTI 검사가 아니에요.', 'A playful comparison from your chart, not an official MBTI assessment.')}</p></details>` : ''}
     ${facts.length ? `<dl class="hero-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
     <div class="hero-actions" data-no-export>
       <button type="button" class="btn small" data-share-card="story">${tr('나를 한 줄로 · 카드 저장', 'Save my card')}</button>
@@ -382,7 +388,11 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
     if (card) {
       const day = s.pillars.find((p) => p.key === 'day')!;
       const general = R.saju(s, st.snapshot.birth.input.gender, { southern: !!cityById(st.snapshot.birth.input.cityId ?? 'seoul').south })[0];
-      const facts = (general.facts ?? []).slice(0, 3).map((f) => [f.label, f.value] as [string, string]);
+      const mbtiC = mbtiLike(s);
+      const facts = [
+        ...(mbtiC ? [[tr('MBTI로 치면', 'Closest MBTI'), mbtiC.code] as [string, string]] : []),
+        ...(general.facts ?? []).slice(0, mbtiC ? 2 : 3).map((f) => [f.label, f.value] as [string, string]),
+      ];
       void saveShareCard({
         type: EN ? iljuTypeEn(day.stem.index, day.branch.index) : iljuTypeKo(day.stem.index, day.branch.index),
         ilju: EN ? `${day.stem.hanja}${day.branch.hanja} · ${ganzhiEn(day.stem.index, day.branch.index)} day pillar` : `${day.stem.hanja}${day.branch.hanja} · ${day.stem.korean}${day.branch.korean}일주`,
@@ -398,9 +408,10 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
       const day = s.pillars.find((p) => p.key === 'day')!;
       const general = R.saju(s, st.snapshot.birth.input.gender, { southern: !!cityById(st.snapshot.birth.input.cityId ?? 'seoul').south })[0];
       const type = iljuTypeKo(day.stem.index, day.branch.index);
+      const mbtiK = mbtiLike(s);
       void shareKakao({
-        title: `나는 '${type}' · ${day.stem.korean}${day.branch.korean}일주`,
-        description: general.headline?.text ?? '인설명리에서 내 사주를 쉬운 말로 풀어 봤어요.',
+        title: `${ANIMAL_EMOJI[day.branch.index]} 나는 '${type}' · ${day.stem.korean}${day.branch.korean}일주`,
+        description: `${general.headline?.text ?? '인설명리에서 내 사주를 쉬운 말로 풀어 봤어요'}${mbtiK ? ` (MBTI로 치면 ${mbtiK.code})` : ''}`,
         url: `${KAKAO_SITE}/`,
         buttons: [
           { title: '나도 내 사주 보기', url: `${KAKAO_SITE}/` },
