@@ -8,6 +8,7 @@ import { ganzhiEn } from '../engine/en-labels';
 import { R } from './readings';
 import { EN, tr } from '../i18n';
 import { $, esc, toast } from './dom';
+import { KAKAO_SITE, shareKakao } from './kakao';
 
 export interface DayPillarCode {
   stem: number;
@@ -94,7 +95,7 @@ export function renderMatch(root: HTMLElement, inviter: DayPillarCode | null, mi
       <button class="btn block" type="submit">${tr('궁합 보기', 'See compatibility')}</button>
       <p class="small muted">${tr('생년월일은 이 브라우저 안에서만 계산해요. 초대 링크에는 생년월일이 아니라 일주만 들어가요.', 'Birth dates are calculated in your browser only. Invite links carry just a day pillar, never a birth date.')}</p>
     </form>
-    ${mine ? `<div class="card"><h2 style="font-size:1rem">${tr('내 궁합 초대 링크', 'Invite someone')}</h2><p class="small muted">${tr('링크를 받은 사람이 자기 생년월일만 넣으면 둘의 궁합이 나와요.', 'Whoever opens the link just enters their birth date to see your match.')}</p><button type="button" class="btn small" data-invite style="margin-top:8px">${tr('초대 링크 보내기', 'Send invite link')}</button></div>` : ''}
+    ${mine ? `<div class="card"><h2 style="font-size:1rem">${tr('내 궁합 초대 링크', 'Invite someone')}</h2><p class="small muted">${tr('링크를 받은 사람이 자기 생년월일만 넣으면 둘의 궁합이 나와요.', 'Whoever opens the link just enters their birth date to see your match.')}</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${EN ? '' : '<button type="button" class="btn small kakao" data-invite-kakao>카카오톡으로 초대</button>'}<button type="button" class="btn small${EN ? '' : ' ghost'}" data-invite>${tr('초대 링크 복사', 'Send invite link')}</button></div></div>` : ''}
   </section><section id="match-result"></section></div>`;
 
   const form = $<HTMLFormElement>('form', root);
@@ -128,6 +129,15 @@ export function renderMatch(root: HTMLElement, inviter: DayPillarCode | null, mi
       err.hidden = false;
       err.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  });
+  root.querySelector('[data-invite-kakao]')?.addEventListener('click', () => {
+    const p = mine!;
+    void shareKakao({
+      title: `'${typeName(p)}'의 궁합 초대가 왔어요`,
+      description: '생년월일만 넣으면 우리 둘의 궁합을 쉬운 말로 풀어 줘요. 생년월일은 서버로 보내지 않아요.',
+      url: `${KAKAO_SITE}/#/match?a=${p.stem}-${p.branch}`,
+      buttons: [{ title: '우리 궁합 보기', url: `${KAKAO_SITE}/#/match?a=${p.stem}-${p.branch}` }],
+    });
   });
   root.querySelector('[data-invite]')?.addEventListener('click', async () => {
     const url = inviteLink(mine!);
