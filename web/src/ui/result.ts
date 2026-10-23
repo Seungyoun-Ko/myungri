@@ -14,6 +14,7 @@ import { boardView, palaceDetail, type ChartMode } from './jamidusu-view';
 import { PLAY_STORE_URL } from './brand';
 import { saveAsImage, saveShareCard } from './share-image';
 import { shareResultLink } from './share-link';
+import { KAKAO_SITE, shareKakao } from './kakao';
 import { iljuTypeEn, iljuTypeKo } from '../engine/ilju-type';
 import { ganzhiEn } from '../engine/en-labels';
 
@@ -161,6 +162,7 @@ function heroCard(st: ResultState) {
     ${facts.length ? `<dl class="hero-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
     <div class="hero-actions" data-no-export>
       <button type="button" class="btn small" data-share-card="story">${tr('나를 한 줄로 · 카드 저장', 'Save my card')}</button>
+      ${EN ? '' : '<button type="button" class="btn small kakao" data-share-kakao>카카오톡 공유</button>'}
       <button type="button" class="btn small ghost" data-share-link>${tr('결과 링크 공유', 'Share link')}</button>
       <a class="btn small ghost" href="#/match">${tr('궁합 보기', 'Compatibility')}</a>
     </div>
@@ -388,6 +390,22 @@ export function renderResult(root: HTMLElement, st: ResultState, cb: ResultCallb
         keywords: general.keywords.slice(0, 3),
         facts,
         shape: (card.dataset.shareCard as 'story' | 'square') ?? 'story',
+      });
+      return;
+    }
+    if (t.closest('[data-share-kakao]')) {
+      // 카톡 메시지에는 일주 타입과 한 줄 은유만 넣고, 이름·생년월일은 넣지 않습니다.
+      const day = s.pillars.find((p) => p.key === 'day')!;
+      const general = R.saju(s, st.snapshot.birth.input.gender, { southern: !!cityById(st.snapshot.birth.input.cityId ?? 'seoul').south })[0];
+      const type = iljuTypeKo(day.stem.index, day.branch.index);
+      void shareKakao({
+        title: `나는 '${type}' · ${day.stem.korean}${day.branch.korean}일주`,
+        description: general.headline?.text ?? '인설명리에서 내 사주를 쉬운 말로 풀어 봤어요.',
+        url: `${KAKAO_SITE}/`,
+        buttons: [
+          { title: '나도 내 사주 보기', url: `${KAKAO_SITE}/` },
+          { title: '우리 궁합 보기', url: `${KAKAO_SITE}/#/match?a=${day.stem.index}-${day.branch.index}` },
+        ],
       });
       return;
     }
