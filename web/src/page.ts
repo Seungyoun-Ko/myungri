@@ -30,15 +30,15 @@ if (bottom) {
       <a href="/en/2027/">2027 forecast</a><a href="/en/about.html">About</a><a href="/en/privacy.html">Privacy</a><a href="/en/terms.html">Terms</a><a href="mailto:${CONTACT_EMAIL}">Contact</a><a href="/" hreflang="ko" lang="ko">한국어</a>
     </nav>
     <p>Readings describe natural tendencies for reflection. They do not predict or guarantee specific events.</p>
-    <p>© Inseol · v1.4.2</p>
+    <p>© Inseol · v1.4.3</p>
   </footer>`
     : `<footer class="site">
     <nav aria-label="사이트 정보">
-      <a href="/about.html">인설명리 소개</a><a href="/blog/">블로그</a><a href="/guide/">명리 공부 글</a><a href="/2027/">2027 신년운세</a><a href="/today.html">오늘의 일진</a><a href="/ilju/">60일주 풀이</a><a href="/terms.html">이용약관</a><a href="/privacy.html">개인정보처리방침</a>
+      <a href="/about.html">인설명리 소개</a><a href="/blog/">블로그</a><a href="/guide/">명리 공부 글</a><a href="/2027/">2027 신년운세</a><a href="/today.html">오늘의 일진</a><a href="/ilju/">60일주 풀이</a><a href="/android/">Android 앱</a><a href="/terms.html">이용약관</a><a href="/privacy.html">개인정보처리방침</a>
       <a href="/contact.html">문의</a><a href="/licenses.html">오픈소스 라이선스</a><a href="/en/" hreflang="en" lang="en">English</a>
     </nav>
     <p>타고난 성향을 풀이한 참고용 내용이며, 특정 사건을 예측하거나 보장하지 않아요.</p>
-    <p>© 인설 (인생설계) · v1.4.2</p>
+    <p>© 인설 (인생설계) · v1.4.3</p>
   </footer>`;
   // 상단 메뉴가 모든 화면 폭에서 보이므로 정적 페이지에는 하단 메뉴를 두지 않습니다
   document.body.classList.add('no-bottomnav');

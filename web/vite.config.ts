@@ -24,6 +24,7 @@ export default defineConfig({
         enTerms: resolve(import.meta.dirname, 'en/terms.html'),
         newyear: resolve(import.meta.dirname, '2027/index.html'),
         enNewyear: resolve(import.meta.dirname, 'en/2027/index.html'),
+        android: resolve(import.meta.dirname, 'android/index.html'),
         ...guide,
       },
     },
