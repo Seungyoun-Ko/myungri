@@ -1,0 +1,27 @@
+{
+  "name": "inseol-web",
+  "private": true,
+  "version": "1.4.3",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vitest run && npm run pages && tsc --noEmit && vite build && node --experimental-strip-types scripts/flatten-blog.ts",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "pages": "node --experimental-strip-types scripts/gen-guide.ts && node --experimental-strip-types scripts/gen-newyear.ts && node --experimental-strip-types scripts/gen-ilju.ts && node --experimental-strip-types scripts/gen-blog.ts"
+  },
+  "dependencies": {
+    "html-to-image": "^1.11.11",
+    "korean-lunar-calendar": "^0.4.0",
+    "lunar-javascript": "^1.7.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
