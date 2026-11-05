@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>인설명리 Android 앱 · 사주팔자 &amp; 자미두수 명반 무료 앱</title>
-  <meta name="description" content="사주팔자 만세력과 자미두수 명반을 한 앱에서 무료로. 원국·대운·세운, 선천·대한·유년 명반, 쉬운 말 통변, 만세력 달력, 보관함까지. 가입 없이 휴대폰 안에서 계산해요.">
+  <meta name="description" content="사주팔자 만세력과 자미두수 명반을 한 앱에서 무료로. 나의 일주 타입과 오늘의 나, 원국·대운·세운, 선천·대한·유년 명반, 쉬운 말 풀이와 명리 근거, 만세력 달력까지. 가입 없이 휴대폰 안에서 계산해요.">
   <link rel="canonical" href="https://app.inseol.com/android/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="인설명리">
@@ -30,7 +30,8 @@
     "operatingSystem": "Android",
     "applicationCategory": "LifestyleApplication",
     "inLanguage": "ko",
-    "description": "사주팔자 만세력과 자미두수 명반을 한 앱에서 무료로 보고, 쉬운 말 통변으로 풀어 주는 앱",
+    "description": "사주팔자 만세력과 자미두수 명반을 한 앱에서 무료로 보고, 쉬운 말 풀이와 명리 근거로 풀어 주는 앱",
+    "softwareVersion": "2.0",
     "url": "https://app.inseol.com/android/",
     "downloadUrl": "https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri",
     "image": "https://app.inseol.com/brand/inseol-logo-512.png",
@@ -71,6 +72,14 @@
     .lp-board span.c { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; display: grid; place-items: center; text-align: center; font-family: var(--serif); font-size: 0.8rem; color: var(--on-surface); background: var(--hanji); }
     .lp-board span.m { border-color: var(--primary); color: var(--primary); font-weight: 700; }
     .lp-sample { margin-top: 8px; text-align: center; font-size: 0.64rem; color: var(--outline); }
+    figure.lp-phone { margin: 0; }
+    .lp-phone img { display: block; width: 100%; height: auto; border-radius: 26px; background: var(--background); }
+    .lp-phone figcaption { margin-top: 8px; text-align: center; font-size: 0.7rem; color: #bdb3a6; }
+    .lp-shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+    .lp-shots figure { margin: 0; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius); overflow: hidden; }
+    .lp-shots img { display: block; width: 100%; height: auto; }
+    .lp-shots figcaption { padding: 10px 14px; font-size: 0.9rem; color: var(--on-surface-variant); }
+    .lp-new { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: 0.7rem; font-weight: 800; vertical-align: 2px; }
 
     .lp-section { margin-top: 44px; }
     main.article .lp-section h2 { font-family: var(--serif); font-size: 1.4rem; margin: 0 0 6px; }
@@ -111,6 +120,7 @@
     @media (max-width: 760px) {
       .lp-hero { grid-template-columns: 1fr; gap: 26px; }
       .lp-grid { grid-template-columns: 1fr; }
+      .lp-shots { grid-template-columns: 1fr; }
       .lp-steps { grid-template-columns: 1fr; }
     }
   </style>
@@ -123,51 +133,44 @@
       <div>
         <div class="app-id">
           <img src="/brand/inseol-logo-512.png" alt="인설명리 앱 아이콘" width="64" height="64">
-          <div><b>인설명리</b><span>사주팔자 &amp; 자미두수 명반 · Android</span></div>
+          <div><b>인설명리 2.0</b><span>사주팔자 &amp; 자미두수 명반 · Android</span></div>
         </div>
         <h1>사주팔자와<br>자미두수 명반을<br><em>한 앱에서, 무료로</em></h1>
-        <p class="lead">생년월일시만 넣으면 사주 원국과 운의 흐름, 자미두수 12궁 명반을 함께 보여 드려요. 어려운 용어 대신 쉬운 말로 풀어 드립니다.</p>
+        <p class="lead">생년월일시를 넣으면 나의 일주 타입과 오늘의 나부터 사주 원국과 운의 흐름, 자미두수 12궁 명반까지 함께 보여 드려요. 어려운 용어 대신 쉬운 말로 풀고, 궁금하면 명리 근거도 펼쳐 볼 수 있어요.</p>
         <div class="lp-cta">
-          <a class="btn" href="https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri" target="_blank" rel="noopener">
+          <a class="btn play-link" href="https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3.5v17l14-8.5z"/></svg>Google Play에서 받기</a>
           <a class="btn ghost" href="/">웹에서 바로 보기</a>
         </div>
         <div class="lp-chips">
-          <span class="chip">무료</span><span class="chip">회원가입 없음</span><span class="chip">휴대폰 안에서 계산</span><span class="chip">1900~2050년</span>
+          <span class="chip">무료</span><span class="chip">회원가입 없음</span><span class="chip">휴대폰 안에서 계산</span><span class="chip">웹과 같은 계산</span><span class="chip">1900~2050년</span>
         </div>
       </div>
 
-      <div class="lp-phone" aria-hidden="true">
-        <div class="lp-screen">
-          <div class="tabs"><span class="on">사주팔자</span><span>자미두수 명반</span><span>종합 통변</span></div>
-          <div class="lp-pillars">
-            <div><small>시</small><b class="e0">甲</b><b class="e0">寅</b></div>
-            <div><small>일</small><b class="e2">戊</b><b class="e2">辰</b></div>
-            <div><small>월</small><b class="e2">己</b><b class="e4">亥</b></div>
-            <div><small>년</small><b class="e1">丙</b><b class="e0">寅</b></div>
-          </div>
-          <div class="lp-bars">
-            <div>목<i style="width:60%;background:var(--el-0)"></i></div>
-            <div>화<i style="width:29%;background:var(--el-1)"></i></div>
-            <div>토<i style="width:67%;background:var(--el-2)"></i></div>
-            <div>금<i style="width:1%;background:var(--el-3)"></i></div>
-            <div>수<i style="width:44%;background:var(--el-4)"></i></div>
-          </div>
-          <div class="lp-board">
-            <span>巳</span><span>午</span><span>未</span><span>申</span>
-            <span>辰</span><span class="c">명반<br>12궁</span><span class="m">酉 명궁</span>
-            <span>卯</span><span>戌</span>
-            <span>寅</span><span>丑</span><span>子</span><span>亥</span>
-          </div>
-          <p class="lp-sample">예시 화면</p>
-        </div>
-      </div>
+      <figure class="lp-phone">
+        <img src="/android/app-2.0-hero.webp" width="600" height="1128" alt="인설명리 2.0 결과 화면: 맨 위 한눈에 카드에 일주 타입 흰 용, 한 줄 비유, MBTI로 치면 ISTP에 가까워요, 오늘의 나가 보입니다">
+        <figcaption>실제 앱 화면 · 예시 인물</figcaption>
+      </figure>
     </section>
 
     <section class="lp-section">
       <h2>앱에서 볼 수 있는 것</h2>
       <p class="sub">공부하는 분은 자세한 표로, 처음 보는 분은 쉬운 풀이로 보시면 돼요.</p>
       <div class="lp-grid">
+        <div class="card">
+          <h3><span class="ic">一</span>한눈에 카드<span class="lp-new">2.0</span></h3>
+          <p>결과 맨 위에서 나를 먼저 보여 드려요.</p>
+          <ul>
+            <li>나의 일주 타입(예: 흰 용)과 한 줄 비유, 성향 키워드</li>
+            <li>"MBTI로 치면 ~에 가까워요"와 그렇게 본 이유</li>
+            <li>오늘의 나, 올해, 지금 10년, 나에게 필요한 기운</li>
+            <li>공유하기: 카카오톡 등으로 보내기 (이름·생년월일은 넣지 않아요)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="ic">今</span>오늘의 나<span class="lp-new">2.0</span></h3>
+          <p>"자세히"를 누르면 일·공부, 돈, 사람, 몸·마음의 오늘 흐름과 오늘의 행운(색·방향·숫자)을 보여 드려요. 충·합이 드는 날에는 그 안내도 함께 나와요.</p>
+        </div>
         <div class="card">
           <h3><span class="ic">四</span>사주팔자</h3>
           <p>시·일·월·년 네 기둥의 원국표와 핵심 요약을 한 화면에.</p>
@@ -179,7 +182,7 @@
         </div>
         <div class="card">
           <h3><span class="ic">運</span>운의 흐름</h3>
-          <p>대운 8칸, 세운, 월운 12칸을 한눈에. 대운을 누르면 그 10년의 해마다 운으로 바뀌고, 지금 운은 강조해서 보여 드려요.</p>
+          <p>대운 8칸, 세운, 월운 12칸을 한눈에. 인생 흐름 막대와 10년 운 풀이, 한 해 운세 12달, 이번 달 풀이까지 함께 봐요. 지금 운은 강조해서 보여 드려요.</p>
         </div>
         <div class="card">
           <h3><span class="ic">紫</span>자미두수 명반</h3>
@@ -191,8 +194,8 @@
           </ul>
         </div>
         <div class="card">
-          <h3><span class="ic">話</span>쉬운 말 통변</h3>
-          <p>사주 통변(총론·성격·적성·연애·재물·건강), 자미두수 통변, 둘을 함께 읽는 종합 통변까지. 친근한 존댓말로 풀어 드려요.</p>
+          <h3><span class="ic">話</span>쉬운 말 풀이</h3>
+          <p>사주 풀이 7가지(나는 어떤 사람·성격·일과 적성·연애·결혼·재물·건강·사람 관계), 자미두수 풀이, 둘을 함께 읽는 종합 풀이까지. 항목마다 "명리 근거 보기"로 왜 그렇게 풀었는지 확인할 수 있어요.</p>
         </div>
         <div class="card">
           <h3><span class="ic">曆</span>만세력 달력</h3>
@@ -200,8 +203,17 @@
         </div>
         <div class="card">
           <h3><span class="ic">藏</span>보관함</h3>
-          <p>가족·친구의 결과를 이름과 함께 저장하고 검색·고정할 수 있어요. 저장은 휴대폰 안에만 하고, 다시 열 때 "현재 기준으로 새로 계산"도 할 수 있어요.</p>
+          <p>가족·친구의 결과를 이름과 함께 저장하고, 최근 본 기록과 이름·생년월일 검색으로 다시 찾아요. 저장은 휴대폰 안에만 해요. 예전 버전에서 저장한 기록은 "현재 기준으로 새로 계산"으로 바꿀 수 있어요.</p>
         </div>
+      </div>
+    </section>
+
+    <section class="lp-section">
+      <h2>실제 화면</h2>
+      <p class="sub">예시 인물로 찍은 2.0 앱 화면이에요.</p>
+      <div class="lp-shots">
+        <figure><img src="/android/app-2.0-today.webp" width="600" height="703" loading="lazy" alt="오늘의 나 자세히: 일·공부, 돈, 사람, 몸·마음, 오늘의 행운과 명리 근거"><figcaption>오늘의 나 → 자세히</figcaption></figure>
+        <figure><img src="/android/app-2.0-board.webp" width="600" height="826" loading="lazy" alt="자미두수 12궁 명반: 별 배치, 사화 배지, 삼방사정 연결선"><figcaption>자미두수 12궁 명반</figcaption></figure>
       </div>
     </section>
 
@@ -211,31 +223,33 @@
       <div class="lp-grid">
         <div class="card"><h3><span class="ic">節</span>절입 시각 기준</h3><p>년주·월주는 입춘과 절입 <b>시각</b>으로 나눠요. 절입일에 태어났어도 몇 시 몇 분인지로 정확히 봐요.</p></div>
         <div class="card"><h3><span class="ic">時</span>한국 시간의 역사</h3><p>표준 자오선 변경과 1948~1960년, 1987~1988년 서머타임을 반영해요. 같은 시각이 두 번 있는 경우에는 앞·뒤를 고를 수 있어요.</p></div>
-        <div class="card"><h3><span class="ic">地</span>출생 지역 보정</h3><p>출생 도시를 고르고, 원하면 지역 경도 보정도 할 수 있어요.</p></div>
-        <div class="card"><h3><span class="ic">?</span>출생시간을 몰라도</h3><p>시주 없이 일·월·년주로 보여 드려요. 절입일이면 절입 전·후 두 경우를 한 표에 함께 보여 드려요.</p></div>
+        <div class="card"><h3><span class="ic">地</span>국내·해외 출생지</h3><p>국내 35곳과 해외 107곳에서 고를 수 있어요. 해외는 그 나라의 시간대와 서머타임을 반영하고, 원하면 지역 경도 보정도 할 수 있어요.</p></div>
+        <div class="card"><h3><span class="ic">?</span>출생시간을 몰라도</h3><p>"출생시간 모름"을 고르면 시주 없이 일·월·년주로 보여 드려요. 자미두수 명반과 종합 풀이는 출생시간이 있어야 만들 수 있어요. 절입일이면 절입 전·후 두 경우를 한 표에 함께 보여 드려요.</p></div>
       </div>
     </section>
 
     <section class="lp-section">
       <h2>이렇게 써요</h2>
       <ol class="lp-steps">
-        <li><b>생년월일시 입력</b><br>양력·음력·음력 윤달, 성별, 출생 지역을 고르고 결과 보기를 눌러요. 이름은 비워도 돼요.</li>
-        <li><b>사주와 명반 보기</b><br>사주팔자 · 자미두수 명반 · 종합 통변 탭을 오가며 봐요.</li>
+        <li><b>생년월일시 입력</b><br>양력·음력·음력 윤달, 출생시간, 성별, 출생 지역을 고르고 결과 보기를 눌러요. 이름은 비워도 돼요.</li>
+        <li><b>한눈에 카드부터</b><br>맨 위에서 나의 일주 타입과 오늘의 나를 보고, 사주팔자 · 자미두수 명반 · 종합 풀이 탭을 오가며 자세히 봐요.</li>
         <li><b>보관함에 저장</b><br>가족·친구 것도 저장해 두고, 달력에서 그 사람 기준으로 날마다 흐름을 봐요.</li>
       </ol>
     </section>
 
     <section class="lp-section">
       <h2>앱과 웹, 무엇이 다른가요</h2>
-      <p class="sub">같은 인설명리예요. 휴대폰에서 자주 보면 앱이, 바로 한 번 보거나 친구에게 보내려면 웹이 편해요.</p>
+      <p class="sub">같은 인설명리예요. 앱 2.0부터 계산과 풀이가 웹과 같아서, 같은 생년월일시와 출생지를 넣으면 결과가 같아요. 휴대폰에서 자주 보면 앱이, 설치 없이 한 번 보려면 웹이 편해요.</p>
       <div class="card">
         <table class="lp-compare">
           <thead><tr><th></th><th>Android 앱</th><th>웹 (app.inseol.com)</th></tr></thead>
           <tbody>
             <tr><td><b>설치</b></td><td data-label="Android 앱">Google Play에서 설치</td><td data-label="웹">설치 없이 브라우저에서 (홈 화면에 추가 가능)</td></tr>
-            <tr><td><b>사주·명반·통변</b></td><td data-label="Android 앱">○</td><td data-label="웹">○</td></tr>
+            <tr><td><b>사주·명반·풀이</b></td><td data-label="Android 앱">○ (웹과 같은 계산)</td><td data-label="웹">○</td></tr>
+            <tr><td><b>한눈에 카드·오늘의 나</b></td><td data-label="Android 앱">○ (오늘의 나 자세히)</td><td data-label="웹">○</td></tr>
+            <tr><td><b>해외 출생지·공유</b></td><td data-label="Android 앱">○ (공유 창으로 카카오톡 등)</td><td data-label="웹">○</td></tr>
             <tr><td><b>달력·보관함</b></td><td data-label="Android 앱">○ (휴대폰 안에 저장)</td><td data-label="웹">○ (브라우저 안에 저장)</td></tr>
-            <tr><td><b>웹에 먼저 들어간 기능</b></td><td data-label="Android 앱">—</td><td data-label="웹">두 사람 궁합, 카카오톡 공유, 2027 신년운세, 해외 출생지, 영어 화면</td></tr>
+            <tr><td><b>웹에 먼저 들어간 기능</b></td><td data-label="Android 앱">—</td><td data-label="웹">두 사람 궁합, 2027 신년운세, 영어 화면</td></tr>
             <tr><td><b>아이폰</b></td><td data-label="Android 앱">—</td><td data-label="웹">○ (Safari에서 바로)</td></tr>
           </tbody>
         </table>
@@ -244,18 +258,20 @@
 
     <section class="lp-section lp-faq">
       <h2>자주 묻는 질문</h2>
-      <details><summary>정말 무료인가요?</summary><p>네. 모든 기능을 무료로 쓸 수 있어요. 앱은 광고로 운영하며, 광고는 "결과 보기"를 누를 때만 나오고 한 번 나오면 5분 동안은 다시 나오지 않아요.</p></details>
+      <details><summary>정말 무료인가요?</summary><p>네. 모든 기능을 무료로 쓸 수 있고 앱 안 결제도 없어요. 앱은 광고로 운영해요. 앱을 켜고 처음 보는 결과는 광고 없이 보여 드리고, 결과를 다시 보거나 풀이를 열 때 가끔 광고가 나와요. 한 번 나오면 5분 동안은 다시 나오지 않아요.</p></details>
       <details><summary>회원가입이 필요한가요?</summary><p>아니요. 가입도 로그인도 없어요. 설치하고 바로 쓰시면 돼요.</p></details>
       <details><summary>내 출생 정보는 어디에 저장되나요?</summary><p>계산과 보관함 저장은 휴대폰 안에서만 해요. 출생 정보를 서버로 보내지 않아요. 자세한 내용은 <a href="https://seungyoun-ko.github.io/inseolmyeongri/privacy.html" target="_blank" rel="noopener">앱 개인정보처리방침</a>을 확인해 주세요.</p></details>
+      <details><summary>태어난 시간을 모르면요?</summary><p>"출생시간 모름"을 고르면 년·월·일주로 사주를 보여 드려요. 시주, 자미두수 명반, 종합 풀이는 출생시간이 있어야 만들 수 있어 보여 드리지 않아요.</p></details>
+      <details><summary>웹과 결과가 같나요?</summary><p>네. 앱 2.0부터 웹과 같은 계산과 풀이를 써요. 같은 생년월일시·출생지·설정이면 앱과 웹의 결과가 같아요.</p></details>
       <details><summary>아이폰에서도 쓸 수 있나요?</summary><p>앱은 지금 Android만 있어요. 아이폰에서는 <a href="/">웹 버전</a>을 Safari로 열어 같은 사주와 명반을 볼 수 있고, 공유 버튼의 "홈 화면에 추가"로 앱처럼 쓸 수 있어요.</p></details>
       <details><summary>풀이는 얼마나 믿어야 하나요?</summary><p>타고난 성향과 흐름을 풀이한 참고용 내용이에요. 특정 사건을 예측하거나 보장하지 않아요. 나를 돌아보는 재료로 가볍게 봐 주세요.</p></details>
     </section>
 
     <section class="lp-final">
-      <h2>내 사주팔자와 명반, 지금 확인해 보세요</h2>
-      <p class="muted">무료 · 가입 없음 · 휴대폰 안에서 계산</p>
+      <h2>나의 일주 타입부터, 지금 확인해 보세요</h2>
+      <p class="muted">무료 · 가입 없음 · 출생 정보는 휴대폰에만</p>
       <div class="lp-cta">
-        <a class="btn" href="https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri" target="_blank" rel="noopener">
+        <a class="btn play-link" href="https://play.google.com/store/apps/details?id=com.lifedesign.inseolmyeongri" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3.5v17l14-8.5z"/></svg>Google Play에서 받기</a>
         <a class="btn ghost" href="/">웹에서 바로 보기</a>
       </div>
@@ -264,5 +280,19 @@
   </main>
   <div id="shell-bottom"></div>
   <script type="module" src="/src/page.ts"></script>
+  <script>
+  // Pass utm_* values from an ad link on to Google Play, so Play Console can tell which ad an install came from.
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search), keep = new URLSearchParams();
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach(function (k) {
+        var v = q.get(k); if (v) keep.set(k, v.slice(0, 60));
+      });
+      if (!keep.toString()) return;
+      var ref = encodeURIComponent(keep.toString());
+      document.querySelectorAll("a.play-link").forEach(function (a) { a.href += "&referrer=" + ref; });
+    } catch (e) { /* the plain Play link still works */ }
+  })();
+  </script>
 </body>
 </html>
