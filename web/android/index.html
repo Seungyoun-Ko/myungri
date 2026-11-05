@@ -94,23 +94,6 @@
     .lp-steps li { list-style: none; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius); padding: 16px; }
     .lp-steps li::before { counter-increment: s; content: counter(s); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: var(--on-primary); font-weight: 800; margin: 0 8px 8px 0; }
     main.article ol.lp-steps { padding: 0; }
-    .lp-compare { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 0.94rem; }
-    .lp-compare td:first-child { white-space: nowrap; }
-    @media (max-width: 560px) {
-      .lp-compare { min-width: 0; }
-      .lp-compare thead { display: none; }
-      .lp-compare tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--outline-variant); }
-      .lp-compare tr:last-child { border-bottom: 0; }
-      main.article .lp-compare td { display: grid; grid-template-columns: 76px 1fr; gap: 8px; border: 0; padding: 3px 0; }
-      main.article .lp-compare td:first-child { display: block; padding-bottom: 4px; }
-      .lp-compare td[data-label]::before { content: attr(data-label); color: var(--on-surface-variant); font-size: 0.82rem; font-weight: 700; }
-    }
-    .lp-compare th, .lp-compare td { border-bottom: 1px solid var(--outline-variant); padding: 10px 8px; text-align: left; vertical-align: top; }
-    .lp-compare th { color: var(--on-surface-variant); font-weight: 700; font-size: 0.86rem; }
-    .lp-faq details { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius); padding: 14px 16px; }
-    .lp-faq details + details { margin-top: 8px; }
-    .lp-faq summary { font-weight: 700; cursor: pointer; }
-    main.article .lp-faq details p { margin-top: 8px; color: var(--on-surface-variant); font-size: 0.96rem; }
     .lp-final { margin-top: 44px; text-align: center; background: var(--hanji); border: 1px solid var(--outline-variant); border-radius: 20px; padding: 28px 18px; color: var(--ink); }
     :root[data-theme='dark'] .lp-final { background: var(--surface); color: var(--on-surface); }
     @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .lp-final { background: var(--surface); color: var(--on-surface); } }
@@ -235,36 +218,6 @@
         <li><b>한눈에 카드부터</b><br>맨 위에서 나의 일주 타입과 오늘의 나를 보고, 사주팔자 · 자미두수 명반 · 종합 풀이 탭을 오가며 자세히 봐요.</li>
         <li><b>보관함에 저장</b><br>가족·친구 것도 저장해 두고, 달력에서 그 사람 기준으로 날마다 흐름을 봐요.</li>
       </ol>
-    </section>
-
-    <section class="lp-section">
-      <h2>앱과 웹, 무엇이 다른가요</h2>
-      <p class="sub">같은 인설명리예요. 앱 2.0부터 계산과 풀이가 웹과 같아서, 같은 생년월일시와 출생지를 넣으면 결과가 같아요. 휴대폰에서 자주 보면 앱이, 설치 없이 한 번 보려면 웹이 편해요.</p>
-      <div class="card">
-        <table class="lp-compare">
-          <thead><tr><th></th><th>Android 앱</th><th>웹 (app.inseol.com)</th></tr></thead>
-          <tbody>
-            <tr><td><b>설치</b></td><td data-label="Android 앱">Google Play에서 설치</td><td data-label="웹">설치 없이 브라우저에서 (홈 화면에 추가 가능)</td></tr>
-            <tr><td><b>사주·명반·풀이</b></td><td data-label="Android 앱">○ (웹과 같은 계산)</td><td data-label="웹">○</td></tr>
-            <tr><td><b>한눈에 카드·오늘의 나</b></td><td data-label="Android 앱">○ (오늘의 나 자세히)</td><td data-label="웹">○</td></tr>
-            <tr><td><b>해외 출생지·공유</b></td><td data-label="Android 앱">○ (공유 창으로 카카오톡 등)</td><td data-label="웹">○</td></tr>
-            <tr><td><b>달력·보관함</b></td><td data-label="Android 앱">○ (휴대폰 안에 저장)</td><td data-label="웹">○ (브라우저 안에 저장)</td></tr>
-            <tr><td><b>웹에 먼저 들어간 기능</b></td><td data-label="Android 앱">—</td><td data-label="웹">두 사람 궁합, 2027 신년운세, 영어 화면</td></tr>
-            <tr><td><b>아이폰</b></td><td data-label="Android 앱">—</td><td data-label="웹">○ (Safari에서 바로)</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="lp-section lp-faq">
-      <h2>자주 묻는 질문</h2>
-      <details><summary>정말 무료인가요?</summary><p>네. 모든 기능을 무료로 쓸 수 있고 앱 안 결제도 없어요. 앱은 광고로 운영해요. 앱을 켜고 처음 보는 결과는 광고 없이 보여 드리고, 결과를 다시 보거나 풀이를 열 때 가끔 광고가 나와요. 한 번 나오면 5분 동안은 다시 나오지 않아요.</p></details>
-      <details><summary>회원가입이 필요한가요?</summary><p>아니요. 가입도 로그인도 없어요. 설치하고 바로 쓰시면 돼요.</p></details>
-      <details><summary>내 출생 정보는 어디에 저장되나요?</summary><p>계산과 보관함 저장은 휴대폰 안에서만 해요. 출생 정보를 서버로 보내지 않아요. 자세한 내용은 <a href="https://seungyoun-ko.github.io/inseolmyeongri/privacy.html" target="_blank" rel="noopener">앱 개인정보처리방침</a>을 확인해 주세요.</p></details>
-      <details><summary>태어난 시간을 모르면요?</summary><p>"출생시간 모름"을 고르면 년·월·일주로 사주를 보여 드려요. 시주, 자미두수 명반, 종합 풀이는 출생시간이 있어야 만들 수 있어 보여 드리지 않아요.</p></details>
-      <details><summary>웹과 결과가 같나요?</summary><p>네. 앱 2.0부터 웹과 같은 계산과 풀이를 써요. 같은 생년월일시·출생지·설정이면 앱과 웹의 결과가 같아요.</p></details>
-      <details><summary>아이폰에서도 쓸 수 있나요?</summary><p>앱은 지금 Android만 있어요. 아이폰에서는 <a href="/">웹 버전</a>을 Safari로 열어 같은 사주와 명반을 볼 수 있고, 공유 버튼의 "홈 화면에 추가"로 앱처럼 쓸 수 있어요.</p></details>
-      <details><summary>풀이는 얼마나 믿어야 하나요?</summary><p>타고난 성향과 흐름을 풀이한 참고용 내용이에요. 특정 사건을 예측하거나 보장하지 않아요. 나를 돌아보는 재료로 가볍게 봐 주세요.</p></details>
     </section>
 
     <section class="lp-final">
